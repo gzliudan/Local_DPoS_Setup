@@ -1,2 +1,4 @@
 *_network
 nodes*
+logs
+*.pid

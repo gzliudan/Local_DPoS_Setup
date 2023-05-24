@@ -284,7 +284,9 @@ Edit the genesis file `${HOME}/XDPoSChain/build/bin/XDPoS.json`, add the below l
 
 under the line `"eip155Block": 3,` according to [issue 196](https://github.com/XinFinOrg/XDPoSChain/issues/196).
 
-## 4. Setup bootnode
+## 4. Create boot node key
+
+This step is optional because this project includes the file `bootnode.key` already.
 
 ```shell
 cd ${HOME}/XDPoSChain/build/bin
@@ -293,12 +295,6 @@ cd ${HOME}/XDPoSChain/build/bin
 ```
 
 ![1678428141480](https://user-images.githubusercontent.com/7695325/224236113-ddd1670b-9300-4f5b-8d68-01da199e9831.png)
-
-Copy bootnode information in above shown:
-
-```text
-enode://62457be5ca9c9ba3913d1513c22ca963b94548a7db06e7a629fec5b654ab7b09a704cba22229107b3f54848ae58e845dcce98393b48be619cc2860d56dd57198
-```
 
 Then press Ctrl+C to stop bootnode program.
 
@@ -313,11 +309,10 @@ cd Local_DPoS_Setup
 git checkout private-network
 ```
 
-### 5.2 Copy genesis and bootkey files
+### 5.2 Copy genesis files
 
 ```shell
 cp ${HOME}/XDPoSChain/build/bin/XDPoS.json ${HOME}/Local_DPoS_Setup/genesis/XDPoS-3-signers.json
-cp ${HOME}/XDPoSChain/build/bin/bootnode.key ${HOME}/Local_DPoS_Setup
 ```
 
 ### 5.3 Setup ENODE and private keys
@@ -325,14 +320,12 @@ cp ${HOME}/XDPoSChain/build/bin/bootnode.key ${HOME}/Local_DPoS_Setup
 Edit file `${HOME}/Local_DPoS_Setup/.env`, add 4 private keys without 0x prefix:
 
 ```text
-ENODE=<ENODE_VALUE>
 PRIVATE_KEY_0=<KEY_0>
 PRIVATE_KEY_1=<KEY_1>
 PRIVATE_KEY_2=<KEY_2>
 PRIVATE_KEY_3=<KEY_3>
 ```
 
-- ENODE_VALUE is from step 4 with below format: `enode://62457be5ca9c9ba3913d1513c22ca963b94548a7db06e7a629fec5b654ab7b09a704cba22229107b3f54848ae58e845dcce98393b48be619cc2860d56dd57198@127.0.0.1:30301`
 - KEY_0 is the private key for first masternode in section 3.6
 - KEY_1, KEY_2, KEY_3 are private keys for three signers in section 3.7
 

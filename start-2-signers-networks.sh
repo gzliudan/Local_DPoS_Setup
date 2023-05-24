@@ -25,8 +25,8 @@ touch .pwd
 mkdir -p "${LOG_DIR}"
 export $(cat .env | xargs)
 
-# ENODE example: "enode://62457be5ca9c9ba3913d1513c22ca963b94548a7db06e7a629fec5b654ab7b09a704cba22229107b3f54848ae58e845dcce98393b48be619cc2860d56dd57198@127.0.0.1:30301"
-echo -e "ENODE = ${ENODE}\n"
+ENODE="enode://62457be5ca9c9ba3913d1513c22ca963b94548a7db06e7a629fec5b654ab7b09a704cba22229107b3f54848ae58e845dcce98393b48be619cc2860d56dd57198@127.0.0.1:30301"
+echo "ENODE = ${ENODE}"
 
 cd ${PROJECT_DIR} && make all
 cd ${WORK_DIR}

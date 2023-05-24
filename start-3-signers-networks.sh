@@ -7,8 +7,9 @@ _interupt() {
 
 trap _interupt INT TERM
 
+# Logging verbosity: 0=silent, 1=error, 2=warn, 3=info, 4=debug, 5=detail (default: 3)
+VERBOSITY=4
 GAS_PRICE=1
-VERBOSITY=3
 NETWORK_ID=888
 BASE_PORT=30000
 BASE_RPC_PORT=8545

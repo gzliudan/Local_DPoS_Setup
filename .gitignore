@@ -2,3 +2,4 @@ nodes/
 logs/
 *.pid
 .env
+/genesis.json

@@ -49,13 +49,22 @@ function start_bootnode() {
 function start_node() {
     NODE_ID=$1
     NODE_NAME="pn${NODE_ID}"
-    echo -e "\nStarting the node ${NODE_ID}"
-
-    PRIVATE_KEY="PRIVATE_KEY_${NODE_ID}"
     DATA_DIR="nodes/${NODE_NAME}"
 
+    echo -e "\nStarting the node ${NODE_ID}"
+
     if [ ! -d "${DATA_DIR}/XDC/chaindata" ]; then
-        WALLET=$(${XDC} account import --password .pwd --datadir ${DATA_DIR} <(echo ${!PRIVATE_KEY}) | awk -v FS="({|})" '{print $2}')
+        PRIVATE_KEY_NAME="PRIVATE_KEY_${NODE_ID}"
+        PRIVATE_KEY="${!PRIVATE_KEY_NAME}"
+        if [[ ${#PRIVATE_KEY} -eq 66 && ( ${PRIVATE_KEY:0:2} = "0x" || ${PRIVATE_KEY:0:2} = "0X" ) ]]; then
+            PRIVATE_KEY=${PRIVATE_KEY:2}
+        fi
+        if [[ ${#PRIVATE_KEY} != 64 || ${PRIVATE_KEY} =~ [^0-9a-fA-F] ]]; then
+            echo "${PRIVATE_KEY_NAME} is invalid: ${PRIVATE_KEY}"
+            exit 3
+        fi
+
+        WALLET=$(${XDC} account import --password .pwd --datadir ${DATA_DIR} <(echo ${PRIVATE_KEY}) | awk -v FS="({|})" '{print $2}')
         if [ ! -f genesis.json ]; then
             cp genesis/XDPoS-3-signers.json genesis.json
         fi

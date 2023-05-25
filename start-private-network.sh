@@ -1,6 +1,7 @@
 #!/bin/bash
 set -eo pipefail
 
+
 if [ $# == 0 ] ; then
     echo "Usage: $0 node_id ..."
     echo "Examples:"
@@ -13,12 +14,14 @@ if [ $# == 0 ] ; then
     exit 1
 fi
 
+
 for arg in $@; do
     if [[ ${arg} =~ [^0-9] ]] ; then
         echo "node_id ${arg} is not integer"
         exit 2
     fi
 done
+
 
 # Logging verbosity: 0=silent, 1=error, 2=warn, 3=info, 4=debug, 5=detail (default: 3)
 VERBOSITY=4
@@ -33,6 +36,7 @@ LOG_DIR="logs"
 PROJECT_DIR="${HOME}/XDPoSChain"
 BOOTNODE_PID_FILE="bootnode.pid"
 XDC="${PROJECT_DIR}/build/bin/XDC"
+
 
 function set_enode() {
     if [ ! -f bootnode.key ]; then
@@ -60,6 +64,7 @@ function start_bootnode() {
     echo ${PID} > ${BOOTNODE_PID_FILE}
     echo "bootnode is running now: ${PID}"
 }
+
 
 function start_node() {
     NODE_ID=$1

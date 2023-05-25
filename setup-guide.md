@@ -284,20 +284,6 @@ Edit the genesis file `${HOME}/XDPoSChain/build/bin/XDPoS.json`, add the below l
 
 under the line `"eip155Block": 3,` according to [issue 196](https://github.com/XinFinOrg/XDPoSChain/issues/196).
 
-## 4. Create boot node key
-
-This step is optional because this project includes the file `bootnode.key` already.
-
-```shell
-cd ${HOME}/XDPoSChain/build/bin
-./bootnode -genkey bootnode.key
-./bootnode -nodekey ./bootnode.key
-```
-
-![1678428141480](https://user-images.githubusercontent.com/7695325/224236113-ddd1670b-9300-4f5b-8d68-01da199e9831.png)
-
-Then press Ctrl+C to stop bootnode program.
-
 ## 5. Start the masternodes
 
 ### 5.1 Download Local_DPoS_Setup
@@ -312,12 +298,12 @@ git checkout private-network
 ### 5.2 Copy genesis files
 
 ```shell
-cp ${HOME}/XDPoSChain/build/bin/XDPoS.json ${HOME}/Local_DPoS_Setup/genesis/XDPoS-3-signers.json
+cp ${HOME}/XDPoSChain/build/bin/XDPoS.json ${HOME}/Local_DPoS_Setup/genesis.json
 ```
 
 ### 5.3 Setup ENODE and private keys
 
-Edit file `${HOME}/Local_DPoS_Setup/.env`, add 4 private keys without 0x prefix:
+Edit file `${HOME}/Local_DPoS_Setup/.env`, add 4 private keys with 0x prefix:
 
 ```text
 PRIVATE_KEY_0=<KEY_0>
@@ -329,9 +315,16 @@ PRIVATE_KEY_3=<KEY_3>
 - KEY_0 is the private key for first masternode in section 3.6
 - KEY_1, KEY_2, KEY_3 are private keys for three signers in section 3.7
 
-### 5.4 Start private networks
+### 5.4 Start private network
 
 ```shell
 cd ${HOME}/Local_DPoS_Setup
-./start-3-signers-networks.sh
+./start-private-network.sh 0 1 2 3
+```
+
+### 5.5 Stop private network
+
+```shell
+cd ${HOME}/Local_DPoS_Setup
+./stop-private-network.sh 0 1 2 3
 ```

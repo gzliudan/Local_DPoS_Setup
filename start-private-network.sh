@@ -33,13 +33,28 @@ LOG_DIR="logs"
 PROJECT_DIR="${HOME}/XDPoSChain"
 BOOTNODE_PID_FILE="bootnode.pid"
 XDC="${PROJECT_DIR}/build/bin/XDC"
-ENODE="enode://62457be5ca9c9ba3913d1513c22ca963b94548a7db06e7a629fec5b654ab7b09a704cba22229107b3f54848ae58e845dcce98393b48be619cc2860d56dd57198@127.0.0.1:30301"
 
-export $(cat .env | xargs)
-echo "ENODE=${ENODE}"
+function set_enode() {
+    if [ ! -f bootnode.key ]; then
+        echo "create bootnode.key"
+        ${PROJECT_DIR}/build/bin/bootnode -genkey bootnode.key
+    fi
+
+    if [ ! -f bootnode.txt ]; then
+        echo "create bootnode.txt"
+        ${PROJECT_DIR}/build/bin/bootnode -nodekey bootnode.key > bootnode.txt 2>&1 &
+        PID=$!
+        sleep 1
+        kill $PID 
+    fi
+
+    # ENODE="enode://62457be5ca9c9ba3913d1513c22ca963b94548a7db06e7a629fec5b654ab7b09a704cba22229107b3f54848ae58e845dcce98393b48be619cc2860d56dd57198@127.0.0.1:30301"
+    ENODE="$(grep -Eo 'enode://[0-9a-f]*' bootnode.txt)@127.0.0.1:30301"
+}
+
 
 function start_bootnode() {
-    echo -e "\nStarting the bootnode"
+    echo "Starting the bootnode"
     ${PROJECT_DIR}/build/bin/bootnode -nodekey bootnode.key --addr 0.0.0.0:30301 > /dev/null 2>&1 &
     PID=$!
     echo ${PID} > ${BOOTNODE_PID_FILE}
@@ -51,7 +66,7 @@ function start_node() {
     NODE_NAME="pn${NODE_ID}"
     DATA_DIR="nodes/${NODE_NAME}"
 
-    echo -e "\nStarting the node ${NODE_ID}"
+    echo "Starting the node ${NODE_ID}"
 
     if [ ! -d "${DATA_DIR}/XDC/chaindata" ]; then
         PRIVATE_KEY_NAME="PRIVATE_KEY_${NODE_ID}"
@@ -107,14 +122,20 @@ function start_node() {
     PID=$!
     echo ${PID} > ${NODE_NAME}.pid
     echo "node is running now: ${PID}"
+    echo
 }
 
-cd ${PROJECT_DIR} && make all
+
+echo
+cd ${PROJECT_DIR}
+make all
 cd ${WORK_DIR}
 
-touch .pwd
-mkdir -p "${LOG_DIR}"
+echo
+set_enode
+echo "ENODE=${ENODE}"
 
+echo
 if [ -f ${BOOTNODE_PID_FILE} ]; then
     PID=$(cat ${BOOTNODE_PID_FILE})
         if [ -d "/proc/${PID}/fd" ]; then
@@ -126,6 +147,10 @@ else
     start_bootnode
 fi
 
+echo
+touch .pwd
+mkdir -p "${LOG_DIR}"
+export $(cat .env | xargs)
 for arg in $@; do
     start_node ${arg}
 done

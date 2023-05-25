@@ -88,6 +88,14 @@ function start_node() {
         WALLET=$(${XDC} account list --datadir ${DATA_DIR} | head -n 1 | awk -v FS="({|})" '{print $2}')
     fi
 
+    if [ ${WALLET:0:3} = "xdc" ]; then
+        WALLET=${WALLET:3}
+    fi
+
+    if [ ${WALLET:0:2} != "0x" ]; then
+        WALLET="0x${WALLET}"
+    fi
+
     echo "WALLET = ${WALLET}"
 
     PORT=$((${BASE_PORT}+${NODE_ID}))
@@ -133,7 +141,7 @@ cd ${WORK_DIR}
 
 echo
 set_enode
-echo "ENODE=${ENODE}"
+echo "ENODE = ${ENODE}"
 
 echo
 if [ -f ${BOOTNODE_PID_FILE} ]; then

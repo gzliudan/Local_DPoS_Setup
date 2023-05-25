@@ -14,7 +14,7 @@ if [ $# == 0 ] ; then
 fi
 
 for arg in $@; do
-    if ! [ ${arg} -ge 0 ] 2>/dev/null ; then
+    if [[ ${arg} =~ [^0-9] ]] ; then
         echo "node_id ${arg} is not integer"
         exit 2
     fi

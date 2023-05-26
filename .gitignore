@@ -1,4 +1,6 @@
-*_network
-nodes*
-logs
+nodes/
+logs/
 *.pid
+.env
+.pwd
+/genesis.json

@@ -1,16 +1,21 @@
 #!/bin/bash
 set -eo pipefail
 
-if [ $# == 0 ] ; then
-    echo "Usage: $0 node_id ..."
+
+function help() {
+    echo "Usage: $0 <node_id> ..."
     echo "Examples:"
-    echo "$0 0"
-    echo "$0 2"
-    echo "$0 0 1"
-    echo "$0 2 3"
-    echo "$0 0 1 2"
-    echo "$0 0 1 2 3"
-    exit 1
+    echo "Stop all nodes: $0"
+    echo "Stop  1  node : $0 0"
+    echo "Stop  2  nodes: $0 2 3"
+    echo "Stop  3  nodes: $0 1 2 3"
+    echo "Stop  4  nodes: $0 0 1 2 3"
+}
+
+
+if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    help
+    exit 0
 fi
 
 for arg in $@; do

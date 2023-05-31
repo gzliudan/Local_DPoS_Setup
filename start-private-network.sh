@@ -27,6 +27,16 @@ for arg in $@; do
         echo "node_id ${arg} is not integer"
         exit 2
     fi
+
+    NODE_NAME="pn${arg}"
+    PID_FILE="${NODE_NAME}.pid"
+    if [ -f "${PID_FILE}" ] ; then
+        PID=$(cat "${PID_FILE}")
+        if [ -d "/proc/${PID}/fd" ]; then
+            echo "please stop node ${NODE_NAME}[${PID}] first: found file ${PID_FILE}"
+            exit 3
+        fi
+    fi
 done
 
 
@@ -76,6 +86,7 @@ function start_bootnode() {
 function start_node() {
     NODE_ID=$1
     NODE_NAME="pn${NODE_ID}"
+    PID_FILE="${NODE_NAME}.pid"
     DATA_DIR="nodes/${NODE_NAME}"
 
     echo "Starting the node ${NODE_ID}"
@@ -88,7 +99,7 @@ function start_node() {
         fi
         if [[ ${#PRIVATE_KEY} != 64 || ${PRIVATE_KEY} =~ [^0-9a-fA-F] ]]; then
             echo "${PRIVATE_KEY_NAME} is invalid: ${PRIVATE_KEY}"
-            exit 3
+            exit 4
         fi
 
         WALLET=$(${XDC} account import --password .pwd --datadir ${DATA_DIR} <(echo ${PRIVATE_KEY}) | awk -v FS="({|})" '{print $2}')
@@ -140,7 +151,7 @@ function start_node() {
         > "${LOG_DIR}/${NODE_NAME}-$(date +%Y%m%d-%H%M%S).log" 2>&1 &
 
     PID=$!
-    echo ${PID} > ${NODE_NAME}.pid
+    echo ${PID} > ${PID_FILE}
     echo "node is running now: ${PID}"
     echo
 }
@@ -158,7 +169,7 @@ echo "ENODE = ${ENODE}"
 echo
 if [ -f ${BOOTNODE_PID_FILE} ]; then
     PID=$(cat ${BOOTNODE_PID_FILE})
-        if [ -d "/proc/${PID}/fd" ]; then
+    if [ -d "/proc/${PID}/fd" ]; then
         echo "bootnode is already running: ${PID}"
     else
         start_bootnode

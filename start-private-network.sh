@@ -3,12 +3,25 @@ set -eo pipefail
 
 
 function help() {
-    echo "Usage: $0 <node_id> ..."
+    echo
+    echo "About:"
+    echo "    This script start one or more node in private network."
+    echo
+    echo "Usage"
+    echo "    $0 [options]"
+    echo "    $0 <node_id> ..."
+    echo
+    echo "Options:"
+    echo "    -h, --help     display this help"
+    echo
     echo "Examples:"
-    echo "Start 1 node : $0 0"
-    echo "Start 2 nodes: $0 2 3"
-    echo "Start 3 nodes: $0 1 2 3"
-    echo "Start 4 nodes: $0 0 1 2 3"
+    echo "    $0 0          Start 1 node which node_id is 0"
+    echo "    $0 2 3        Start 3 nodes which node_id are 2, 3"
+    echo "    $0 1 2 3      Start 3 nodes which node_id are 0, 1, 2"
+    echo "    $0 0 1 2 3    Start 4 nodes which node_id are 0, 1, 2, 3"
+    echo "    $0 -h         Display this help messages"
+    echo "    $0 --help     Display this help messages"
+    echo
 }
 
 
@@ -17,7 +30,7 @@ if [ $# == 0 ] ; then
     exit 1
 fi
 
-if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+if [[ $# == 1 ]] && [[ "$1" == "-h" || "$1" == "--help" ]]; then
     help
     exit 0
 fi

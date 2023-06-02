@@ -3,13 +3,22 @@ set -eo pipefail
 
 
 function help() {
-    echo "Usage: $0 <node_id> ..."
+    echo
+    echo "About:"
+    echo "    This script stop one or more node in private network."
+    echo
+    echo "Usage:"
+    echo "    $0 [node_id] ..."
+    echo
     echo "Examples:"
-    echo "Stop all nodes: $0"
-    echo "Stop  1  node : $0 0"
-    echo "Stop  2  nodes: $0 2 3"
-    echo "Stop  3  nodes: $0 1 2 3"
-    echo "Stop  4  nodes: $0 0 1 2 3"
+    echo "    $0            Stop all nodes without node_id"
+    echo "    $0 0          Stop 1 node which node_id is 0"
+    echo "    $0 2 3        Stop 2 nodes which node_id are 2, 3"
+    echo "    $0 1 2 3      Stop 3 nodes which node_id are 1, 2, 3"
+    echo "    $0 0 1 2 3    Stop 4 nodes which node_id are 0, 1, 2, 3"
+    echo "    $0 -h         Display this help messages"
+    echo "    $0 --help     Display this help messages"
+    echo
 }
 
 
@@ -33,7 +42,7 @@ function stop_node() {
 }
 
 
-if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+if [[ $# == 1 ]] && [[ "$1" == "-h" || "$1" == "--help" ]]; then
     help
     exit 0
 fi

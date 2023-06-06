@@ -58,6 +58,7 @@ for NODE_ID in {0..2} ; do
 
   ${XDC} \
     --mine \
+    --gcmode archive \
     --syncmode full \
     --enable-0x-prefix \
     --bootnodes ${ENODE} \

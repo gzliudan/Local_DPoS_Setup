@@ -140,6 +140,7 @@ function start_node() {
 
     ${XDC} \
         --mine \
+        --gcmode archive \
         --syncmode full \
         --enable-0x-prefix \
         --bootnodes ${ENODE} \

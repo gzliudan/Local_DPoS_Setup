@@ -60,6 +60,7 @@ NETWORK_ID=888
 BASE_PORT=30000
 BASE_RPC_PORT=8545
 BASE_WS_RPC_PORT=9545
+DATE=$(date +%Y%m%d-%H%M%S)
 
 WORK_DIR=${PWD}
 LOG_DIR="logs"
@@ -162,7 +163,7 @@ function start_node() {
         --wsaddr 0.0.0.0 \
         --wsport ${WS_RPC_PORT} \
         --wsorigins "*" \
-        > "${LOG_DIR}/${NODE_NAME}-$(date +%Y%m%d-%H%M%S).log" 2>&1 &
+        > "${LOG_DIR}/${NODE_NAME}-${DATE}.log" 2>&1 &
 
     PID=$!
     echo ${PID} > ${PID_FILE}

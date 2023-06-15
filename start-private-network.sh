@@ -172,10 +172,10 @@ function start_node() {
 }
 
 
-echo
-cd ${PROJECT_DIR}
-make all
-cd ${WORK_DIR}
+# echo
+# cd ${PROJECT_DIR}
+# make all
+# cd ${WORK_DIR}
 
 echo
 set_enode

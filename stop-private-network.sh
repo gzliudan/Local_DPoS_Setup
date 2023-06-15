@@ -23,14 +23,22 @@ function help() {
 
 
 function stop_node() {
-    PID_FILE="$1"    
+    echo
+    PID_FILE="$1"
+    NODE_NAME=${PID_FILE%.*}
 
     if [ -f "${PID_FILE}" ]; then
         PID=$(cat ${PID_FILE})
 
         if [ -d "/proc/${PID}/fd" ]; then
-            echo "Stopping node pn${PID} ..."
             kill ${PID}
+            echo -n "Stopping node ${NODE_NAME} ${PID} "
+            while true; do
+                echo -n "."
+                [ ! -d "/proc/${PID}/fd" ] && echo && break
+                sleep 1
+            done
+            echo "Node ${NODE_NAME} ${PID} is stopped"
         else
             echo "No such process: ${PID}"
         fi
@@ -63,3 +71,7 @@ else
         stop_node "pn${arg}.pid"
     done
 fi
+
+echo
+echo "All nodes are stopped !"
+echo

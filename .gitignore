@@ -1,0 +1,7 @@
+nodes/
+logs/
+*.pid
+.env
+/genesis.json
+/apothem.tar
+/xdcchain.tar

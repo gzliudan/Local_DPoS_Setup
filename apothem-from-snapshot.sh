@@ -14,6 +14,7 @@ DATE=$(date +%Y%m%d-%H%M%S)
 cd ${HOME}
 if [ ! -d XDPoSChain ]; then
     git clone https://github.com/XinFinOrg/XDPoSChain.git
+    git checkout apothem
 fi
 
 cd XDPoSChain
@@ -57,6 +58,7 @@ ${XDC} \
     --gcmode archive \
     --syncmode full \
     --skip-signers \
+    --apothem \
     < /dev/null \
     >> "${LOG_FILE}" \
     2>&1 &

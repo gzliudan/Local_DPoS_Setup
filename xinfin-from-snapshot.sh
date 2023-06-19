@@ -2,6 +2,7 @@
 set -eo pipefail
 
 VERBOSITY=3
+RPC_PORT=8545
 NETWORK="xinfin"
 MODE="snapshot"
 DATA_DIR="${HOME}/.${NETWORK}"
@@ -56,6 +57,12 @@ ${XDC} \
     --gcmode archive \
     --syncmode full \
     --skip-signers \
+    --rpc \
+    --rpcaddr 0.0.0.0 \
+    --rpcport ${RPC_PORT} \
+    --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,XDPoS \
+    --rpccorsdomain "*" \
+    --rpcvhosts "*" \
     < /dev/null \
     >> "${LOG_FILE}" \
     2>&1 &

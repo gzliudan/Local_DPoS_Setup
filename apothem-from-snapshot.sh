@@ -16,6 +16,7 @@ cd ${HOME}
 if [ ! -d XDPoSChain ]; then
     git clone https://github.com/XinFinOrg/XDPoSChain.git
     git checkout apothem
+    make all
 fi
 
 cd XDPoSChain

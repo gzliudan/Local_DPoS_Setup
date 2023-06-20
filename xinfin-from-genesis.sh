@@ -15,6 +15,7 @@ DATE=$(date +%Y%m%d-%H%M%S)
 cd ${HOME}
 if [ ! -d XDPoSChain ]; then
     git clone https://github.com/XinFinOrg/XDPoSChain.git
+    make all
 fi
 
 cd XDPoSChain

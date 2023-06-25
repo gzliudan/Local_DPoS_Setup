@@ -3,6 +3,7 @@ set -eo pipefail
 
 VERBOSITY=3
 RPC_PORT=8545
+WS_RPC_PORT=9545
 NETWORK="xinfin"
 MODE="snapshot"
 DATA_DIR="${HOME}/.${NETWORK}"
@@ -64,6 +65,10 @@ ${XDC} \
     --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,XDPoS \
     --rpccorsdomain "*" \
     --rpcvhosts "*" \
+    --ws \
+    --wsaddr 0.0.0.0 \
+    --wsport ${WS_RPC_PORT} \
+    --wsorigins "*" \
     < /dev/null \
     >> "${LOG_FILE}" \
     2>&1 &

@@ -177,6 +177,11 @@ function start_node() {
 # make all
 # cd ${WORK_DIR}
 
+if [ ! -f .env ]; then
+    echo "Not found file .env"
+    exit 5
+fi
+
 echo
 set_enode
 echo "ENODE = ${ENODE}"

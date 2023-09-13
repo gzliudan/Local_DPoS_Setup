@@ -1,1 +1,1 @@
-./start-private-network.sh 0 1 2 3
+./start-private-network.sh 1 2 3

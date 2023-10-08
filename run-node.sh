@@ -51,7 +51,6 @@ for arg in $@; do
 done
 
 
-LOG_DIR="logs"
 WORK_DIR=${PWD}
 DATE=$( date +%Y%m%d-%H%M%S )
 PROJECT_DIR="${HOME}/XDPoSChain"
@@ -163,7 +162,7 @@ function start_node() {
 
     PID=$!
     echo ${PID} > ${PID_FILE}
-    echo "node is running now, PID = ${PID}"
+    echo "node ${NODE_NAME} is running now, PID = ${PID}"
     echo
 }
 
@@ -174,6 +173,13 @@ else
     echo "Not found file .env"
     exit 5
 fi
+
+GAS_PRICE="${GAS_PRICE:-1}"
+NETWORK_ID="${NETWORK_ID:-888}"
+BASE_PORT="${BASE_PORT:-30000}"
+BASE_RPC_PORT="${BASE_RPC_PORT:-8545}"
+BASE_WS_RPC_PORT="${BASE_WS_RPC_PORT:-9545}"
+LOG_DIR="${LOG_DIR:-logs}"
 
 echo
 set_enode

@@ -303,28 +303,30 @@ cp ${HOME}/XDPoSChain/build/bin/XDPoS.json ${HOME}/Local_DPoS_Setup/genesis.json
 
 ### 5.3 Setup ENODE and private keys
 
-Edit file `${HOME}/Local_DPoS_Setup/.env`, add 4 private keys with 0x prefix:
-
-```text
-PRIVATE_KEY_0=<KEY_0>
-PRIVATE_KEY_1=<KEY_1>
-PRIVATE_KEY_2=<KEY_2>
-PRIVATE_KEY_3=<KEY_3>
+```shell
+cp ${HOME}/Local_DPoS_Setup/env.sample ${HOME}/Local_DPoS_Setup/.env`
 ```
 
-- KEY_0 is the private key for first masternode in section 3.6
-- KEY_1, KEY_2, KEY_3 are private keys for three signers in section 3.7
+Edit file `${HOME}/Local_DPoS_Setup/.env`, set private keys with 0x prefix:
+
+```text
+PRIVATE_KEY_0=<KEY0>
+PRIVATE_KEY_1=<KEY1>
+PRIVATE_KEY_2=<KEY2>
+```
+
+KEY0, KEY1, KEY2 are private keys for three signers in section 3.7
 
 ### 5.4 Start private network
 
 ```shell
 cd ${HOME}/Local_DPoS_Setup
-./start-private-network.sh 0 1 2 3
+./start-network.sh
 ```
 
 ### 5.5 Stop private network
 
 ```shell
 cd ${HOME}/Local_DPoS_Setup
-./stop-private-network.sh 0 1 2 3
+./stop-network.sh
 ```

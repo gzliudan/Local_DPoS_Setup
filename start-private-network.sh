@@ -201,7 +201,7 @@ fi
 echo
 touch .pwd
 mkdir -p "${LOG_DIR}"
-export $(cat .env | xargs)
+export $( cat .env | sed '/^\s*#/d' | xargs )
 for arg in $@; do
     start_node ${arg}
 done

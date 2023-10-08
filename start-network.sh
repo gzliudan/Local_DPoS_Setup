@@ -1,1 +1,1 @@
-./run-node.sh 1 2 3
+./run-node.sh 0 1 2

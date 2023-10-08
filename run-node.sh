@@ -15,13 +15,11 @@ function help() {
     echo "    -h, --help     display this help"
     echo
     echo "Examples:"
-    echo "    $0 0          Start 1 node which node_id is 0"
-    echo "    $0 2 3        Start 3 nodes which node_id are 2, 3"
-    echo "    $0 1 2 3      Start 3 nodes which node_id are 0, 1, 2"
-    echo "    $0 0 1 2 3    Start 4 nodes which node_id are 0, 1, 2, 3"
     echo "    $0 -h         Display this help messages"
     echo "    $0 --help     Display this help messages"
-    echo
+    echo "    $0 0          Start 1 node which node_id is 0"
+    echo "    $0 1 2        Start 2 nodes which node_id are 1, 2"
+    echo "    $0 0 1 2      Start 3 nodes which node_id are 0, 1, 2"
 }
 
 

@@ -51,17 +51,9 @@ for arg in $@; do
 done
 
 
-# Logging verbosity: 0=silent, 1=error, 2=warn, 3=info, 4=debug, 5=detail (default: 3)
-VERBOSITY=4
-GAS_PRICE=1
-NETWORK_ID=888
-BASE_PORT=30000
-BASE_RPC_PORT=8545
-BASE_WS_RPC_PORT=9545
-DATE=$(date +%Y%m%d-%H%M%S)
-
-WORK_DIR=${PWD}
 LOG_DIR="logs"
+WORK_DIR=${PWD}
+DATE=$( date +%Y%m%d-%H%M%S )
 PROJECT_DIR="${HOME}/XDPoSChain"
 BOOTNODE_PID_FILE="bootnode.pid"
 XDC="${PROJECT_DIR}/build/bin/XDC"
@@ -100,8 +92,12 @@ function start_node() {
     NODE_NAME="pn${NODE_ID}"
     PID_FILE="${NODE_NAME}.pid"
     DATA_DIR="nodes/${NODE_NAME}"
+    LOG_FILE="${LOG_DIR}/${NODE_NAME}-${DATE}.log"
+    PORT=$((${BASE_PORT}+${NODE_ID}))
+    RPC_PORT=$((${BASE_RPC_PORT}+${NODE_ID}))
+    WS_RPC_PORT=$((${BASE_WS_RPC_PORT}+${NODE_ID}))
 
-    echo "Starting the node ${NODE_ID}"
+    echo "Starting the node ${NODE_NAME}"
 
     if [ ! -d "${DATA_DIR}/XDC/chaindata" ]; then
         PRIVATE_KEY_NAME="PRIVATE_KEY_${NODE_ID}"
@@ -131,11 +127,13 @@ function start_node() {
         WALLET="0x${WALLET}"
     fi
 
+    echo "PORT = ${PORT}"
+    echo "RPC_PORT = ${RPC_PORT}"
+    echo "WS_RPC_PORT = ${WS_RPC_PORT}"
+    echo "DATA_DIR = ${DATA_DIR}"
+    echo "LOG_FILE = ${LOG_FILE}"
     echo "WALLET = ${WALLET}"
 
-    PORT=$((${BASE_PORT}+${NODE_ID}))
-    RPC_PORT=$((${BASE_RPC_PORT}+${NODE_ID}))
-    WS_RPC_PORT=$((${BASE_WS_RPC_PORT}+${NODE_ID}))
 
     ${XDC} \
         --mine \
@@ -161,21 +159,18 @@ function start_node() {
         --wsaddr 0.0.0.0 \
         --wsport ${WS_RPC_PORT} \
         --wsorigins "*" \
-        > "${LOG_DIR}/${NODE_NAME}-${DATE}.log" 2>&1 &
+        > ${LOG_FILE} 2>&1 &
 
     PID=$!
     echo ${PID} > ${PID_FILE}
-    echo "node is running now: ${PID}"
+    echo "node is running now, PID = ${PID}"
     echo
 }
 
 
-# echo
-# cd ${PROJECT_DIR}
-# make all
-# cd ${WORK_DIR}
-
-if [ ! -f .env ]; then
+if [ -f .env ]; then
+    export $( cat .env | sed '/^\s*#/d' | xargs )
+else
     echo "Not found file .env"
     exit 5
 fi
@@ -199,7 +194,6 @@ fi
 echo
 touch .pwd
 mkdir -p "${LOG_DIR}"
-export $( cat .env | sed '/^\s*#/d' | xargs )
 for arg in $@; do
     start_node ${arg}
 done

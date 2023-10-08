@@ -30,15 +30,22 @@ Following network ports need to be open for the nodes to communicate
 
 Please refer to the [setup guide](./setup-guide.md)
 
+### Remove old data
+
+This step is optional.
+
+```bash
+./reset.sh -f
+```
+
 ### Start network
 
-```shell
-rm -rf nodes/
-./start-3-signers-networks.sh
+```bash
+./start-network.sh
 ```
 
 #### Stop network
 
-```shell
-./stop-private-network.sh
+```bash
+./stop-network.sh
 ```

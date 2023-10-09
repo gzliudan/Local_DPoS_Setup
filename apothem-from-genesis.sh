@@ -49,7 +49,6 @@ ${XDC} \
     --etherbase 0x000000000000000000000000000000000000dead \
     --gcmode archive \
     --syncmode full \
-    --skip-signers \
     --apothem \
     --rpc \
     --rpcaddr 0.0.0.0 \

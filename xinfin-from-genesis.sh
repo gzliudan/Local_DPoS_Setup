@@ -48,7 +48,6 @@ ${XDC} \
     --etherbase 0x000000000000000000000000000000000000dead \
     --gcmode archive \
     --syncmode full \
-    --skip-signers \
     --rpc \
     --rpcaddr 0.0.0.0 \
     --rpcport ${RPC_PORT} \

@@ -51,7 +51,7 @@ while IFS= read -r line; do
 done < "${input}"
 
 echo
-${XDC} \
+nohup ${XDC} \
     --verbosity ${VERBOSITY} \
     --datadir ${DATA_DIR} \
     --networkid 50 \
@@ -69,7 +69,6 @@ ${XDC} \
     --wsport ${WS_RPC_PORT} \
     --wsorigins "*" \
     --bootnodes "${bootnodes}" \
-    < /dev/null \
     >> "${LOG_FILE}" \
     2>&1 &
 

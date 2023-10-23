@@ -6,12 +6,12 @@ RPC_PORT=8545
 WS_RPC_PORT=9545
 NETWORK="xinfin"
 MODE="snapshot"
-DATA_DIR="${HOME}/.${NETWORK}"
-XDC="${HOME}/XDPoSChain/build/bin/XDC"
-WORK_DIR=${PWD}
-PID_FILE="${WORK_DIR}/${NETWORK}-sync.pid"
-LOG_DIR="${WORK_DIR}/logs"
 DATE=$(date +%Y%m%d-%H%M%S)
+DATA_DIR="${HOME}/.${NETWORK}"
+WORK_DIR=${PWD}
+LOG_DIR="logs"
+PID_FILE="${NETWORK}-sync.pid"
+XDC="${HOME}/XDPoSChain/build/bin/XDC"
 
 cd ${HOME}
 if [ ! -d XDPoSChain ]; then
@@ -50,6 +50,16 @@ if [ ! -d ${DATA_DIR}/XDC ]; then
     tar -xvf xdcchain.tar -C ${DATA_DIR}
 fi
 
+bootnodes=""
+input="bootnodes-${NETWORK}.txt"
+while IFS= read -r line; do
+    if [ -z "${bootnodes}" ]; then
+        bootnodes=${line}
+    else
+        bootnodes="${bootnodes},${line}"
+    fi
+done < "${input}"
+
 echo
 ${XDC} \
     --verbosity ${VERBOSITY} \
@@ -68,11 +78,13 @@ ${XDC} \
     --wsaddr 0.0.0.0 \
     --wsport ${WS_RPC_PORT} \
     --wsorigins "*" \
+    --bootnodes "${bootnodes}" \
     < /dev/null \
     >> "${LOG_FILE}" \
     2>&1 &
 
 PID=$!
+
 echo
 echo "Sync PID = ${PID}"
 echo "Log file = ${LOG_FILE}"

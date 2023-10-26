@@ -59,6 +59,7 @@ nohup ${XDC} \
     --etherbase 0x000000000000000000000000000000000000dead \
     --gcmode archive \
     --syncmode full \
+    --enable-0x-prefix \
     --rpc \
     --rpcaddr 0.0.0.0 \
     --rpcport ${RPC_PORT} \

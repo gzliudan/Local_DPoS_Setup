@@ -22,39 +22,6 @@ function help() {
     echo
 }
 
-if [ $# == 0 ]; then
-    help
-    exit 1
-fi
-
-if [[ $# == 1 ]] && [[ "$1" == "-h" || "$1" == "--help" ]]; then
-    help
-    exit 0
-fi
-
-for arg in $@; do
-    if [[ ${arg} =~ [^0-9] ]]; then
-        echo "node_id ${arg} is not integer"
-        exit 2
-    fi
-
-    NODE_NAME="pn${arg}"
-    PID_FILE="${NODE_NAME}.pid"
-    if [ -f "${PID_FILE}" ]; then
-        PID=$(cat "${PID_FILE}")
-        if [ -d "/proc/${PID}/fd" ]; then
-            echo "please stop node ${NODE_NAME}[${PID}] first: found file ${PID_FILE}"
-            exit 3
-        fi
-    fi
-done
-
-WORK_DIR=${PWD}
-DATE=$(date +%Y%m%d-%H%M%S)
-PROJECT_DIR="${HOME}/XDPoSChain"
-BOOTNODE_PID_FILE="bootnode.pid"
-XDC="${PROJECT_DIR}/build/bin/XDC"
-
 function set_enode() {
     if [ ! -f bootnode.key ]; then
         echo "create bootnode.key"
@@ -101,7 +68,7 @@ function start_node() {
         fi
         if [[ ${#PRIVATE_KEY} != 64 || ${PRIVATE_KEY} =~ [^0-9a-fA-F] ]]; then
             echo "${PRIVATE_KEY_NAME} is invalid: ${PRIVATE_KEY}"
-            exit 4
+            exit 5
         fi
 
         WALLET=$(${XDC_BIN} account import --password .pwd --datadir ${DATA_DIR} <(echo ${PRIVATE_KEY}) | awk -v FS="({|})" '{print $2}')
@@ -160,12 +127,42 @@ function start_node() {
     echo
 }
 
+if [ $# == 0 ]; then
+    help
+    exit 1
+fi
+
+if [[ $# == 1 ]] && [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    help
+    exit 0
+fi
+
+for arg in $@; do
+    if [[ ${arg} =~ [^0-9] ]]; then
+        echo "node_id ${arg} is not integer"
+        exit 2
+    fi
+
+    NODE_NAME="pn${arg}"
+    PID_FILE="${NODE_NAME}.pid"
+    if [ -f "${PID_FILE}" ]; then
+        PID=$(cat "${PID_FILE}")
+        if [ -d "/proc/${PID}/fd" ]; then
+            echo "please stop node ${NODE_NAME}[${PID}] first: found file ${PID_FILE}"
+            exit 3
+        fi
+    fi
+done
+
 if [ -f .env ]; then
     export $(cat .env | sed '/^\s*#/d' | xargs)
 else
     echo "Not found file .env"
-    exit 5
+    exit 4
 fi
+
+DATE=$(date +%Y%m%d-%H%M%S)
+BOOTNODE_PID_FILE="bootnode.pid"
 
 LOG_DIR="${LOG_DIR:-logs}"
 VERBOSITY="${VERBOSITY:-3}"

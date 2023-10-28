@@ -48,7 +48,7 @@ function start_observer() {
     fi
 
     echo "Starting the observer ${NODE_NAME}"
-    ${XDC} \
+    nohup ${XDC} \
         --gcmode archive \
         --syncmode full \
         --enable-0x-prefix \

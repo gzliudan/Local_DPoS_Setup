@@ -128,7 +128,7 @@ function start_node() {
     echo "LOG_FILE = ${LOG_FILE}"
     echo "WALLET = ${WALLET}"
 
-    ${XDC} \
+    nohup ${XDC} \
         --mine \
         --gcmode archive \
         --syncmode full \

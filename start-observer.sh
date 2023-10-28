@@ -43,12 +43,12 @@ function start_observer() {
     mkdir -p ${DATA_DIR}
     if [ ! -d "${DATA_DIR}/XDC/chaindata" ]; then
         echo "init the observer ${NODE_NAME}"
-        ${XDC} --datadir ${DATA_DIR} init genesis.json
+        ${XDC_BIN} --datadir ${DATA_DIR} init genesis.json
         echo
     fi
 
     echo "Starting the observer ${NODE_NAME}"
-    nohup ${XDC} \
+    nohup ${XDC_BIN} \
         --gcmode archive \
         --syncmode full \
         --enable-0x-prefix \
@@ -106,13 +106,14 @@ for arg in $@; do
     fi
 done
 
-DATE=$(date +%Y%m%d-%H%M%S)
-XDC="${HOME}/XDPoSChain/build/bin/XDC2"
 ENODE="$(grep -Eo 'enode://[0-9a-f]*' bootnode.txt)@127.0.0.1:30301"
 
 if [ -f .env ]; then
     export $(cat .env | sed '/^\s*#/d' | xargs)
 fi
+
+DATE=$(date +%Y%m%d-%H%M%S)
+XDC_BIN="${XDC2:-${HOME}/XDPoSChain/build/bin/XDC2}"
 
 LOG_DIR="${LOG_DIR:-logs}"
 VERBOSITY="${VERBOSITY:-3}"

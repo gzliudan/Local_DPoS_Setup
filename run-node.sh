@@ -58,12 +58,12 @@ XDC="${PROJECT_DIR}/build/bin/XDC"
 function set_enode() {
     if [ ! -f bootnode.key ]; then
         echo "create bootnode.key"
-        ${PROJECT_DIR}/build/bin/bootnode -genkey bootnode.key
+        ${BOOTNODE_BIN_FILE} -genkey bootnode.key
     fi
 
     if [ ! -f bootnode.txt ]; then
         echo "create bootnode.txt"
-        ${PROJECT_DIR}/build/bin/bootnode -nodekey bootnode.key >bootnode.txt 2>&1 &
+        ${BOOTNODE_BIN_FILE} -nodekey bootnode.key >bootnode.txt 2>&1 &
         PID=$!
         sleep 1
         kill ${PID}
@@ -75,7 +75,7 @@ function set_enode() {
 
 function start_bootnode() {
     echo "Starting the bootnode"
-    ${PROJECT_DIR}/build/bin/bootnode -nodekey bootnode.key --addr 0.0.0.0:30301 >/dev/null 2>&1 &
+    ${BOOTNODE_BIN_FILE} -nodekey bootnode.key --addr 0.0.0.0:30301 >/dev/null 2>&1 &
     PID=$!
     echo ${PID} >${BOOTNODE_PID_FILE}
     echo "bootnode is running now: ${PID}"
@@ -104,13 +104,13 @@ function start_node() {
             exit 4
         fi
 
-        WALLET=$(${XDC} account import --password .pwd --datadir ${DATA_DIR} <(echo ${PRIVATE_KEY}) | awk -v FS="({|})" '{print $2}')
+        WALLET=$(${XDC_BIN} account import --password .pwd --datadir ${DATA_DIR} <(echo ${PRIVATE_KEY}) | awk -v FS="({|})" '{print $2}')
         if [ ! -f genesis.json ]; then
             cp genesis/XDPoS-3-signers.json genesis.json
         fi
-        ${XDC} --datadir ${DATA_DIR} init genesis.json
+        ${XDC_BIN} --datadir ${DATA_DIR} init genesis.json
     else
-        WALLET=$(${XDC} account list --datadir ${DATA_DIR} | head -n 1 | awk -v FS="({|})" '{print $2}')
+        WALLET=$(${XDC_BIN} account list --datadir ${DATA_DIR} | head -n 1 | awk -v FS="({|})" '{print $2}')
     fi
 
     if [ ${WALLET:0:3} = "xdc" ]; then
@@ -128,7 +128,7 @@ function start_node() {
     echo "LOG_FILE = ${LOG_FILE}"
     echo "WALLET = ${WALLET}"
 
-    nohup ${XDC} \
+    nohup ${XDC_BIN} \
         --mine \
         --gcmode archive \
         --syncmode full \
@@ -171,12 +171,18 @@ LOG_DIR="${LOG_DIR:-logs}"
 VERBOSITY="${VERBOSITY:-3}"
 GAS_PRICE="${GAS_PRICE:-1}"
 NETWORK_ID="${NETWORK_ID:-888}"
+
 BASE_PORT="${BASE_PORT:-30000}"
 BASE_RPC_PORT="${BASE_RPC_PORT:-8545}"
 BASE_WS_RPC_PORT="${BASE_WS_RPC_PORT:-9545}"
 
+XDC_BIN="${XDC:-${HOME}/XDPoSChain/build/bin/XDC}"
+BOOTNODE_BIN_FILE="${XDC_BIN%/*}/bootnode"
+
 echo
 set_enode
+echo "XDC = ${XDC_BIN}"
+echo "bootnode = ${BOOTNODE_BIN_FILE}"
 echo "ENODE = ${ENODE}"
 
 echo

@@ -105,34 +105,32 @@ Here I input 3 addresses:
 
 without `xdc` prefix.
 
-### 3.8 Input `900` as blocks per epoch
-
-![1678421304308](https://user-images.githubusercontent.com/7695325/224221043-be7baab9-6be5-43fc-b87f-ef6f455dc709.png)
+### 3.8 blocks per epoch
 
 ```text
 How many blocks per epoch? (default = 900)
-> 900
+>
 ```
 
-### 3.9 Input `5` as gap
+Press enter to use default value 900.
 
-![1678422570325](https://user-images.githubusercontent.com/7695325/224223681-6712ca37-ded5-49bb-88d8-d71cc0372443.png)
+### 3.9 gap
 
 ```text
 How many blocks before checkpoint need to prepare new set of masternodes? (default = 450)
-> 5
+>
 ```
+
+Press enter to use default value 450.
 
 ### 3.10 Input foundation address
 
-![1678422746528](https://user-images.githubusercontent.com/7695325/224224073-1585c991-96a3-448c-bb28-828652c5659b.png)
-
 ```text
 What is foundation wallet address? (default = xdc0000000000000000000000000000000000000068)
-> xdc4969aFf4Cb9993534b7E8dC088a81B6a3C63B3Cd
+> xdc
 ```
 
-Here I input my address: `4969aFf4Cb9993534b7E8dC088a81B6a3C63B3Cd` without `xdc` prefix.
+Press enter to use default address: `xdc0000000000000000000000000000000000000068`.
 
 ### 3.11 Input three addresses for foudation MultiSignWallet
 

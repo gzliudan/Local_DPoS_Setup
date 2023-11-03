@@ -13,14 +13,33 @@
       "epoch": 900,
       "reward": 2000,
       "rewardCheckpoint": 900,
-      "gap": 5,
-      "foudationWalletAddr": "xdc4969aff4cb9993534b7e8dc088a81b6a3c63b3cd",
-      "SkipValidation": false,
-      "V2ConsensusBlockNumber": null
+      "gap": 450,
+      "foudationWalletAddr": "xdc0000000000000000000000000000000000000068",
+      "SkipV1Validation": false,
+      "v2": {
+        "switchBlock": 0,
+        "config": {
+          "switchRound": 0,
+          "minePeriod": 2,
+          "timeoutSyncThreshold": 3,
+          "timeoutPeriod": 10,
+          "certificateThreshold": 49
+        },
+        "allConfigs": {
+          "0": {
+            "switchRound": 0,
+            "minePeriod": 2,
+            "timeoutSyncThreshold": 3,
+            "timeoutPeriod": 10,
+            "certificateThreshold": 49
+          }
+        },
+        "SkipV2Validation": false
+      }
     }
   },
   "nonce": "0x0",
-  "timestamp": "0x640ac4d3",
+  "timestamp": "0x6544ca71",
   "extraData": "0x00000000000000000000000000000000000000000000000000000000000000002526fdebae27162e45da84e5e2f00abaa1a1cc8c77cb85ae0ae070dfc013ba1a5b3ee1ced4a059a796509a56f0243b10a2706391b95af449712da6990000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
   "gasLimit": "0x47b760",
   "difficulty": "0x1",

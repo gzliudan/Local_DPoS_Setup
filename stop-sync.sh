@@ -6,7 +6,7 @@ for PID_FILE in $(ls *-sync.pid 2> /dev/null); do
 
     if [ -d "/proc/${PID}/fd" ]; then
         kill ${PID}
-        echo -n "Stopping the sync process: ${PID}"
+        echo -n "Stopping the sync process: ${PID} "
         while true; do
             echo -n "."
             [ ! -d "/proc/${PID}/fd" ] && echo && break

@@ -2,6 +2,7 @@ nodes/
 logs/
 *.pid
 .env
-/genesis.json
-/apothem.tar
-/xdcchain.tar
+.pwd
+genesis.json
+coinbase-*.txt
+*.tar

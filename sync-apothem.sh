@@ -67,13 +67,15 @@ echo "DATA_DIR = ${DATA_DIR}"
 # setup bootnodes list
 bootnodes=""
 input="bootnodes-${NETWORK}.txt"
-while IFS= read -r line; do
-    if [[ "${bootnodes}" == "" ]]; then
-        bootnodes=${line}
-    else
-        bootnodes="${bootnodes},${line}"
-    fi
-done <"${input}"
+if [[ -f ${input} ]]; then
+    while IFS= read -r line; do
+        if [[ "${bootnodes}" == "" ]]; then
+            bootnodes=${line}
+        else
+            bootnodes="${bootnodes},${line}"
+        fi
+    done <"${input}"
+fi
 
 
 ${XDC_BIN} \

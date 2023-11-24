@@ -38,10 +38,12 @@ mkdir -p ${LOG_DIR}
 
 
 if [[ ! -d ${DATA_DIR}/keystore ]]; then
-    WALLET=$(${XDC_BIN} account new --password .pwd --datadir ${DATA_DIR} | awk -F '[{}]' '{print $2}')
-    ${XDC_BIN} --datadir ${DATA_DIR} init genesis-${NETWORK}.json
+    echo "create account"
+    WALLET=$(${XDC_BIN} account new --password .pwd --datadir ${DATA_DIR} 2>/dev/null | awk -F '[{}]' '{print $2}')
+    echo "init datatdir"
+    ${XDC_BIN} --datadir ${DATA_DIR} init genesis-${NETWORK}.json 2>/dev/null
 else
-    WALLET=$(${XDC_BIN} account list --datadir ${DATA_DIR} | head -n 1 | awk -F '[{}]' '{print $2}')
+    WALLET=$(${XDC_BIN} account list --datadir ${DATA_DIR} 2>/dev/null | head -n 1 | awk -F '[{}]' '{print $2}')
 fi
 
 if [[ -f "${APOTHEM_SNAPSHOT_FILE}" && ! -f "${DATA_DIR}/XDC/nodekey" ]]; then

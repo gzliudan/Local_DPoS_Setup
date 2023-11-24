@@ -59,25 +59,19 @@ if [[ ${WALLET:0:2} != "0x" ]]; then
 fi
 echo "${WALLET}" >"coinbase-${NETWORK}.txt"
 
-echo
-echo "XDPoSChain = ${XDPoSChain}"
-echo "branch = ${BRANCH}"
-echo "commit = ${COMMIT}"
-echo "WALLET = ${WALLET}"
-echo "DATA_DIR = ${DATA_DIR}"
-
 # setup bootnodes list
-bootnodes=""
+BOOTNODES=""
 input="bootnodes-${NETWORK}.txt"
 if [[ -f ${input} ]]; then
     while IFS= read -r line; do
-        if [[ "${bootnodes}" == "" ]]; then
-            bootnodes=${line}
+        if [[ "${BOOTNODES}" == "" ]]; then
+            BOOTNODES=${line}
         else
-            bootnodes="${bootnodes},${line}"
+            BOOTNODES="${BOOTNODES},${line}"
         fi
     done <"${input}"
 fi
+echo "bootnodes = ${BOOTNODES}"
 
 
 ${XDC_BIN} \
@@ -99,7 +93,7 @@ ${XDC_BIN} \
     --wsaddr "0.0.0.0" \
     --wsport ${WS_PORT} \
     --wsorigins "*" \
-    --bootnodes "${bootnodes}" \
+    --bootnodes "${BOOTNODES}" \
     --gasprice 1 \
     --targetgaslimit 420000000 \
     --password ".pwd" \
@@ -107,8 +101,14 @@ ${XDC_BIN} \
     &> "${LOG_FILE}" &
 
 PID=$!
-
-echo "Sync PID = ${PID}"
-echo "Log file = ${LOG_FILE}"
 echo ${PID} >${PID_FILE}
+
 echo
+echo "XDPoSChain = ${XDPoSChain}"
+echo "branch = ${BRANCH}"
+echo "commit = ${COMMIT}"
+echo "wallet = ${WALLET}"
+echo "datadir = ${DATA_DIR}"
+echo
+echo "PID = ${PID}"
+echo "logfile = ${LOG_FILE}"

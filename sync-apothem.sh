@@ -63,7 +63,9 @@ echo "${WALLET}" >"coinbase-${NETWORK}.txt"
 BOOTNODES=""
 input="bootnodes-${NETWORK}.txt"
 if [[ -f ${input} ]]; then
+    echo "bootnodes:"
     while IFS= read -r line; do
+        echo "${line}"
         if [[ "${BOOTNODES}" == "" ]]; then
             BOOTNODES=${line}
         else
@@ -71,7 +73,6 @@ if [[ -f ${input} ]]; then
         fi
     done <"${input}"
 fi
-echo "bootnodes = ${BOOTNODES}"
 
 
 ${XDC_BIN} \

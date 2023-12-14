@@ -93,6 +93,7 @@ ${XDC_BIN} \
     --ws \
     --wsaddr "0.0.0.0" \
     --wsport ${WS_PORT} \
+    --wsapi "admin,db,eth,debug,net,shh,txpool,personal,web3,XDPoS" \
     --wsorigins "*" \
     --bootnodes "${BOOTNODES}" \
     --gasprice 1 \

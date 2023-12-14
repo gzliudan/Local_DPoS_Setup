@@ -89,6 +89,7 @@ ${XDC_BIN} \
     --targetgaslimit 420000000 \
     --password ".pwd" \
     --unlock "${WALLET}" \
+    --rpcwritetimeout "300s" \
     &> "${LOG_FILE}" &
 
 PID=$!

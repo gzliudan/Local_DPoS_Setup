@@ -19,9 +19,8 @@ DATA_DIR="${HOME}/.${NETWORK}"
 PID_FILE="${NETWORK}-sync.pid"
 XDC_BIN="${XDPoSChain}/build/bin/XDC"
 BRANCH=$(cd "${XDPoSChain}" && git branch --show-current)
-COMMIT=$(cd "${XDPoSChain}" && git log --pretty=format:'%h: %s' -1)
-LOG_FILE="${LOG_DIR}/${NETWORK}-${BRANCH}-${DATE}.log"
-
+COMMIT=$(cd "${XDPoSChain}" && git log --format=%h --abbrev=8 -1)
+LOG_FILE="${LOG_DIR}/${NETWORK}_${BRANCH}_${COMMIT}_${DATE}.log"
 
 if [[ ! -f genesis-${NETWORK}.json ]]; then
     wget https://raw.githubusercontent.com/XinFinOrg/Local_DPoS_Setup/apothem/genesis/genesis.json -O genesis-${NETWORK}.json
@@ -106,11 +105,7 @@ PID=$!
 echo ${PID} >${PID_FILE}
 
 echo
-echo "XDPoSChain = ${XDPoSChain}"
-echo "branch = ${BRANCH}"
-echo "commit = ${COMMIT}"
-echo "wallet = ${WALLET}"
-echo "datadir = ${DATA_DIR}"
-echo
 echo "PID = ${PID}"
+echo "datadir = ${DATA_DIR}"
+echo "wallet = ${WALLET}"
 echo "logfile = ${LOG_FILE}"

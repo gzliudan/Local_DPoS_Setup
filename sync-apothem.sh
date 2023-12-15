@@ -18,6 +18,7 @@ XDPoSChain="${XDPoSChain:-${HOME}/XDPoSChain}"
 DATA_DIR="${HOME}/.${NETWORK}"
 PID_FILE="${NETWORK}-sync.pid"
 XDC_BIN="${XDPoSChain}/build/bin/XDC"
+BOOTNODES_FILE="bootnodes-${NETWORK}.txt"
 BRANCH=$(cd "${XDPoSChain}" && git branch --show-current)
 COMMIT=$(cd "${XDPoSChain}" && git log --format=%h --abbrev=8 -1)
 LOG_FILE="${LOG_DIR}/${NETWORK}_${BRANCH}_${COMMIT}_${DATE}.log"
@@ -60,9 +61,8 @@ echo "${WALLET}" >"coinbase-${NETWORK}.txt"
 
 # setup bootnodes list
 BOOTNODES=""
-input="bootnodes-${NETWORK}.txt"
-if [[ -f ${input} ]]; then
-    echo "bootnodes:"
+if [[ -f "${BOOTNODES_FILE}" ]]; then
+    echo "read bootnodes from file ${BOOTNODES_FILE}:"
     while IFS= read -r line; do
         echo "${line}"
         if [[ "${BOOTNODES}" == "" ]]; then
@@ -70,7 +70,7 @@ if [[ -f ${input} ]]; then
         else
             BOOTNODES="${BOOTNODES},${line}"
         fi
-    done <"${input}"
+    done <"${BOOTNODES_FILE}"
 fi
 
 

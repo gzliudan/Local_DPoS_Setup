@@ -81,6 +81,7 @@ ${XDC_BIN} \
     --syncmode "full" \
     --gcmode "archive" \
     --enable-0x-prefix \
+    --periodicprofile \
     --verbosity ${VERBOSITY} \
     --datadir "${DATA_DIR}" \
     --rpc \

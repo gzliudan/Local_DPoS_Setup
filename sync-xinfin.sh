@@ -14,6 +14,7 @@ PORT="${XINFIN_PORT:-30303}"
 WS_PORT="${XINFIN_WS_PORT:-8546}"
 RPC_PORT="${XINFIN_RPC_PORT:-8545}"
 XDPoSChain="${XDPoSChain:-${HOME}/XDPoSChain}"
+DEBUG_DATA_DIR="${DEBUG_DATA_DIR:-debug-data}"
 
 DATA_DIR="${HOME}/.${NETWORK}"
 PID_FILE="${NETWORK}-sync.pid"
@@ -31,6 +32,7 @@ fi
 rm -f .pwd
 touch .pwd
 mkdir -p ${LOG_DIR}
+mkdir -p ${DEBUG_DATA_DIR}
 
 
 if [[ ! -d ${DATA_DIR}/keystore ]]; then
@@ -72,7 +74,7 @@ ${XDC_BIN} \
     --gcmode "archive" \
     --enable-0x-prefix \
     --periodicprofile \
-    --debugdatadir debug-data \
+    --debugdatadir ${DEBUG_DATA_DIR} \
     --verbosity ${VERBOSITY} \
     --datadir "${DATA_DIR}" \
     --rpc \

@@ -17,21 +17,23 @@
       "foudationWalletAddr": "xdc0000000000000000000000000000000000000068",
       "SkipV1Validation": false,
       "v2": {
-        "switchBlock": 0,
+        "switchBlock": 4500,
         "config": {
+          "maxMasternodes": 0,
           "switchRound": 0,
           "minePeriod": 2,
           "timeoutSyncThreshold": 3,
           "timeoutPeriod": 10,
-          "certificateThreshold": 49
+          "certificateThreshold": 0.666
         },
         "allConfigs": {
           "0": {
+            "maxMasternodes": 0,
             "switchRound": 0,
             "minePeriod": 2,
             "timeoutSyncThreshold": 3,
             "timeoutPeriod": 10,
-            "certificateThreshold": 49
+            "certificateThreshold": 0.666
           }
         },
         "SkipV2Validation": false
@@ -39,7 +41,7 @@
     }
   },
   "nonce": "0x0",
-  "timestamp": "0x6544ca71",
+  "timestamp": "0x659d129a",
   "extraData": "0x00000000000000000000000000000000000000000000000000000000000000002526fdebae27162e45da84e5e2f00abaa1a1cc8c77cb85ae0ae070dfc013ba1a5b3ee1ced4a059a796509a56f0243b10a2706391b95af449712da6990000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
   "gasLimit": "0x47b760",
   "difficulty": "0x1",

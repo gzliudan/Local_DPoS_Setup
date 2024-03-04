@@ -32,25 +32,23 @@ if [[ "${APOTHEM_SNAPSHOT_FILE}" != "" && ! -f "${APOTHEM_SNAPSHOT_FILE}" ]]; th
     wget -c -t 0 "https://downloads.apothem.network/${APOTHEM_SNAPSHOT_FILE}"
 fi
 
-
 rm -f .pwd
 touch .pwd
-mkdir -p ${LOG_DIR}
-mkdir -p ${DEBUG_DATA_DIR}
-
+mkdir -p "${LOG_DIR}"
+mkdir -p "${DEBUG_DATA_DIR}"
 
 if [[ ! -d ${DATA_DIR}/keystore ]]; then
     echo "create account"
-    WALLET=$(${XDC_BIN} account new --password .pwd --datadir ${DATA_DIR} 2>/dev/null | awk -F '[{}]' '{print $2}')
+    WALLET=$(${XDC_BIN} account new --password .pwd --datadir "${DATA_DIR}" 2>/dev/null | awk -F '[{}]' '{print $2}')
     echo "init datatdir"
-    ${XDC_BIN} --datadir ${DATA_DIR} init genesis-${NETWORK}.json 2>/dev/null
+    ${XDC_BIN} --datadir "${DATA_DIR}" init genesis-${NETWORK}.json 2>/dev/null
 else
-    WALLET=$(${XDC_BIN} account list --datadir ${DATA_DIR} 2>/dev/null | head -n 1 | awk -F '[{}]' '{print $2}')
+    WALLET=$(${XDC_BIN} account list --datadir "${DATA_DIR}" 2>/dev/null | head -n 1 | awk -F '[{}]' '{print $2}')
 fi
 
 if [[ -f "${APOTHEM_SNAPSHOT_FILE}" && ! -f "${DATA_DIR}/XDC/nodekey" ]]; then
     mv "${DATA_DIR}/XDC" "${DATA_DIR}/XDC.bak"
-    tar -xvf "${APOTHEM_SNAPSHOT_FILE}" -C ${DATA_DIR}
+    tar -xvf "${APOTHEM_SNAPSHOT_FILE}" -C "${DATA_DIR}"
 fi
 
 if [[ ${WALLET:0:3} == "xdc" ]]; then
@@ -75,26 +73,25 @@ if [[ -f "${BOOTNODES_FILE}" ]]; then
     done <"${BOOTNODES_FILE}"
 fi
 
-
 ${XDC_BIN} \
     --apothem \
-    --port ${PORT} \
+    --port "${PORT}" \
     --networkid 51 \
     --syncmode "full" \
     --gcmode "archive" \
     --enable-0x-prefix \
-    --debugdatadir ${DEBUG_DATA_DIR} \
-    --verbosity ${VERBOSITY} \
+    --debugdatadir "${DEBUG_DATA_DIR}" \
+    --verbosity "${VERBOSITY}" \
     --datadir "${DATA_DIR}" \
     --rpc \
     --rpcaddr "0.0.0.0" \
-    --rpcport ${RPC_PORT} \
+    --rpcport "${RPC_PORT}" \
     --rpcapi "admin,db,eth,debug,net,shh,txpool,personal,web3,XDPoS" \
     --rpccorsdomain "*" \
     --rpcvhosts "*" \
     --ws \
     --wsaddr "0.0.0.0" \
-    --wsport ${WS_PORT} \
+    --wsport "${WS_PORT}" \
     --wsapi "admin,db,eth,debug,net,shh,txpool,personal,web3,XDPoS" \
     --wsorigins "*" \
     --bootnodes "${BOOTNODES}" \
@@ -103,7 +100,7 @@ ${XDC_BIN} \
     --password ".pwd" \
     --unlock "${WALLET}" \
     --rpcwritetimeout "300s" \
-    &> "${LOG_FILE}" &
+    &>"${LOG_FILE}" &
 
 PID=$!
 echo ${PID} >${PID_FILE}

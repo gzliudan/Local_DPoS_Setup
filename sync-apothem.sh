@@ -83,7 +83,6 @@ ${XDC_BIN} \
     --syncmode "full" \
     --gcmode "archive" \
     --enable-0x-prefix \
-    --periodicprofile \
     --debugdatadir ${DEBUG_DATA_DIR} \
     --verbosity ${VERBOSITY} \
     --datadir "${DATA_DIR}" \

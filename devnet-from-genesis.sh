@@ -13,14 +13,9 @@ LOG_DIR="logs"
 PID_FILE="${NETWORK}-sync.pid"
 XDC="${HOME}/XDPoSChain/build/bin/XDC"
 
-cd ${HOME}
-if [ ! -d XDPoSChain ]; then
-    git clone https://github.com/XinFinOrg/XDPoSChain.git
-    git checkout dev-upgrade
-    make all
-fi
-
-cd XDPoSChain
+cd ${HOME}/XDPoSChain
+cp common/constants/constants.go.devnet common/constants.go
+make all
 BRANCH=$(git branch --show-current)
 LOG_FILE="${LOG_DIR}/${NETWORK}-${MODE}-${BRANCH}-${DATE}.log"
 
@@ -49,7 +44,7 @@ while IFS= read -r line; do
     else
         bootnodes="${bootnodes},${line}"
     fi
-done < "${input}"
+done <"${input}"
 
 echo
 nohup ${XDC} \
@@ -71,12 +66,12 @@ nohup ${XDC} \
     --wsport ${WS_RPC_PORT} \
     --wsorigins "*" \
     --bootnodes "${bootnodes}" \
-    >> "${LOG_FILE}" \
+    >>"${LOG_FILE}" \
     2>&1 &
 
 PID=$!
 
 echo "Sync PID = ${PID}"
 echo "Log file = ${LOG_FILE}"
-echo ${PID} > ${PID_FILE}
+echo ${PID} >${PID_FILE}
 echo

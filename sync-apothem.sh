@@ -5,6 +5,7 @@ if [[ -f .env ]]; then
     export $(cat .env | sed '/^\s*#/d' | xargs)
 fi
 
+WORK_DIR=${PWD}
 NETWORK="apothem"
 DATE="$(date +%Y%m%d-%H%M%S)"
 
@@ -20,9 +21,14 @@ DATA_DIR="${HOME}/.${NETWORK}"
 PID_FILE="${NETWORK}-sync.pid"
 XDC_BIN="${XDPoSChain}/build/bin/XDC"
 BOOTNODES_FILE="bootnodes-${NETWORK}.txt"
-BRANCH=$(cd "${XDPoSChain}" && git branch --show-current)
-COMMIT=$(cd "${XDPoSChain}" && git log --format=%h --abbrev=8 -1)
+
+cd ${HOME}/XDPoSChain
+cp common/constants/constants.go.testnet common/constants.go
+make all
+BRANCH=$(git branch --show-current)
+COMMIT=$(git log --format=%h --abbrev=8 -1)
 LOG_FILE="${LOG_DIR}/${NETWORK}_${BRANCH}_${COMMIT}_${DATE}.log"
+cd ${WORK_DIR}
 
 if [[ ! -f genesis-${NETWORK}.json ]]; then
     wget https://raw.githubusercontent.com/XinFinOrg/Local_DPoS_Setup/apothem/genesis/genesis.json -O genesis-${NETWORK}.json

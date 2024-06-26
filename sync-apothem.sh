@@ -27,7 +27,7 @@ cp common/constants/constants.go.testnet common/constants.go
 make all
 BRANCH=$(git branch --show-current)
 COMMIT=$(git log --format=%h --abbrev=8 -1)
-LOG_FILE="${LOG_DIR}/${NETWORK}_${BRANCH}_${COMMIT}_${DATE}.log"
+LOG_FILE="${LOG_DIR}/${NETWORK}_${BRANCH}_${DATE}_${COMMIT}.log"
 cd ${WORK_DIR}
 
 if [[ ! -f genesis-${NETWORK}.json ]]; then

@@ -5,7 +5,6 @@ VERBOSITY=3
 RPC_PORT=8545
 WS_RPC_PORT=9545
 NETWORK="devnet"
-MODE="genesis"
 DATE=$(date +%Y%m%d-%H%M%S)
 DATA_DIR="${HOME}/.${NETWORK}"
 WORK_DIR=${PWD}
@@ -17,7 +16,8 @@ cd ${HOME}/XDPoSChain
 cp common/constants/constants.go.devnet common/constants.go
 make all
 BRANCH=$(git branch --show-current)
-LOG_FILE="${LOG_DIR}/${NETWORK}-${MODE}-${BRANCH}-${DATE}.log"
+COMMIT=$(git log --format=%h --abbrev=8 -1)
+LOG_FILE="${LOG_DIR}/${NETWORK}-${BRANCH}-${DATE}_${COMMIT}.log"
 
 echo
 echo "branch = ${BRANCH}"

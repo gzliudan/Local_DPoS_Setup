@@ -39,22 +39,11 @@ touch .pwd
 mkdir -p "${LOG_DIR}"
 mkdir -p "${DEBUG_DATA_DIR}"
 
-if [[ ! -d ${DATA_DIR}/keystore ]]; then
-    echo "create account"
-    WALLET=$(${XDC_BIN} account new --password .pwd --datadir "${DATA_DIR}" 2>/dev/null | awk -F '[{}]' '{print $2}')
-    echo "init datatdir"
-    ${XDC_BIN} --datadir "${DATA_DIR}" init genesis-${NETWORK}.json 2>/dev/null
-else
-    WALLET=$(${XDC_BIN} account list --datadir "${DATA_DIR}" 2>/dev/null | head -n 1 | awk -F '[{}]' '{print $2}')
+if [ ! -d ${DATA_DIR}/keystore ]; then
+    echo
+    echo "init data dir: ${DATA_DIR}"
+    ${XDC_BIN} --datadir ${DATA_DIR} init genesis-${NETWORK}.json
 fi
-
-if [[ ${WALLET:0:3} == "xdc" ]]; then
-    WALLET=${WALLET:3}
-fi
-if [[ ${WALLET:0:2} != "0x" ]]; then
-    WALLET="0x${WALLET}"
-fi
-echo "${WALLET}" >"coinbase-${NETWORK}.txt"
 
 # setup bootnodes list
 BOOTNODES=""
@@ -73,6 +62,7 @@ fi
 ${XDC_BIN} \
     --port "${PORT}" \
     --networkid 50 \
+    --etherbase 0x0000000000000000000000000000000000abcdef \
     --syncmode "full" \
     --gcmode "archive" \
     --enable-0x-prefix \
@@ -82,19 +72,18 @@ ${XDC_BIN} \
     --rpc \
     --rpcaddr "0.0.0.0" \
     --rpcport "${RPC_PORT}" \
-    --rpcapi "admin,db,eth,debug,net,shh,txpool,personal,web3,XDPoS" \
+    --rpcapi "admin,db,eth,debug,net,shh,txpool,web3,XDPoS" \
     --rpccorsdomain "*" \
     --rpcvhosts "*" \
     --ws \
     --wsaddr "0.0.0.0" \
     --wsport "${WS_PORT}" \
-    --wsapi "admin,db,eth,debug,net,shh,txpool,personal,web3,XDPoS" \
+    --wsapi "admin,db,eth,debug,net,shh,txpool,web3,XDPoS" \
     --wsorigins "*" \
     --bootnodes "${BOOTNODES}" \
     --gasprice 1 \
     --targetgaslimit 420000000 \
     --password ".pwd" \
-    --unlock "${WALLET}" \
     --rpcwritetimeout "300s" \
     &>"${LOG_FILE}" &
 

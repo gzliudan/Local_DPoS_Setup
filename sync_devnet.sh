@@ -10,7 +10,7 @@ DATA_DIR="${HOME}/.${NETWORK}"
 WORK_DIR=${PWD}
 LOG_DIR="logs"
 PID_FILE="${NETWORK}-sync.pid"
-XDC="${HOME}/XDPoSChain/build/bin/XDC"
+XDC_BIN="${HOME}/XDPoSChain/build/bin/XDC"
 
 cd ${HOME}/XDPoSChain
 cp common/constants/constants.go.devnet common/constants.go
@@ -33,7 +33,7 @@ fi
 if [ ! -d ${DATA_DIR}/keystore ]; then
     echo
     echo "init data dir: ${DATA_DIR}"
-    ${XDC} --datadir ${DATA_DIR} init genesis-${NETWORK}.json
+    ${XDC_BIN} --datadir ${DATA_DIR} init genesis-${NETWORK}.json
 fi
 
 bootnodes=""
@@ -47,18 +47,18 @@ while IFS= read -r line; do
 done <"${input}"
 
 echo
-nohup ${XDC} \
+nohup ${XDC_BIN} \
     --verbosity ${VERBOSITY} \
     --datadir ${DATA_DIR} \
     --networkid 551 \
-    --etherbase 0x000000000000000000000000000000000000dead \
+    --etherbase 0x0000000000000000000000000000000000abcdef \
     --gcmode archive \
     --syncmode full \
     --enable-0x-prefix \
     --rpc \
     --rpcaddr 0.0.0.0 \
     --rpcport ${RPC_PORT} \
-    --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,XDPoS \
+    --rpcapi admin,db,eth,debug,miner,net,shh,txpool,web3,XDPoS \
     --rpccorsdomain "*" \
     --rpcvhosts "*" \
     --ws \

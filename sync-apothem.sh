@@ -34,10 +34,6 @@ if [[ ! -f genesis-${NETWORK}.json ]]; then
     wget https://raw.githubusercontent.com/XinFinOrg/Local_DPoS_Setup/apothem/genesis/genesis.json -O genesis-${NETWORK}.json
 fi
 
-if [[ "${APOTHEM_SNAPSHOT_FILE}" != "" && ! -f "${APOTHEM_SNAPSHOT_FILE}" ]]; then
-    wget -c -t 0 "https://downloads.apothem.network/${APOTHEM_SNAPSHOT_FILE}"
-fi
-
 rm -f .pwd
 touch .pwd
 mkdir -p "${LOG_DIR}"

@@ -45,6 +45,11 @@ if [ ! -d ${DATA_DIR}/keystore ]; then
     ${XDC_BIN} --datadir ${DATA_DIR} init genesis-${NETWORK}.json
 fi
 
+if [[ -f "${XINFIN_SNAPSHOT_FILE}" && ! -f "${DATA_DIR}/XDC/nodekey" ]]; then
+    mv "${DATA_DIR}/XDC" "${DATA_DIR}/XDC.bak"
+    tar -xvf "${XINFIN_SNAPSHOT_FILE}" -C "${DATA_DIR}"
+fi
+
 # setup bootnodes list
 BOOTNODES=""
 if [[ -f "${BOOTNODES_FILE}" ]]; then

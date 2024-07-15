@@ -8,17 +8,16 @@ fi
 WORK_DIR=${PWD}
 NETWORK="xinfin"
 DATE="$(date +%Y%m%d-%H%M%S)"
-
 LOG_DIR="${LOG_DIR:-logs}"
 VERBOSITY="${VERBOSITY:-3}"
 PORT="${XINFIN_PORT:-30303}"
-WS_PORT="${XINFIN_WS_PORT:-8546}"
 RPC_PORT="${XINFIN_RPC_PORT:-8545}"
-XDPoSChain="${XDPoSChain:-${HOME}/XDPoSChain}"
+WS_PORT="${XINFIN_WS_PORT:-9545}"
+DATA_DIR="${DATA_DIR:-${HOME}/xdc_data}"
+DATA_DIR="${DATA_DIR}/${NETWORK}"
 DEBUG_DATA_DIR="${DEBUG_DATA_DIR:-debug-data}"
-
-DATA_DIR="${HOME}/.${NETWORK}"
 PID_FILE="${NETWORK}-sync.pid"
+XDPoSChain="${XDPoSChain:-${HOME}/XDPoSChain}"
 XDC_BIN="${XDPoSChain}/build/bin/XDC"
 BOOTNODES_FILE="bootnodes-${NETWORK}.txt"
 
@@ -36,6 +35,7 @@ fi
 
 rm -f .pwd
 touch .pwd
+mkdir -p "${DATA_DIR}"
 mkdir -p "${LOG_DIR}"
 mkdir -p "${DEBUG_DATA_DIR}"
 

@@ -1,16 +1,18 @@
 #!/bin/bash
 set -eo pipefail
 
-VERBOSITY=3
-RPC_PORT=8545
-WS_RPC_PORT=9545
-NETWORK="devnet"
-DATE=$(date +%Y%m%d-%H%M%S)
-DATA_DIR="${HOME}/.${NETWORK}"
 WORK_DIR=${PWD}
-LOG_DIR="logs"
+NETWORK="devnet"
+DATE="$(date +%Y%m%d-%H%M%S)"
+LOG_DIR="${LOG_DIR:-logs}"
+VERBOSITY="${VERBOSITY:-3}"
+PORT="${APOTHEM_PORT:-30303}"
+RPC_PORT="${DEVNET_RPC_PORT:-8545}"
+WS_PORT="${DEVNET_WS_PORT:-9545}"
+DATA_DIR="${DATA_DIR:-${HOME}/xdc_data/${NETWORK}}"
+XDPoSChain="${XDPoSChain:-${HOME}/XDPoSChain}"
 PID_FILE="${NETWORK}-sync.pid"
-XDC_BIN="${HOME}/XDPoSChain/build/bin/XDC"
+XDC_BIN="${XDPoSChain}/build/bin/XDC"
 
 cd ${HOME}/XDPoSChain
 cp common/constants/constants.go.devnet common/constants.go
@@ -24,6 +26,7 @@ echo "branch = ${BRANCH}"
 echo "commit = $(git log --pretty=format:'%h: %s' -1)"
 
 cd ${WORK_DIR}
+mkdir -p "${DATA_DIR}"
 mkdir -p ${LOG_DIR}
 
 if [ ! -f genesis-${NETWORK}.json ]; then
@@ -63,7 +66,7 @@ nohup ${XDC_BIN} \
     --rpcvhosts "*" \
     --ws \
     --wsaddr 0.0.0.0 \
-    --wsport ${WS_RPC_PORT} \
+    --wsport ${WS_PORT} \
     --wsorigins "*" \
     --bootnodes "${bootnodes}" \
     >>"${LOG_FILE}" \

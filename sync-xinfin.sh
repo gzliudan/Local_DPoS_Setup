@@ -98,5 +98,4 @@ echo ${PID} >${PID_FILE}
 echo
 echo "PID = ${PID}"
 echo "datadir = ${DATA_DIR}"
-echo "wallet = ${WALLET}"
 echo "logfile = ${LOG_FILE}"

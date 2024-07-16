@@ -90,7 +90,6 @@ ${XDC_BIN} \
     --gasprice 1 \
     --targetgaslimit 420000000 \
     --password ".pwd" \
-    --unlock "${WALLET}" \
     --rpcwritetimeout "300s" \
     &>"${LOG_FILE}" &
 
@@ -100,5 +99,4 @@ echo ${PID} >${PID_FILE}
 echo
 echo "PID = ${PID}"
 echo "datadir = ${DATA_DIR}"
-echo "wallet = ${WALLET}"
 echo "logfile = ${LOG_FILE}"

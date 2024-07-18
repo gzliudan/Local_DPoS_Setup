@@ -13,9 +13,7 @@ VERBOSITY="${VERBOSITY:-3}"
 PORT="${APOTHEM_PORT:-30303}"
 RPC_PORT="${APOTHEM_RPC_PORT:-8545}"
 WS_PORT="${APOTHEM_WS_PORT:-9545}"
-DATA_DIR="${DATA_DIR:-${HOME}/xdc_data}"
-DATA_DIR="${DATA_DIR}/${NETWORK}"
-DEBUG_DATA_DIR="${DEBUG_DATA_DIR:-debug-data}"
+DATA_DIR="${DATA_DIR:-${HOME}/xdc_data/${NETWORK}}"
 PID_FILE="${NETWORK}-sync.pid"
 XDPoSChain="${XDPoSChain:-${HOME}/XDPoSChain}"
 XDC_BIN="${XDPoSChain}/build/bin/XDC"
@@ -37,7 +35,6 @@ rm -f .pwd
 touch .pwd
 mkdir -p "${DATA_DIR}"
 mkdir -p "${LOG_DIR}"
-mkdir -p "${DEBUG_DATA_DIR}"
 
 if [ ! -d ${DATA_DIR}/keystore ]; then
     echo
@@ -72,7 +69,6 @@ ${XDC_BIN} \
     --syncmode "full" \
     --gcmode "archive" \
     --enable-0x-prefix \
-    --debugdatadir "${DEBUG_DATA_DIR}" \
     --verbosity "${VERBOSITY}" \
     --datadir "${DATA_DIR}" \
     --rpc \

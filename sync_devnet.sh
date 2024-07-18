@@ -27,7 +27,7 @@ echo "commit = $(git log --pretty=format:'%h: %s' -1)"
 
 cd ${WORK_DIR}
 mkdir -p "${DATA_DIR}"
-mkdir -p ${LOG_DIR}
+mkdir -p "${LOG_DIR}"
 
 if [ ! -f genesis-${NETWORK}.json ]; then
     wget https://raw.githubusercontent.com/XinFinOrg/Local_DPoS_Setup/${NETWORK}/genesis/genesis.json -O genesis-${NETWORK}.json

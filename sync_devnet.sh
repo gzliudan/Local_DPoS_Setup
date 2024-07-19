@@ -5,6 +5,7 @@ NETWORK="devnet"
 LOG_DIR="logs"
 WORK_DIR=${PWD}
 DATE="$(date +%Y%m%d-%H%M%S)"
+BOOTNODES_FILE="bootnodes-${NETWORK}.txt"
 
 VERBOSITY="${VERBOSITY:-3}"
 PORT="${APOTHEM_PORT:-30303}"
@@ -39,15 +40,19 @@ if [ ! -d ${DATA_DIR}/keystore ]; then
     ${XDC_BIN} --datadir ${DATA_DIR} init genesis-${NETWORK}.json
 fi
 
-bootnodes=""
-input="bootnodes-${NETWORK}.txt"
-while IFS= read -r line; do
-    if [ -z "${bootnodes}" ]; then
-        bootnodes=${line}
-    else
-        bootnodes="${bootnodes},${line}"
-    fi
-done <"${input}"
+# setup bootnodes list
+BOOTNODES=""
+if [[ -f "${BOOTNODES_FILE}" ]]; then
+    echo "read bootnodes from file ${BOOTNODES_FILE}:"
+    while IFS= read -r line; do
+        echo "${line}"
+        if [[ "${BOOTNODES}" == "" ]]; then
+            BOOTNODES=${line}
+        else
+            BOOTNODES="${BOOTNODES},${line}"
+        fi
+    done <"${BOOTNODES_FILE}"
+fi
 
 echo
 nohup ${XDC_BIN} \
@@ -68,7 +73,7 @@ nohup ${XDC_BIN} \
     --wsaddr 0.0.0.0 \
     --wsport ${WS_PORT} \
     --wsorigins "*" \
-    --bootnodes "${bootnodes}" \
+    --bootnodes "${BOOTNODES}" \
     >>"${LOG_FILE}" \
     2>&1 &
 

@@ -9,6 +9,7 @@ NETWORK="xinfin"
 LOG_DIR="logs"
 WORK_DIR=${PWD}
 DATE="$(date +%Y%m%d-%H%M%S)"
+BOOTNODES_FILE="bootnodes-${NETWORK}.txt"
 
 VERBOSITY="${VERBOSITY:-3}"
 PORT="${XINFIN_PORT:-30303}"
@@ -17,7 +18,6 @@ WS_PORT="${XINFIN_WS_PORT:-9545}"
 DATA_DIR="${DATA_DIR:-${HOME}/xdc_data/${NETWORK}}"
 XDPoSChain="${XDPoSChain:-${HOME}/XDPoSChain}"
 XDC_BIN="${XDPoSChain}/build/bin/XDC"
-BOOTNODES_FILE="bootnodes-${NETWORK}.txt"
 
 cd ${HOME}/XDPoSChain
 git checkout HEAD -- common/constants.go

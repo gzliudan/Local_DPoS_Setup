@@ -12,14 +12,14 @@ DATE="$(date +%Y%m%d-%H%M%S)"
 BOOTNODES_FILE="bootnodes-${NETWORK}.txt"
 
 VERBOSITY="${VERBOSITY:-3}"
-PORT="${APOTHEM_PORT:-30303}"
-RPC_PORT="${APOTHEM_RPC_PORT:-8545}"
-WS_PORT="${APOTHEM_WS_PORT:-9545}"
+PORT="${PORT:-30303}"
+RPC_PORT="${RPC_PORT:-8545}"
+WS_PORT="${WS_PORT:-9545}"
 DATA_DIR="${DATA_DIR:-${HOME}/xdc_data/${NETWORK}}"
-XDPoSChain="${XDPoSChain:-${HOME}/XDPoSChain}"
-XDC_BIN="${XDPoSChain}/build/bin/XDC"
+XDC_SRC="${XDC_SRC:-${HOME}/XDPoSChain}"
+XDC_BIN="${XDC_BIN:-${XDC_SRC}/build/bin/XDC}"
 
-cd ${HOME}/XDPoSChain
+cd "${XDC_SRC}"
 cp common/constants/constants.go.testnet common/constants.go
 make all
 BRANCH=$(git branch --show-current)

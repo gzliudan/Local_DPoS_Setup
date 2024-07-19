@@ -1,8 +1,20 @@
 #!/bin/bash
 set -eo pipefail
 
+# read env from .env file
 if [[ -f .env ]]; then
     export $(cat .env | sed '/^\s*#/d' | xargs)
+fi
+
+# read env from config file
+if [[ $# == 1 ]]; then
+    CFG_FILE="$1"
+    if [[ -f "${CFG_FILE}" ]]; then
+        vars=$(cat ${CFG_FILE} | sed '/^\s*#/d;/^\s*$/d' | xargs)
+        if [[ -n "${vars}" ]]; then
+            export ${vars}
+        fi
+    fi
 fi
 
 NETWORK="xinfin"

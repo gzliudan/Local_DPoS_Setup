@@ -12,7 +12,6 @@ RPC_PORT="${DEVNET_RPC_PORT:-8545}"
 WS_PORT="${DEVNET_WS_PORT:-9545}"
 DATA_DIR="${DATA_DIR:-${HOME}/xdc_data/${NETWORK}}"
 XDPoSChain="${XDPoSChain:-${HOME}/XDPoSChain}"
-PID_FILE="${NETWORK}-sync.pid"
 XDC_BIN="${XDPoSChain}/build/bin/XDC"
 
 cd ${HOME}/XDPoSChain
@@ -74,8 +73,10 @@ nohup ${XDC_BIN} \
     2>&1 &
 
 PID=$!
-
-echo "Sync PID = ${PID}"
-echo "Log file = ${LOG_FILE}"
+PID_FILE="${NETWORK}-${PID}-sync.pid"
 echo ${PID} >${PID_FILE}
+
 echo
+echo "PID = ${PID}"
+echo "datadir = ${DATA_DIR}"
+echo "logfile = ${LOG_FILE}"

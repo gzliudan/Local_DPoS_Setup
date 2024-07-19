@@ -15,7 +15,6 @@ PORT="${XINFIN_PORT:-30303}"
 RPC_PORT="${XINFIN_RPC_PORT:-8545}"
 WS_PORT="${XINFIN_WS_PORT:-9545}"
 DATA_DIR="${DATA_DIR:-${HOME}/xdc_data/${NETWORK}}"
-PID_FILE="${NETWORK}-sync.pid"
 XDPoSChain="${XDPoSChain:-${HOME}/XDPoSChain}"
 XDC_BIN="${XDPoSChain}/build/bin/XDC"
 BOOTNODES_FILE="bootnodes-${NETWORK}.txt"
@@ -90,6 +89,7 @@ ${XDC_BIN} \
     &>"${LOG_FILE}" &
 
 PID=$!
+PID_FILE="${NETWORK}-${PID}-sync.pid"
 echo ${PID} >${PID_FILE}
 
 echo

@@ -8,17 +8,23 @@ This document explains how to sync xdc networks.
 
 #### 1.1.1 mainnet
 
+Read configuration from file `.env.xinfin`:
+
 ```bash
 ./sync-xinfin.sh
 ```
 
 #### 1.1.2 testnet
 
+Read configuration from file `.env.apothem`:
+
 ```bash
 ./sync-apothem.sh
 ```
 
 #### 1.1.3 devnet
+
+Read configuration from file `.env.devnet`:
 
 ```bash
 ./sync-devnet.sh
@@ -28,17 +34,7 @@ This document explains how to sync xdc networks.
 
 #### 1.2.1 mainnet
 
-create a config file, such as:
-
-```text
-PORT=30504
-RPC_PORT=8546
-WS_PORT=9546
-XDC_SRC="/home/me/XDPoSChain2"
-DATA_DIR="/home/me/xdc_data/xinfin2"
-```
-
-Then start instance with your config file:
+Read configuration from <CONFIG_FILE_NAME>:
 
 ```bash
 ./sync-xinfin.sh <CONFIG_FILE_NAME>
@@ -46,17 +42,7 @@ Then start instance with your config file:
 
 #### 1.2.2 testnet
 
-create a config file, such as:
-
-```text
-PORT=30604
-RPC_PORT=8646
-WS_PORT=9646
-XDC_SRC="/home/me/XDPoSChain3"
-DATA_DIR="/home/me/xdc_data/apothem3"
-```
-
-Then start instance with your config file:
+Read configuration from <CONFIG_FILE_NAME>:
 
 ```bash
 ./sync-apothem.sh <CONFIG_FILE_NAME>
@@ -64,17 +50,7 @@ Then start instance with your config file:
 
 ##### 1.2.3 devnet
 
-create a config file, such as:
-
-```text
-PORT=30704
-RPC_PORT=8746
-WS_PORT=9746
-XDC_SRC="/home/me/XDPoSChain4"
-DATA_DIR="/home/me/xdc_data/devnet4"
-```
-
-Then start instance with your config file:
+Read configuration from <CONFIG_FILE_NAME>:
 
 ```bash
 ./sync-devnet.sh <CONFIG_FILE_NAME>

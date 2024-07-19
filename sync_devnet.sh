@@ -1,20 +1,27 @@
 #!/bin/bash
 set -eo pipefail
 
-# read env from .env file
-if [[ -f .env ]]; then
-    export $(cat .env | sed '/^\s*#/d' | xargs)
+# set config file
+if [[ $# == 0 ]]; then
+    if [[ -f ".env.devnet" ]]; then
+        CFG_FILE=".env.devnet"
+    else
+        CFG_FILE=".env"
+    fi
+else
+    CFG_FILE="$1"
+fi
+
+if [[ ! -f "${CFG_FILE}" ]]; then
+    echo "Not find config file: ${CFG_FILE}"
+    echo "Usage: $0 [CONFIG_FILE]"
+    exit 1
 fi
 
 # read env from config file
-if [[ $# == 1 ]]; then
-    CFG_FILE="$1"
-    if [[ -f "${CFG_FILE}" ]]; then
-        vars=$(cat ${CFG_FILE} | sed '/^\s*#/d;/^\s*$/d' | xargs)
-        if [[ -n "${vars}" ]]; then
-            export ${vars}
-        fi
-    fi
+vars=$(cat ${CFG_FILE} | sed '/^\s*#/d;/^\s*$/d' | xargs)
+if [[ -n "${vars}" ]]; then
+    export ${vars}
 fi
 
 NETWORK="devnet"

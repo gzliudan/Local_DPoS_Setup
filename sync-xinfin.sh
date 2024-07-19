@@ -5,10 +5,11 @@ if [[ -f .env ]]; then
     export $(cat .env | sed '/^\s*#/d' | xargs)
 fi
 
-WORK_DIR=${PWD}
 NETWORK="xinfin"
+LOG_DIR="logs"
+WORK_DIR=${PWD}
 DATE="$(date +%Y%m%d-%H%M%S)"
-LOG_DIR="${LOG_DIR:-logs}"
+
 VERBOSITY="${VERBOSITY:-3}"
 PORT="${XINFIN_PORT:-30303}"
 RPC_PORT="${XINFIN_RPC_PORT:-8545}"

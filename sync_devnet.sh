@@ -1,10 +1,11 @@
 #!/bin/bash
 set -eo pipefail
 
-WORK_DIR=${PWD}
 NETWORK="devnet"
+LOG_DIR="logs"
+WORK_DIR=${PWD}
 DATE="$(date +%Y%m%d-%H%M%S)"
-LOG_DIR="${LOG_DIR:-logs}"
+
 VERBOSITY="${VERBOSITY:-3}"
 PORT="${APOTHEM_PORT:-30303}"
 RPC_PORT="${DEVNET_RPC_PORT:-8545}"

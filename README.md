@@ -31,7 +31,7 @@ This document explains how to sync xdc networks.
 create a config file, such as:
 
 ```text
-PORT=30304
+PORT=30504
 RPC_PORT=8546
 WS_PORT=9546
 XDC_SRC="/home/me/XDPoSChain2"
@@ -49,7 +49,7 @@ Then start instance with your config file:
 create a config file, such as:
 
 ```text
-PORT=30404
+PORT=30604
 RPC_PORT=8646
 WS_PORT=9646
 XDC_SRC="/home/me/XDPoSChain3"
@@ -67,7 +67,7 @@ Then start instance with your config file:
 create a config file, such as:
 
 ```text
-PORT=30504
+PORT=30704
 RPC_PORT=8746
 WS_PORT=9746
 XDC_SRC="/home/me/XDPoSChain4"

@@ -24,7 +24,7 @@ DATE="$(date +%Y%m%d-%H%M%S)"
 BOOTNODES_FILE="bootnodes-${NETWORK}.txt"
 
 VERBOSITY="${VERBOSITY:-3}"
-PORT="${PORT:-30303}"
+PORT="${PORT:-30503}"
 RPC_PORT="${RPC_PORT:-8545}"
 WS_PORT="${WS_PORT:-9545}"
 DATA_DIR="${DATA_DIR:-${HOME}/xdc_data/${NETWORK}}"

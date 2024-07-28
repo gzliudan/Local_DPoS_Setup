@@ -3,8 +3,8 @@ set -eo pipefail
 
 # set config file
 if [[ $# == 0 ]]; then
-    if [[ -f ".env.xinfin" ]]; then
-        CFG_FILE=".env.xinfin"
+    if [[ -f "xinfin.env" ]]; then
+        CFG_FILE="xinfin.env"
     else
         CFG_FILE=".env"
     fi

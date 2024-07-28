@@ -3,8 +3,8 @@ set -eo pipefail
 
 # set config file
 if [[ $# == 0 ]]; then
-    if [[ -f ".env.apothem" ]]; then
-        CFG_FILE=".env.apothem"
+    if [[ -f "apothem.env" ]]; then
+        CFG_FILE="apothem.env"
     else
         CFG_FILE=".env"
     fi

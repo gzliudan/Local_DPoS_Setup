@@ -3,8 +3,8 @@ set -eo pipefail
 
 # set config file
 if [[ $# == 0 ]]; then
-    if [[ -f ".env.devnet" ]]; then
-        CFG_FILE=".env.devnet"
+    if [[ -f "devnet.env" ]]; then
+        CFG_FILE="devnet.env"
     else
         CFG_FILE=".env"
     fi

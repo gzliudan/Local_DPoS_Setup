@@ -19,10 +19,10 @@ if [[ ! -f "${CFG_FILE}" ]]; then
 fi
 
 # read env from config file
-vars=$(cat ${CFG_FILE} | sed '/^\s*#/d;/^\s*$/d' | xargs)
-if [[ -n "${vars}" ]]; then
-    export ${vars}
-fi
+set -a
+# shellcheck source=/dev/null
+source <(sed -e '/^#/d;/^\s*$/d' -e "s/'/'\\\''/g" -e "s/=\(.*\)/='\1'/g" "${CFG_FILE}")
+set +a
 
 NETWORK="apothem"
 LOG_DIR="logs"
@@ -44,7 +44,7 @@ make all
 BRANCH=$(git branch --show-current)
 COMMIT=$(git log --format=%h --abbrev=8 -1)
 LOG_FILE="${LOG_DIR}/${NETWORK}_${BRANCH}_${DATE}_${COMMIT}.log"
-cd ${WORK_DIR}
+cd "${WORK_DIR}"
 
 if [[ ! -f genesis-${NETWORK}.json ]]; then
     wget https://raw.githubusercontent.com/XinFinOrg/Local_DPoS_Setup/apothem/genesis/genesis.json -O genesis-${NETWORK}.json
@@ -55,10 +55,10 @@ touch .pwd
 mkdir -p "${DATA_DIR}"
 mkdir -p "${LOG_DIR}"
 
-if [ ! -d ${DATA_DIR}/keystore ]; then
+if [ ! -d "${DATA_DIR}/keystore" ]; then
     echo
     echo "init data dir: ${DATA_DIR}"
-    ${XDC_BIN} --datadir ${DATA_DIR} init genesis-${NETWORK}.json
+    ${XDC_BIN} --datadir "${DATA_DIR}" init genesis-${NETWORK}.json
 fi
 
 if [[ -f "${APOTHEM_SNAPSHOT_FILE}" && ! -f "${DATA_DIR}/XDC/nodekey" ]]; then
@@ -80,7 +80,7 @@ if [[ -f "${BOOTNODES_FILE}" ]]; then
     done <"${BOOTNODES_FILE}"
 fi
 
-${XDC_BIN} \
+nohup "${XDC_BIN}" \
     --apothem \
     --port "${PORT}" \
     --networkid 51 \

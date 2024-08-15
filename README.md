@@ -8,7 +8,7 @@ This document explains how to sync xdc networks.
 
 #### 1.1.1 mainnet
 
-Read configuration from file `.env.xinfin`:
+Read configuration from file `xinfin.env`:
 
 ```bash
 ./sync-xinfin.sh
@@ -16,7 +16,7 @@ Read configuration from file `.env.xinfin`:
 
 #### 1.1.2 testnet
 
-Read configuration from file `.env.apothem`:
+Read configuration from file `apothem.env`:
 
 ```bash
 ./sync-apothem.sh
@@ -24,7 +24,7 @@ Read configuration from file `.env.apothem`:
 
 #### 1.1.3 devnet
 
-Read configuration from file `.env.devnet`:
+Read configuration from file `devnet.env`:
 
 ```bash
 ./sync-devnet.sh
@@ -67,5 +67,23 @@ Read configuration from <CONFIG_FILE_NAME>:
 ### 2.2 stop one instance
 
 ```bash
-./stop-sync-by-pid.sh <PID_FILE>
+./stop-by-pid.sh <PID_FILE>
+```
+
+### 2.3 stop all instances of mainnet
+
+```bash
+./stop-xinfin.sh
+```
+
+### 2.4 stop all instances of testnet
+
+```bash
+./stop-apothem.sh
+```
+
+### 2.5 stop all instances of devnet
+
+```bash
+./stop-devnet.sh
 ```

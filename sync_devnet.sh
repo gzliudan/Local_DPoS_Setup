@@ -45,17 +45,15 @@ BRANCH=$(git branch --show-current)
 COMMIT=$(git log --format=%h --abbrev=8 -1)
 LOG_FILE="${LOG_DIR}/${NETWORK}-${BRANCH}-${DATE}_${COMMIT}.log"
 
-echo
-echo "branch = ${BRANCH}"
-echo "commit = $(git log --pretty=format:'%h: %s' -1)"
-
 cd "${WORK_DIR}"
-mkdir -p "${DATA_DIR}"
-mkdir -p "${LOG_DIR}"
-
 if [ ! -f genesis-${NETWORK}.json ]; then
     wget https://raw.githubusercontent.com/XinFinOrg/Local_DPoS_Setup/${NETWORK}/genesis/genesis.json -O genesis-${NETWORK}.json
 fi
+
+rm -f .pwd
+touch .pwd
+mkdir -p "${DATA_DIR}"
+mkdir -p "${LOG_DIR}"
 
 if [ ! -d "${DATA_DIR}/keystore" ]; then
     echo
@@ -77,15 +75,16 @@ if [[ -f "${BOOTNODES_FILE}" ]]; then
     done <"${BOOTNODES_FILE}"
 fi
 
-echo
 nohup "${XDC_BIN}" \
-    --verbosity "${VERBOSITY}" \
-    --datadir "${DATA_DIR}" \
+    --port "${PORT}" \
     --networkid 551 \
     --etherbase 0x0000000000000000000000000000000000abcdef \
-    --gcmode archive \
     --syncmode full \
+    --gcmode archive \
     --enable-0x-prefix \
+    --verbosity "${VERBOSITY}" \
+    --datadir "${DATA_DIR}" \
+    --XDCx.datadir "${DATA_DIR}/XDCx" \
     --rpc \
     --rpcaddr 0.0.0.0 \
     --rpcport "${RPC_PORT}" \
@@ -95,8 +94,13 @@ nohup "${XDC_BIN}" \
     --ws \
     --wsaddr 0.0.0.0 \
     --wsport "${WS_PORT}" \
+    --wsapi "admin,db,eth,debug,net,shh,txpool,web3,XDPoS" \
     --wsorigins "*" \
     --bootnodes "${BOOTNODES}" \
+    --gasprice 1 \
+    --targetgaslimit 420000000 \
+    --password ".pwd" \
+    --rpcwritetimeout "300s" \
     &>"${LOG_FILE}" &
 
 PID=$!

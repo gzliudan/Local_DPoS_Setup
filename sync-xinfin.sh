@@ -44,8 +44,8 @@ make all
 BRANCH=$(git branch --show-current)
 COMMIT=$(git log --format=%h --abbrev=8 -1)
 LOG_FILE="${LOG_DIR}/${NETWORK}_${BRANCH}_${DATE}_${COMMIT}.log"
-cd "${WORK_DIR}"
 
+cd "${WORK_DIR}"
 if [[ ! -f genesis-${NETWORK}.json ]]; then
     wget https://raw.githubusercontent.com/XinFinOrg/XinFin-Node/master/mainnet/genesis.json -O genesis-${NETWORK}.json
 fi
@@ -89,6 +89,7 @@ nohup "${XDC_BIN}" \
     --enable-0x-prefix \
     --verbosity "${VERBOSITY}" \
     --datadir "${DATA_DIR}" \
+    --XDCx.datadir "${DATA_DIR}/XDCx" \
     --rpc \
     --rpcaddr "0.0.0.0" \
     --rpcport "${RPC_PORT}" \

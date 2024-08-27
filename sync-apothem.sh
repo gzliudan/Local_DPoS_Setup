@@ -8,8 +8,10 @@ if [[ $# == 0 ]]; then
     else
         CFG_FILE=".env"
     fi
+    CFG="apothem"
 else
     CFG_FILE="$1"
+    CFG=$(basename ${CFG_FILE} .env)
 fi
 
 if [[ ! -f "${CFG_FILE}" ]]; then
@@ -43,7 +45,7 @@ cp common/constants/constants.go.testnet common/constants.go
 make all
 BRANCH=$(git branch --show-current)
 COMMIT=$(git log --format=%h --abbrev=8 -1)
-LOG_FILE="${LOG_DIR}/${NETWORK}_${BRANCH}_${DATE}_${COMMIT}.log"
+LOG_FILE="${LOG_DIR}/${CFG}_${BRANCH}_${DATE}_${COMMIT}.log"
 
 cd "${WORK_DIR}"
 if [[ ! -f genesis-${NETWORK}.json ]]; then

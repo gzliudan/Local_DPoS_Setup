@@ -17,7 +17,7 @@
       "foudationWalletAddr": "xdc0000000000000000000000000000000000000068",
       "SkipV1Validation": false,
       "v2": {
-        "switchBlock": 4500,
+        "switchBlock": 99999999,
         "config": {
           "maxMasternodes": 0,
           "switchRound": 0,

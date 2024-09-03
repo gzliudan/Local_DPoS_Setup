@@ -115,6 +115,6 @@ PID_FILE="${CFG}-${PID}-sync.pid"
 echo ${PID} >${PID_FILE}
 
 echo
-echo "PID = ${PID}"
 echo "datadir = ${DATA_DIR}"
+echo "PID_FILE = ${PID_FILE}"
 echo "logfile = ${LOG_FILE}"

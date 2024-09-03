@@ -111,7 +111,7 @@ nohup "${XDC_BIN}" \
     &>"${LOG_FILE}" &
 
 PID=$!
-PID_FILE="${NETWORK}-${PID}-sync.pid"
+PID_FILE="${CFG}-${PID}-sync.pid"
 echo ${PID} >${PID_FILE}
 
 echo

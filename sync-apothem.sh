@@ -45,6 +45,9 @@ cp common/constants/constants.go.testnet common/constants.go
 make all
 BRANCH=$(git branch --show-current)
 COMMIT=$(git log --format=%h --abbrev=8 -1)
+if [[ "${BRANCH}" == "" ]]; then
+    BRANCH="${COMMIT}"
+fi
 LOG_FILE="${LOG_DIR}/${CFG}_${BRANCH}_${DATE}_${COMMIT}.log"
 
 cd "${WORK_DIR}"

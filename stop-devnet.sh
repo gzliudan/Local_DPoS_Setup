@@ -1,7 +1,12 @@
 #!/bin/bash
 set -eo pipefail
 
-for PID_FILE in $(ls devnet-*-sync.pid 2> /dev/null); do
+if [ $# -ne 0 ]; then
+    echo "Usage: $0"
+    exit 1
+fi
+
+for PID_FILE in $(ls devnet*-sync.pid 2> /dev/null); do
     PID=$(cat ${PID_FILE})
 
     if [ -d "/proc/${PID}/fd" ]; then

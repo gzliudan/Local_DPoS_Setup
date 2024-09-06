@@ -9,7 +9,7 @@ else
     exit 1
 fi
 
-for PID_FILE in $(ls "${CFG}-*-sync.pid" 2>/dev/null); do
+for PID_FILE in $(ls ${CFG}-*-sync.pid 2>/dev/null); do
     echo "Find PID_FILE: ${PID_FILE}"
     PID=$(cat ${PID_FILE})
 

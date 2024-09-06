@@ -57,8 +57,10 @@ if [ ! -f genesis-${NETWORK}.json ]; then
     wget https://raw.githubusercontent.com/XinFinOrg/Local_DPoS_Setup/${NETWORK}/genesis/genesis.json -O genesis-${NETWORK}.json
 fi
 
-rm -f .pwd
-touch .pwd
+if [[ ! -f .pwd ]]; then
+    touch .pwd
+fi
+
 mkdir -p "${DATA_DIR}"
 mkdir -p "${LOG_DIR}"
 

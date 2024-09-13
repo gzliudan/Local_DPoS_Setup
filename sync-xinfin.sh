@@ -16,9 +16,9 @@ function help() {
     echo "Examples:"
     echo "    $0 -h         Display this help messages"
     echo "    $0 --help     Display this help messages"
-    echo "    $0            Start a sync node with default config"
-    echo "    $0 cfg1       Start a sync node with cfg1.env"
-    echo "    $0 cfg1.env   Start a sync node with cfg1.env"
+    echo "    $0            Start a sync node with cfg1.env"
+    echo "    $0 cfg2       Start a sync node with cfg2.env"
+    echo "    $0 cfg3.env   Start a sync node with cfg3.env"
     echo
 }
 
@@ -33,22 +33,23 @@ if [[ "$#" == 1 ]] && [[ "$1" == "-h" || "$1" == "--help" ]]; then
 fi
 
 if [[ "$#" == 0 ]]; then
-    CFG="def"
+    CFG_FILE="cfg1.env"
 else
     # set config file
     CFG_FILE="$1"
-    if [[ ! -f "${CFG_FILE}" ]]; then
-        echo "Not find CFG_FILE: ${CFG_FILE}"
-        exit 1
-    fi
-    CFG="$(basename ${CFG_FILE} .env)"
-
-    # get env from config file
-    set -a
-    # shellcheck source=/dev/null
-    source <(sed -e '/^#/d;/^\s*$/d' -e "s/'/'\\\''/g" -e "s/=\(.*\)/='\1'/g" "${CFG_FILE}")
-    set +a
 fi
+
+if [[ ! -f "${CFG_FILE}" ]]; then
+    echo "Not find CFG_FILE: ${CFG_FILE}"
+    exit 2
+fi
+CFG="$(basename ${CFG_FILE} .env)"
+
+# get env from config file
+set -a
+# shellcheck source=/dev/null
+source <(sed -e '/^#/d;/^\s*$/d' -e "s/'/'\\\''/g" -e "s/=\(.*\)/='\1'/g" "${CFG_FILE}")
+set +a
 
 NETWORK="xinfin"
 LOG_DIR="logs"

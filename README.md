@@ -6,6 +6,8 @@ This document explains how to sync xdc networks.
 
 ### 1.1 start a node with default config
 
+The default config file is `cfg1.env` if not specified.
+
 #### 1.1.1 mainnet
 
 ```bash

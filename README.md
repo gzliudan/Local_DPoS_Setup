@@ -24,11 +24,9 @@ This document explains how to sync xdc networks.
 ./sync-devnet.sh
 ```
 
-### 1.2 start instances with custom config
+### 1.2 start a node with custom config
 
 #### 1.2.1 mainnet
-
-Read configuration from <CONFIG_FILE_NAME>:
 
 ```bash
 ./sync-xinfin.sh <CONFIG_FILE_NAME>
@@ -36,15 +34,11 @@ Read configuration from <CONFIG_FILE_NAME>:
 
 #### 1.2.2 testnet
 
-Read configuration from <CONFIG_FILE_NAME>:
-
 ```bash
 ./sync-apothem.sh <CONFIG_FILE_NAME>
 ```
 
 ##### 1.2.3 devnet
-
-Read configuration from <CONFIG_FILE_NAME>:
 
 ```bash
 ./sync-devnet.sh <CONFIG_FILE_NAME>
@@ -52,10 +46,10 @@ Read configuration from <CONFIG_FILE_NAME>:
 
 ## 2. stop sync
 
-### 2.1 stop all nodes
+### 2.1 stop one node by config
 
 ```bash
-./stop-all.sh
+./stop-cfg.sh <CONFIG_FILE_NAME>
 ```
 
 ### 2.2 stop one node by PID
@@ -64,8 +58,8 @@ Read configuration from <CONFIG_FILE_NAME>:
 ./stop-pid.sh <PID_FILE>
 ```
 
-### 2.3 stop none node by config
+### 2.3 stop all nodes
 
 ```bash
-./stop-cfg.sh <CONFIG_FILE_NAME>
+./stop-all.sh
 ```

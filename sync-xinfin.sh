@@ -17,8 +17,8 @@ function help() {
     echo "    $0 -h         Display this help messages"
     echo "    $0 --help     Display this help messages"
     echo "    $0            Start a sync node with default config"
-    echo "    $0 8545       Start a sync node with 8545.env"
-    echo "    $0 8546.env   Start a sync node with 8546.env"
+    echo "    $0 cfg1       Start a sync node with cfg1.env"
+    echo "    $0 cfg1.env   Start a sync node with cfg1.env"
     echo
 }
 

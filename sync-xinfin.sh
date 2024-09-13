@@ -8,7 +8,7 @@ function help() {
     echo
     echo "Usage"
     echo "    $0 [options]"
-    echo "    $0 [CFG]"
+    echo "    $0 [CFG_FILE]"
     echo
     echo "Options:"
     echo "    -h, --help     display this help"
@@ -27,7 +27,7 @@ if [[ "$#" == 1 ]] && [[ "$1" == "-h" || "$1" == "--help" ]]; then
     exit 0
 fi
 
-if [[ $# == 0 ]]; then
+if [[ "$#" == 0 ]]; then
     CFG="def"
 else
     # set config file

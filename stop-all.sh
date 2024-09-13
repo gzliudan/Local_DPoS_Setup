@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eo pipefail
 
-for PID_FILE in $(ls *-sync.pid 2> /dev/null); do
+for PID_FILE in $(ls *-*-sync-*.pid 2> /dev/null); do
     echo "Find PID_FILE: ${PID_FILE}"
     PID=$(cat ${PID_FILE})
 

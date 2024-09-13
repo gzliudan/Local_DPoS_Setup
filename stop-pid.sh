@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eo pipefail
 
-if [[ $# != 1 ]]; then
+if [[ "$#" != 1 ]]; then
     echo "Usage: $0 <PID>"
     exit 1
 fi

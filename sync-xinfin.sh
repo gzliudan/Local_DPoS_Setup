@@ -22,6 +22,11 @@ function help() {
     echo
 }
 
+if [[ "$#" > 1 ]]; then
+    help
+    exit 1
+fi
+
 if [[ "$#" == 1 ]] && [[ "$1" == "-h" || "$1" == "--help" ]]; then
     help
     exit 0

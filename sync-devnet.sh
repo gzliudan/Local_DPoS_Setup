@@ -135,6 +135,7 @@ nohup "${XDC_BIN}" \
     --targetgaslimit 420000000 \
     --password ".pwd" \
     --rpcwritetimeout "300s" \
+    --store-reward \
     &>"${LOG_FILE}" &
 
 PID=$!

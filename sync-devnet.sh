@@ -71,11 +71,10 @@ make all
 BRANCH=$(git branch --show-current)
 COMMIT=$(git log --format=%h --abbrev=8 -1)
 if [[ "${BRANCH}" == "" ]]; then
-    CODE="${COMMIT}"
+    LOG_FILE="${LOG_DIR}/${NETWORK}_${CFG}_${DATE}_${COMMIT}.log"
 else
-    CODE="${BRANCH}-${COMMIT}"
+    LOG_FILE="${LOG_DIR}/${NETWORK}_${BRANCH}_${CFG}_${DATE}_${COMMIT}.log"
 fi
-LOG_FILE="${LOG_DIR}/${NETWORK}_${CFG}_${CODE}_${DATE}.log"
 
 cd "${WORK_DIR}"
 if [ ! -f genesis-${NETWORK}.json ]; then

@@ -90,7 +90,7 @@ for ((i = ${start_number}; i < ${end_number}; i++)); do
 
     hash2=$(get_hash_in_logs ${number})
     if [[ "${hash1}" != "${hash2}" ]] && [[ "${hash2}" != "" ]]; then
-        echo -n ", wrong=${hash1}"
+        echo -n ", wrong=${hash2}"
     fi
 
     echo

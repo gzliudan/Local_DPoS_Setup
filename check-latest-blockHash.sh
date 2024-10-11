@@ -2,7 +2,9 @@
 set -e
 
 net="$1"
-if [[ ${net} == "local" ]]; then
+if [[ ${net} == "RPC" || ${net} == "rpc" ]]; then
+    RPC="${RPC}"
+elif [[ ${net} == "local" ]]; then
     RPC="http://localhost:8545/"
 elif [[ ${net} == "dev" ]]; then
     RPC="https://devnetstats.apothem.network/devnet/"

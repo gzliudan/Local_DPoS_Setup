@@ -113,7 +113,7 @@ if [ -f .env ]; then
 fi
 
 DATE=$(date +%Y%m%d-%H%M%S)
-XDC_BIN="${XDC2:-${HOME}/XDPoSChain/build/bin/XDC2}"
+XDC_BIN="${XDC:-${HOME}/XDPoSChain/build/bin/XDC}"
 
 LOG_DIR="${LOG_DIR:-logs}"
 VERBOSITY="${VERBOSITY:-3}"

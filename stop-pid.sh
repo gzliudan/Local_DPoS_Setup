@@ -27,6 +27,6 @@ else
     echo "No such process: ${PID}"
 fi
 
-if "${PID_FILE##*.}" == "pid"; then
+if [[ "${PID_FILE##*.}" == "pid" ]]; then
     rm -f "${PID_FILE}"
 fi

@@ -100,24 +100,25 @@ function start_node() {
         --gcmode archive \
         --syncmode full \
         --enable-0x-prefix \
-        --bootnodes ${ENODE} \
-        --datadir ${DATA_DIR} \
-        --networkid ${NETWORK_ID} \
-        --verbosity ${VERBOSITY} \
-        --gasprice ${GAS_PRICE} \
+        --bootnodes "${ENODE}" \
+        --datadir "${DATA_DIR}" \
+        --XDCx.datadir "${DATA_DIR}/XDCx" \
+        --networkid "${NETWORK_ID}" \
+        --verbosity "${VERBOSITY}" \
+        --gasprice "${GAS_PRICE}" \
         --targetgaslimit 420000000 \
         --password .pwd \
         --unlock "${WALLET}" \
-        --port ${PORT} \
+        --port "${PORT}" \
         --rpc \
-        --rpcaddr 0.0.0.0 \
-        --rpcport ${RPC_PORT} \
+        --rpcaddr "0.0.0.0" \
+        --rpcport "${RPC_PORT}" \
         --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,XDPoS \
         --rpccorsdomain "*" \
         --rpcvhosts "*" \
         --ws \
-        --wsaddr 0.0.0.0 \
-        --wsport ${WS_RPC_PORT} \
+        --wsaddr "0.0.0.0" \
+        --wsport "${WS_RPC_PORT}" \
         --wsorigins "*" \
         >${LOG_FILE} 2>&1 &
 

@@ -71,13 +71,13 @@ function start_node() {
             exit 5
         fi
 
-        WALLET=$(${XDC_BIN} account import --password .pwd --datadir ${DATA_DIR} <(echo ${PRIVATE_KEY}) | awk -v FS="({|})" '{print $2}')
+        WALLET=$(${XDC_BIN} account import --password .pwd --datadir "${DATA_DIR}" --XDCx.datadir "${DATA_DIR}/XDCx" <(echo ${PRIVATE_KEY}) | awk -v FS="({|})" '{print $2}')
         if [ ! -f genesis.json ]; then
             cp genesis/XDPoS-3-signers.json genesis.json
         fi
-        ${XDC_BIN} --datadir ${DATA_DIR} init genesis.json
+        ${XDC_BIN} init --datadir "${DATA_DIR}" --XDCx.datadir "${DATA_DIR}/XDCx" genesis.json
     else
-        WALLET=$(${XDC_BIN} account list --datadir ${DATA_DIR} | head -n 1 | awk -v FS="({|})" '{print $2}')
+        WALLET=$(${XDC_BIN} account list --datadir "${DATA_DIR}" | head -n 1 | awk -v FS="({|})" '{print $2}')
     fi
 
     if [ ${WALLET:0:3} = "xdc" ]; then

@@ -57,6 +57,7 @@ function start_node() {
     PORT=$((${BASE_PORT} + ${NODE_ID}))
     RPC_PORT=$((${BASE_RPC_PORT} + ${NODE_ID}))
     WS_RPC_PORT=$((${BASE_WS_RPC_PORT} + ${NODE_ID}))
+    METRICS_PORT=$((${BASE_METRICS_PORT} + ${NODE_ID}))
 
     echo "Starting the node ${NODE_NAME}"
 
@@ -120,6 +121,9 @@ function start_node() {
         --wsaddr "0.0.0.0" \
         --wsport "${WS_RPC_PORT}" \
         --wsorigins "*" \
+        --metrics \
+        --metrics-addr "0.0.0.0" \
+        --metrics-port "${METRICS_PORT}" \
         >${LOG_FILE} 2>&1 &
 
     PID=$!
@@ -173,6 +177,7 @@ NETWORK_ID="${NETWORK_ID:-888}"
 BASE_PORT="${BASE_PORT:-30000}"
 BASE_RPC_PORT="${BASE_RPC_PORT:-8545}"
 BASE_WS_RPC_PORT="${BASE_WS_RPC_PORT:-9545}"
+BASE_METRICS_PORT="${BASE_METRICS_PORT:-6060}"
 
 XDC_BIN="${XDC:-${HOME}/XDPoSChain/build/bin/XDC}"
 BOOTNODE_BIN_FILE="${XDC_BIN%/*}/bootnode"

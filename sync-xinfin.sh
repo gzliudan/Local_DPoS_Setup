@@ -127,13 +127,13 @@ nohup "${XDC_BIN}" \
     --rpc \
     --rpcaddr "0.0.0.0" \
     --rpcport "${RPC_PORT}" \
-    --rpcapi "admin,db,eth,debug,net,shh,txpool,web3,XDPoS" \
+    --rpcapi "admin,eth,debug,net,txpool,web3,XDPoS" \
     --rpccorsdomain "*" \
     --rpcvhosts "*" \
     --ws \
     --wsaddr "0.0.0.0" \
     --wsport "${WS_PORT}" \
-    --wsapi "admin,db,eth,debug,net,shh,txpool,web3,XDPoS" \
+    --wsapi "admin,eth,debug,net,txpool,web3,XDPoS" \
     --wsorigins "*" \
     --bootnodes "${BOOTNODES}" \
     --gasprice 1 \

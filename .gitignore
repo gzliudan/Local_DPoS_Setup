@@ -1,8 +1,12 @@
 nodes/
 logs/
-*.pid
+snapshot/
+
 .env
 .pwd
 genesis.json
-coinbase-*.txt
+nohup.out
+
+*.pid
 *.tar
+coinbase-*.txt

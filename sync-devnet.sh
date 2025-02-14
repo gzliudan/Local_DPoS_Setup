@@ -82,10 +82,6 @@ if [ ! -f genesis-${NETWORK}.json ]; then
     wget https://raw.githubusercontent.com/XinFinOrg/Local_DPoS_Setup/${NETWORK}/genesis/genesis.json -O genesis-${NETWORK}.json
 fi
 
-if [[ ! -f .pwd ]]; then
-    touch .pwd
-fi
-
 mkdir -p "${DATA_DIR}"
 mkdir -p "${LOG_DIR}"
 
@@ -133,7 +129,6 @@ nohup "${XDC_BIN}" \
     --bootnodes "${BOOTNODES}" \
     --gasprice 1 \
     --targetgaslimit 420000000 \
-    --password ".pwd" \
     --rpcwritetimeout "300s" \
     --store-reward \
     &>"${LOG_FILE}" &

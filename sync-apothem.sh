@@ -67,7 +67,6 @@ XDC_SRC="${XDC_SRC:-${HOME}/XDPoSChain}"
 XDC_BIN="${XDC_BIN:-${XDC_SRC}/build/bin/XDC}"
 
 cd "${XDC_SRC}"
-cp common/constants/constants.go.testnet common/constants.go
 make all
 BRANCH=$(git branch --show-current)
 COMMIT=$(git log --format=%h --abbrev=8 -1)
@@ -78,17 +77,13 @@ else
 fi
 
 cd "${WORK_DIR}"
-if [[ ! -f genesis-${NETWORK}.json ]]; then
-    wget https://raw.githubusercontent.com/XinFinOrg/Local_DPoS_Setup/apothem/genesis/genesis.json -O genesis-${NETWORK}.json
-fi
-
 mkdir -p "${DATA_DIR}"
 mkdir -p "${LOG_DIR}"
 
 if [ ! -d "${DATA_DIR}/keystore" ]; then
     echo
     echo "init data dir: ${DATA_DIR}"
-    ${XDC_BIN} --datadir "${DATA_DIR}" init genesis-${NETWORK}.json
+    ${XDC_BIN} --datadir "${DATA_DIR}" init testnet
 fi
 
 if [[ -f "${APOTHEM_SNAPSHOT_FILE}" && ! -f "${DATA_DIR}/XDC/nodekey" ]]; then
@@ -96,46 +91,13 @@ if [[ -f "${APOTHEM_SNAPSHOT_FILE}" && ! -f "${DATA_DIR}/XDC/nodekey" ]]; then
     tar -xvf "${APOTHEM_SNAPSHOT_FILE}" -C "${DATA_DIR}"
 fi
 
-# setup bootnodes list
-BOOTNODES=""
-if [[ -f "${BOOTNODES_FILE}" ]]; then
-    echo "read bootnodes from file ${BOOTNODES_FILE}:"
-    while IFS= read -r line; do
-        echo "${line}"
-        if [[ "${BOOTNODES}" == "" ]]; then
-            BOOTNODES=${line}
-        else
-            BOOTNODES="${BOOTNODES},${line}"
-        fi
-    done <"${BOOTNODES_FILE}"
-fi
-
 nohup "${XDC_BIN}" \
     --apothem \
     --port "${PORT}" \
-    --networkid 51 \
-    --etherbase 0x0000000000000000000000000000000000abcdef \
-    --syncmode "full" \
     --gcmode "archive" \
-    --enable-0x-prefix \
-    --verbosity "${VERBOSITY}" \
     --datadir "${DATA_DIR}" \
-    --XDCx.datadir "${DATA_DIR}/XDCx" \
-    --rpc \
-    --rpcaddr "0.0.0.0" \
     --rpcport "${RPC_PORT}" \
-    --rpcapi "admin,eth,debug,net,txpool,web3,XDPoS" \
-    --rpccorsdomain "*" \
-    --rpcvhosts "*" \
-    --ws \
-    --wsaddr "0.0.0.0" \
     --wsport "${WS_PORT}" \
-    --wsapi "admin,eth,debug,net,txpool,web3,XDPoS" \
-    --wsorigins "*" \
-    --bootnodes "${BOOTNODES}" \
-    --gasprice 1 \
-    --targetgaslimit 420000000 \
-    --rpcwritetimeout "300s" \
     --store-reward \
     &>"${LOG_FILE}" &
 

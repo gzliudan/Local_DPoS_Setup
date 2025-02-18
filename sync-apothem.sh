@@ -92,7 +92,7 @@ if [[ -f "${APOTHEM_SNAPSHOT_FILE}" && ! -f "${DATA_DIR}/XDC/nodekey" ]]; then
 fi
 
 nohup "${XDC_BIN}" \
-    --apothem \
+    --testnet \
     --port "${PORT}" \
     --gcmode "archive" \
     --datadir "${DATA_DIR}" \

@@ -61,7 +61,7 @@ function start_observer() {
         --rpc \
         --rpcaddr 0.0.0.0 \
         --rpcport ${RPC_PORT} \
-        --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,XDPoS \
+        --rpcapi admin,eth,debug,miner,net,txpool,personal,web3,XDPoS \
         --rpccorsdomain "*" \
         --rpcvhosts "*" \
         --ws \

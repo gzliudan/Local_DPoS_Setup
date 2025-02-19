@@ -1,13 +1,13 @@
 {
   "config": {
     "chainId": 5151,
-    "homesteadBlock": 1,
-    "eip150Block": 2,
+    "homesteadBlock": 0,
+    "eip155Block": 0,
+    "eip158Block": 0,
+    "byzantiumBlock": 0,
+    "constantinopleBlock": 0,
+    "eip150Block": 0,
     "eip150Hash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-    "eip155Block": 3,
-    "eip158Block": 3,
-    "byzantiumBlock": 4,
-    "constantinopleBlock": 4,
     "XDPoS": {
       "period": 2,
       "epoch": 900,
@@ -17,9 +17,9 @@
       "foudationWalletAddr": "0x85f33E1242d87a875301312BD4EbaEe8876517BA",
       "SkipV1Validation": false,
       "v2": {
-        "switchBlock": 90000,
+        "switchBlock": 0,
         "config": {
-          "maxMasternodes": 0,
+          "maxMasternodes": 108,
           "switchRound": 0,
           "minePeriod": 2,
           "timeoutSyncThreshold": 3,
@@ -28,7 +28,7 @@
         },
         "allConfigs": {
           "0": {
-            "maxMasternodes": 0,
+            "maxMasternodes": 108,
             "switchRound": 0,
             "minePeriod": 2,
             "timeoutSyncThreshold": 3,

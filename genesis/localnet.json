@@ -1,6 +1,6 @@
 {
   "config": {
-    "chainId": 888,
+    "chainId": 5151,
     "homesteadBlock": 1,
     "eip150Block": 2,
     "eip150Hash": "0x0000000000000000000000000000000000000000000000000000000000000000",
@@ -14,10 +14,10 @@
       "reward": 2000,
       "rewardCheckpoint": 900,
       "gap": 450,
-      "foudationWalletAddr": "xdc0000000000000000000000000000000000000068",
+      "foudationWalletAddr": "0x85f33E1242d87a875301312BD4EbaEe8876517BA",
       "SkipV1Validation": false,
       "v2": {
-        "switchBlock": 99999999,
+        "switchBlock": 90000,
         "config": {
           "maxMasternodes": 0,
           "switchRound": 0,

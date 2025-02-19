@@ -239,10 +239,10 @@ without `xdc` prefix.
 
 ```text
 Specify your chain/network ID if you want an explicit one (default = random)
-> 888
+> 5151
 ```
 
-Here I input `888`.
+Here I input `5151`.
 
 ### 3.18 Export the genesis file
 

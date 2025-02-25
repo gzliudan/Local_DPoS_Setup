@@ -100,6 +100,7 @@ nohup "${XDC_BIN}" \
     --rpcport "${RPC_PORT}" \
     --wsport "${WS_PORT}" \
     --verbosity "${VERBOSITY}" \
+    --rpcapi admin,eth,debug,miner,net,txpool,web3,XDPoS \
     --store-reward \
     &>"${LOG_FILE}" &
 

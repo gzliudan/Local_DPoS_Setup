@@ -94,10 +94,12 @@ fi
 
 nohup "${XDC_BIN}" \
     --port "${PORT}" \
+    --syncmode "full" \
     --gcmode "archive" \
     --datadir "${DATA_DIR}" \
     --rpcport "${RPC_PORT}" \
     --wsport "${WS_PORT}" \
+    --verbosity "${VERBOSITY}" \
     --store-reward \
     &>"${LOG_FILE}" &
 

@@ -24,7 +24,7 @@ function stop_sync_by_cfg() {
     CFG=$(basename ${CFG_FILE} .env)
     echo "handle CFG: ${CFG}"
 
-    for PID_FILE in $(ls *-${CFG}-sync-*.pid 2>/dev/null); do
+    for PID_FILE in $(ls ${CFG}-sync-*.pid 2>/dev/null); do
         echo "Find PID_FILE: ${PID_FILE}"
         PID=$(cat ${PID_FILE})
 

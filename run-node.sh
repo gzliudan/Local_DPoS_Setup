@@ -72,11 +72,11 @@ function start_node() {
             exit 5
         fi
 
-        WALLET=$(${XDC_BIN} account import --password .pwd --datadir "${DATA_DIR}" --XDCx.datadir "${DATA_DIR}/XDCx" <(echo ${PRIVATE_KEY}) | awk -v FS="({|})" '{print $2}')
+        WALLET=$(${XDC_BIN} account import --password .pwd --datadir "${DATA_DIR}" <(echo ${PRIVATE_KEY}) | awk -v FS="({|})" '{print $2}')
         if [ ! -f genesis.json ]; then
             cp genesis/localnet.json genesis.json
         fi
-        ${XDC_BIN} init --datadir "${DATA_DIR}" --XDCx.datadir "${DATA_DIR}/XDCx" genesis.json
+        ${XDC_BIN} init --datadir "${DATA_DIR}" genesis.json
     else
         WALLET=$(${XDC_BIN} account list --datadir "${DATA_DIR}" | head -n 1 | awk -v FS="({|})" '{print $2}')
     fi
@@ -103,7 +103,6 @@ function start_node() {
         --enable-0x-prefix \
         --bootnodes "${ENODE}" \
         --datadir "${DATA_DIR}" \
-        --XDCx.datadir "${DATA_DIR}/XDCx" \
         --networkid "${NETWORK_ID}" \
         --verbosity "${VERBOSITY}" \
         --gasprice "${GAS_PRICE}" \

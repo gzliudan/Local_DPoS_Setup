@@ -4,7 +4,7 @@ set -eo pipefail
 function help() {
     echo
     echo "About:"
-    echo "    This script stop an obsrever node for private network."
+    echo "    This script stop an RPC node for private network."
     echo
     echo "Usage:"
     echo "    $0 [options]"
@@ -13,12 +13,12 @@ function help() {
     echo "Examples:"
     echo "    $0 -h        Display this help messages"
     echo "    $0 --help    Display this help messages"
-    echo "    $0 0         Stop an observer which id is 0"
-    echo "    $0 1         Stop an observer which id is 1"
+    echo "    $0 0         Stop a RPC which id is 0"
+    echo "    $0 1         Stop a RPC which id is 1"
     echo
 }
 
-function stop_obsrever() {
+function stop_rpc() {
     echo
     PID_FILE="$1"
     NODE_NAME=${PID_FILE%.*}
@@ -52,7 +52,7 @@ fi
 
 if [ $# == 0 ]; then
     for PID_FILE in $(ls on*.pid 2>/dev/null); do
-        stop_obsrever ${PID_FILE}
+        stop_rpc ${PID_FILE}
     done
 else
     for arg in $@; do
@@ -63,10 +63,10 @@ else
     done
 
     for arg in $@; do
-        stop_obsrever "on${arg}.pid"
+        stop_rpc "on${arg}.pid"
     done
 fi
 
 echo
-echo "All obsrevers are stopped !"
+echo "All RPC nodes are stopped !"
 echo

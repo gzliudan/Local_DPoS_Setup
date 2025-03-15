@@ -4,7 +4,7 @@ set -eo pipefail
 function help() {
     echo
     echo "About:"
-    echo "    This script start an obsrever for private network."
+    echo "    This script start a RPC for private network."
     echo
     echo "Usage"
     echo "    $0 [options]"
@@ -16,12 +16,12 @@ function help() {
     echo "Examples:"
     echo "    $0 -h        Display this help messages"
     echo "    $0 --help    Display this help messages"
-    echo "    $0 0         Start an observer which id is 0"
-    echo "    $0 1         Start an observer which id is 1"
+    echo "    $0 0         Start a RPC which id is 0"
+    echo "    $0 1         Start a RPC which id is 1"
     echo
 }
 
-function start_observer() {
+function start_rpc() {
     NODE_ID=$1
     NODE_NAME="on${NODE_ID}"
     PID_FILE="${NODE_NAME}.pid"
@@ -29,7 +29,7 @@ function start_observer() {
     if [ -f "${PID_FILE}" ]; then
         PID=$(cat "${PID_FILE}")
         if [ -d "/proc/${PID}/fd" ]; then
-            echo "please stop the observer ${NODE_NAME}[${PID}] first: found file ${PID_FILE}"
+            echo "please stop the RPC ${NODE_NAME}[${PID}] first: found file ${PID_FILE}"
             exit 4
         fi
     fi
@@ -42,12 +42,12 @@ function start_observer() {
 
     mkdir -p ${DATA_DIR}
     if [ ! -d "${DATA_DIR}/XDC/chaindata" ]; then
-        echo "init the observer ${NODE_NAME}"
+        echo "init the RPC ${NODE_NAME}"
         ${XDC_BIN} --datadir ${DATA_DIR} init genesis.json
         echo
     fi
 
-    echo "Starting the observer ${NODE_NAME}"
+    echo "Starting the RPC ${NODE_NAME}"
     nohup ${XDC_BIN} \
         --gcmode archive \
         --syncmode full \
@@ -61,7 +61,7 @@ function start_observer() {
         --rpc \
         --rpcaddr 0.0.0.0 \
         --rpcport ${RPC_PORT} \
-        --rpcapi admin,eth,debug,miner,net,txpool,personal,web3,XDPoS \
+        --rpcapi eth,debug,miner,net,txpool,personal,web3,XDPoS \
         --rpccorsdomain "*" \
         --rpcvhosts "*" \
         --ws \
@@ -73,7 +73,7 @@ function start_observer() {
     PID=$!
     echo ${PID} >${PID_FILE}
 
-    echo "the observer ${NODE_NAME} is running now, PID = ${PID}"
+    echo "the RPC ${NODE_NAME} is running now, PID = ${PID}"
     echo "PORT = ${PORT}, RPC_PORT = ${RPC_PORT}, WS_RPC_PORT = ${WS_RPC_PORT}"
     echo "DATA_DIR = ${DATA_DIR}, LOG_FILE = ${LOG_FILE}"
     echo
@@ -100,7 +100,7 @@ for arg in $@; do
     if [ -f "${PID_FILE}" ]; then
         PID=$(cat "${PID_FILE}")
         if [ -d "/proc/${PID}/fd" ]; then
-            echo "please stop observer ${NODE_NAME}[${PID}] first: found file ${PID_FILE}"
+            echo "please stop RPC ${NODE_NAME}[${PID}] first: found file ${PID_FILE}"
             exit 3
         fi
     fi
@@ -124,5 +124,5 @@ BASE_WS_RPC_PORT="${OBSERVER_BASE_WS_RPC_PORT:-9645}"
 
 mkdir -p ${LOG_DIR}
 for arg in $@; do
-    start_observer ${arg}
+    start_rpc ${arg}
 done

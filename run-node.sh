@@ -105,8 +105,8 @@ function start_node() {
         --datadir "${DATA_DIR}" \
         --networkid "${NETWORK_ID}" \
         --verbosity "${VERBOSITY}" \
-        --gasprice "${GAS_PRICE}" \
-        --targetgaslimit 420000000 \
+        --gasprice "1" \
+        --targetgaslimit 50000000 \
         --password .pwd \
         --unlock "${WALLET}" \
         --port "${PORT}" \
@@ -170,7 +170,6 @@ BOOTNODE_PID_FILE="bootnode.pid"
 
 LOG_DIR="${LOG_DIR:-logs}"
 VERBOSITY="${VERBOSITY:-3}"
-GAS_PRICE="${GAS_PRICE:-1}"
 NETWORK_ID="${NETWORK_ID:-5151}"
 
 BASE_PORT="${BASE_PORT:-30000}"

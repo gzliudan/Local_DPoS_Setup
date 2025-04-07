@@ -135,6 +135,10 @@ if [[ -n "${NETWORK_ID}" ]]; then
     args+=(--networkid "${NETWORK_ID}")
 fi
 
+if [[ -n "${SET_HEAD}" ]]; then
+    args+=(--set-head "${SET_HEAD}")
+fi
+
 nohup "${XDC_BIN}" "${args[@]}" &>"${LOG_FILE}" &
 
 PID=$!

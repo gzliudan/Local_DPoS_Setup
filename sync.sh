@@ -126,9 +126,13 @@ args=(
     --store-reward
 )
 
-# Add testnet-specific flag
-if [[ "${NETWORK}" = "testnet" ]]; then
+# add network specific flag
+if [[ "${NETWORK}" = "mainnet" ]]; then
+    args+=(--mainnet)
+elif [[ "${NETWORK}" = "testnet" ]]; then
     args+=(--testnet)
+elif [[ "${NETWORK}" = "devnet" ]]; then
+    args+=(--devnet)
 fi
 
 if [[ -n "${NETWORK_ID}" ]]; then

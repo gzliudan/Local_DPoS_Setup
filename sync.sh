@@ -113,6 +113,20 @@ if [[ -f "${SNAPSHOT_FILE}" && ! -f "${DATA_DIR}/XDC/nodekey" ]]; then
     tar -xvf "${SNAPSHOT_FILE}" -C "${DATA_DIR}"
 fi
 
+# setup bootnodes list
+BOOTNODES=""
+if [[ -f "${BOOTNODES_FILE}" ]]; then
+    echo "read bootnodes from file ${BOOTNODES_FILE}:"
+    while IFS= read -r line; do
+        echo "${line}"
+        if [[ "${BOOTNODES}" == "" ]]; then
+            BOOTNODES=${line}
+        else
+            BOOTNODES="${BOOTNODES},${line}"
+        fi
+    done <"${BOOTNODES_FILE}"
+fi
+
 args=(
     --syncmode "${SYNCMODE}"
     --gcmode "${GCMODE}"
@@ -125,6 +139,10 @@ args=(
     --wsapi "${RPC_API}"
     --store-reward
 )
+
+if [[ "${BOOTNODES}" != "" ]]; then
+    args+=(--bootnodes "${BOOTNODES}")
+fi
 
 # add network specific flag
 if [[ "${NETWORK}" = "mainnet" ]]; then

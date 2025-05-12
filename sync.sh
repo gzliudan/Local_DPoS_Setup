@@ -80,6 +80,7 @@ XDC_SRC="${XDC_SRC:-${HOME}/XDPoSChain}"
 XDC_BIN="${XDC_BIN:-${XDC_SRC}/build/bin/XDC}"
 GCMODE="${GCMODE:-archive}"
 SYNCMODE="${SYNCMODE:-full}"
+NETWORK_ID="${NETWORK_ID:-0}"
 
 # constant parameters
 LOG_DIR="logs"
@@ -147,13 +148,14 @@ fi
 # add network specific flag
 if [[ "${NETWORK}" = "mainnet" ]]; then
     args+=(--mainnet)
+    args+=(--networkid 50)
 elif [[ "${NETWORK}" = "testnet" ]]; then
     args+=(--testnet)
+    args+=(--networkid 51)
 elif [[ "${NETWORK}" = "devnet" ]]; then
     args+=(--devnet)
-fi
-
-if [[ -n "${NETWORK_ID}" ]]; then
+    args+=(--networkid 551)
+else
     args+=(--networkid "${NETWORK_ID}")
 fi
 

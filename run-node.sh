@@ -113,7 +113,7 @@ function start_node() {
         --rpc \
         --rpcaddr "0.0.0.0" \
         --rpcport "${RPC_PORT}" \
-        --rpcapi admin,eth,debug,miner,net,txpool,personal,web3,XDPoS \
+        --rpcapi admin,eth,debug,miner,net,rpc,txpool,personal,web3,XDPoS \
         --rpccorsdomain "*" \
         --rpcvhosts "*" \
         --ws \

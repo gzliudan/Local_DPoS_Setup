@@ -104,10 +104,13 @@ cd "${WORK_DIR}"
 mkdir -p "${DATA_DIR}"
 mkdir -p "${LOG_DIR}"
 
-if [ ! -d "${DATA_DIR}/keystore" ]; then
+if [[ ! -d "${DATA_DIR}/keystore" ]]; then
     echo
     echo "init data dir for ${NETWORK}: ${DATA_DIR}"
     ${XDC_BIN} --datadir "${DATA_DIR}" init ${NETWORK}
+    if [[ -f "${SNAPSHOT_FILE}" ]]; then
+        rm -f "${DATA_DIR}/XDC/nodekey"
+    fi
 fi
 
 if [[ -f "${SNAPSHOT_FILE}" && ! -f "${DATA_DIR}/XDC/nodekey" ]]; then

@@ -81,6 +81,7 @@ XDC_BIN="${XDC_BIN:-${XDC_SRC}/build/bin/XDC}"
 GCMODE="${GCMODE:-archive}"
 SYNCMODE="${SYNCMODE:-full}"
 NETWORK_ID="${NETWORK_ID:-0}"
+ETHERBASE="${ETHERBASE:-0x0000000000000000000000000000000000abcdef}"
 
 # constant parameters
 LOG_DIR="logs"
@@ -138,6 +139,7 @@ args=(
     --datadir "${DATA_DIR}"
     --rpcapi "${RPC_API}"
     --wsapi "${RPC_API}"
+    --etherbase "${ETHERBASE}"
     --store-reward
 )
 

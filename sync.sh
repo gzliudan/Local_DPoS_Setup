@@ -136,12 +136,19 @@ args=(
     --syncmode "${SYNCMODE}"
     --gcmode "${GCMODE}"
     --port "${PORT}"
+    --rpc
+    --rpcaddr "0.0.0.0"
     --rpcport "${RPC_PORT}"
+    --rpcapi "${RPC_API}"
+    --rpccorsdomain "*"
+    --rpcvhosts "*"
+    --ws
+    --wsaddr "0.0.0.0"
     --wsport "${WS_PORT}"
+    --wsapi "${RPC_API}"
+    --wsorigins "*"
     --verbosity "${VERBOSITY}"
     --datadir "${DATA_DIR}"
-    --rpcapi "${RPC_API}"
-    --wsapi "${RPC_API}"
     --etherbase "${ETHERBASE}"
     --store-reward
 )

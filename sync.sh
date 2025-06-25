@@ -154,25 +154,37 @@ args=(
 )
 
 if [[ "${BOOTNODES}" != "" ]]; then
-    args+=(--bootnodes "${BOOTNODES}")
+    args+=(
+        --bootnodes "${BOOTNODES}"
+    )
 fi
 
 # add network specific flag
 if [[ "${NETWORK}" = "mainnet" ]]; then
-    args+=(--mainnet)
-    args+=(--networkid 50)
+    args+=(
+        --mainnet
+        --networkid 50
+    )
 elif [[ "${NETWORK}" = "testnet" ]]; then
-    args+=(--testnet)
-    args+=(--networkid 51)
+    args+=(
+        --testnet
+        --networkid 51
+    )
 elif [[ "${NETWORK}" = "devnet" ]]; then
-    args+=(--devnet)
-    args+=(--networkid 551)
+    args+=(
+        --devnet
+        --networkid 551
+    )
 else
-    args+=(--networkid "${NETWORK_ID}")
+    args+=(
+        --networkid "${NETWORK_ID}"
+    )
 fi
 
 if [[ -n "${SET_HEAD}" ]]; then
-    args+=(--set-head "${SET_HEAD}")
+    args+=(
+        --set-head "${SET_HEAD}"
+    )
 fi
 
 nohup "${XDC_BIN}" "${args[@]}" &>"${LOG_FILE}" &

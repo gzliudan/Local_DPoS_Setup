@@ -88,7 +88,7 @@ LOG_DIR="logs"
 WORK_DIR=${PWD}
 DATE="$(date +%Y%m%d-%H%M%S)"
 BOOTNODES_FILE="bootnodes-${NETWORK}.txt"
-RPC_API="admin,eth,debug,net,txpool,personal,web3,XDPoS"
+RPC_API="admin,eth,debug,net,txpool,web3,XDPoS"
 
 cd "${XDC_SRC}"
 make all

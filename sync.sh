@@ -87,7 +87,8 @@ ETHERBASE="${ETHERBASE:-0x0000000000000000000000000000000000abcdef}"
 LOG_DIR="logs"
 WORK_DIR=${PWD}
 DATE="$(date +%Y%m%d-%H%M%S)"
-BOOTNODES_FILE="bootnodes-${NETWORK}.txt"
+BOOT_NODES_FILE="boot-nodes-${NETWORK}.txt"
+BLACK_PEERS_FILE="black-peers-${NETWORK}.txt"
 RPC_API="admin,eth,debug,net,txpool,web3,XDPoS"
 
 cd "${XDC_SRC}"
@@ -118,20 +119,6 @@ if [[ -f "${SNAPSHOT_FILE}" && ! -f "${DATA_DIR}/XDC/nodekey" ]]; then
     tar -xvf "${SNAPSHOT_FILE}" -C "${DATA_DIR}"
 fi
 
-# setup bootnodes list
-BOOTNODES=""
-if [[ -f "${BOOTNODES_FILE}" ]]; then
-    echo "read bootnodes from file ${BOOTNODES_FILE}:"
-    while IFS= read -r line; do
-        echo "${line}"
-        if [[ "${BOOTNODES}" == "" ]]; then
-            BOOTNODES=${line}
-        else
-            BOOTNODES="${BOOTNODES},${line}"
-        fi
-    done <"${BOOTNODES_FILE}"
-fi
-
 args=(
     --syncmode "${SYNCMODE}"
     --gcmode "${GCMODE}"
@@ -153,9 +140,41 @@ args=(
     --store-reward
 )
 
-if [[ "${BOOTNODES}" != "" ]]; then
+# setup bootnodes list
+BOOT_NODES=""
+if [[ -f "${BOOT_NODES_FILE}" ]]; then
+    echo
+    echo "read boot nodes from file: ${BOOT_NODES_FILE}"
+    BOOT_NODES=$(
+        sed -e 's/^[[:space:][:cntrl:]]*//' -e 's/[[:space:][:cntrl:]]*$//' "${BOOT_NODES_FILE}" |
+        grep -v '^[[:space:][:cntrl:]]*$' |
+        paste -sd, - 2>/dev/null || echo ""
+    )
+fi
+
+if [[ "${BOOT_NODES}" != "" ]]; then
+    echo "${BOOT_NODES}"
     args+=(
-        --bootnodes "${BOOTNODES}"
+        --bootnodes "${BOOT_NODES}"
+    )
+fi
+
+# setup balck peers
+BLACK_PEERS=""
+if [[ -f "${BLACK_PEERS_FILE}" ]]; then
+    echo
+    echo "read black peers from file: ${BLACK_PEERS_FILE}"
+    BLACK_PEERS=$(
+        sed -e 's/^[[:space:][:cntrl:]]*//' -e 's/[[:space:][:cntrl:]]*$//' "${BLACK_PEERS_FILE}" |
+        grep -v '^[[:space:][:cntrl:]]*$' |
+        paste -sd, - 2>/dev/null || echo ""
+    )
+fi
+
+if [[ "${BLACK_PEERS}" != "" ]]; then
+    echo "${BLACK_PEERS}"
+    args+=(
+        --black-peers "${BLACK_PEERS}"
     )
 fi
 

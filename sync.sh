@@ -88,6 +88,7 @@ LOG_DIR="logs"
 WORK_DIR=${PWD}
 DATE="$(date +%Y%m%d-%H%M%S)"
 BOOT_NODES_FILE="boot-nodes-${NETWORK}.txt"
+WHITE_PEERS_FILE="white-peers-${NETWORK}.txt"
 BLACK_PEERS_FILE="black-peers-${NETWORK}.txt"
 RPC_API="admin,eth,debug,net,txpool,web3,XDPoS"
 
@@ -159,7 +160,26 @@ if [[ "${BOOT_NODES}" != "" ]]; then
     )
 fi
 
-# setup balck peers
+# setup whitelist for peers
+WHITE_PEERS=""
+if [[ -f "${WHITE_PEERS_FILE}" ]]; then
+    echo
+    echo "read black peers from file: ${WHITE_PEERS_FILE}"
+    WHITE_PEERS=$(
+        sed -e 's/^[[:space:][:cntrl:]]*//' -e 's/[[:space:][:cntrl:]]*$//' "${WHITE_PEERS_FILE}" |
+        grep -v '^[[:space:][:cntrl:]]*$' |
+        paste -sd, - 2>/dev/null || echo ""
+    )
+fi
+
+if [[ "${WHITE_PEERS}" != "" ]]; then
+    echo "${WHITE_PEERS}"
+    args+=(
+        --peers-whitelist "${WHITE_PEERS}"
+    )
+fi
+
+# setup balcklist for peers
 BLACK_PEERS=""
 if [[ -f "${BLACK_PEERS_FILE}" ]]; then
     echo
@@ -174,7 +194,7 @@ fi
 if [[ "${BLACK_PEERS}" != "" ]]; then
     echo "${BLACK_PEERS}"
     args+=(
-        --black-peers "${BLACK_PEERS}"
+        --peers-blacklist "${BLACK_PEERS}"
     )
 fi
 

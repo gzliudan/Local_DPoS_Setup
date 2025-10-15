@@ -106,7 +106,7 @@ function start_node() {
         --networkid "${NETWORK_ID}" \
         --verbosity "${VERBOSITY}" \
         --gasprice "1" \
-        --targetgaslimit 50000000 \
+        --targetgaslimit 4700000 \
         --password .pwd \
         --unlock "${WALLET}" \
         --port "${PORT}" \

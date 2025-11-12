@@ -33,19 +33,25 @@ fi
 
 CFG_FILE="${1}"
 if [[ ! -f "${CFG_FILE}" ]]; then
-    if [[ "${CFG_FILE##*.}" == "env" ]]; then
-        echo "Error: not find configuration file: ${CFG_FILE}"
-        exit 2
-    else
+    if [[ -f "${CFG_FILE}.env" ]]; then
         CFG_FILE="${CFG_FILE}.env"
-        if [[ ! -f "${CFG_FILE}" ]]; then
-            echo "Error: not find configuration file: ${1} or ${CFG_FILE}"
-            exit 2
+    else
+        if [[ -f "env/${CFG_FILE}" ]]; then
+            CFG_FILE="env/${CFG_FILE}"
+        else
+            if [[ -f "env/${CFG_FILE}.env" ]]; then
+                CFG_FILE="env/${CFG_FILE}.env"
+            else
+                echo "Error: not find configuration file: ${CFG_FILE}, ${CFG_FILE}.env, env/${CFG_FILE}, env/${CFG_FILE}.env"
+                exit 2
+            fi
         fi
     fi
 fi
+echo "Find configuration file: ${CFG_FILE}"
 
 CFG="$(basename ${CFG_FILE} .env)"
+echo "Use configuration: ${CFG}"
 
 # get env from config file
 set -a

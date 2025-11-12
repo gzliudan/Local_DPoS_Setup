@@ -93,10 +93,16 @@ ETHERBASE="${ETHERBASE:-0x0000000000000000000000000000000000abcdef}"
 LOG_DIR="logs"
 WORK_DIR=${PWD}
 DATE="$(date +%Y%m%d-%H%M%S)"
-BOOT_NODES_FILE="boot-nodes-${NETWORK}.txt"
+BOOT_NODES_FILE="boot-nodes/${NETWORK}.txt"
 WHITE_PEERS_FILE="white-peers-${NETWORK}.txt"
 BLACK_PEERS_FILE="black-peers-${NETWORK}.txt"
 RPC_API="admin,eth,debug,net,txpool,web3,XDPoS"
+
+if [[ ! -f "${BOOT_NODES_FILE}" ]]; then
+    echo "Error: not find boot nodes file: ${BOOT_NODES_FILE}"
+    exit 6
+fi
+echo "Use boot nodes file: ${BOOT_NODES_FILE}"
 
 cd "${XDC_SRC}"
 make all

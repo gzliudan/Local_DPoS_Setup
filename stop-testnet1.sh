@@ -3,4 +3,4 @@ set -eo pipefail
 
 cd "$(dirname "$0")"
 
-./stop-cfg.sh testnet1
+./stop-by-cfg.sh testnet1

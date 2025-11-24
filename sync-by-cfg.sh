@@ -151,6 +151,7 @@ args=(
     --datadir "${DATA_DIR}"
     --etherbase "${ETHERBASE}"
     --store-reward
+    --maxpeers 200
 )
 
 # setup bootnodes list

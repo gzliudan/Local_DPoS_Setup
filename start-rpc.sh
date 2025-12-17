@@ -51,7 +51,6 @@ function start_rpc() {
     nohup ${XDC_BIN} \
         --gcmode archive \
         --syncmode full \
-        --enable-0x-prefix \
         --bootnodes ${ENODE} \
         --datadir ${DATA_DIR} \
         --networkid ${NETWORK_ID} \
@@ -61,7 +60,7 @@ function start_rpc() {
         --rpc \
         --rpcaddr 0.0.0.0 \
         --rpcport ${RPC_PORT} \
-        --rpcapi eth,debug,miner,net,txpool,personal,web3,XDPoS \
+        --rpcapi eth,debug,miner,net,txpool,web3,XDPoS \
         --rpccorsdomain "*" \
         --rpcvhosts "*" \
         --ws \

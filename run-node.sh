@@ -97,10 +97,8 @@ function start_node() {
     echo "WALLET = ${WALLET}"
 
     nohup ${XDC_BIN} \
-        --mine \
         --gcmode archive \
         --syncmode full \
-        --enable-0x-prefix \
         --bootnodes "${ENODE}" \
         --datadir "${DATA_DIR}" \
         --networkid "${NETWORK_ID}" \
@@ -113,7 +111,7 @@ function start_node() {
         --rpc \
         --rpcaddr "0.0.0.0" \
         --rpcport "${RPC_PORT}" \
-        --rpcapi admin,eth,debug,miner,net,rpc,txpool,personal,web3,XDPoS \
+        --rpcapi admin,eth,debug,miner,net,rpc,txpool,web3,XDPoS \
         --rpccorsdomain "*" \
         --rpcvhosts "*" \
         --ws \

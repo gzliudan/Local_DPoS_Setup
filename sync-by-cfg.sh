@@ -50,7 +50,7 @@ if [[ ! -f "${CFG_FILE}" ]]; then
 fi
 echo "Find configuration file: ${CFG_FILE}"
 
-CFG="$(basename ${CFG_FILE} .env)"
+CFG="$(basename "${CFG_FILE}" .env)"
 echo "Use configuration: ${CFG}"
 
 # get env from config file
@@ -94,8 +94,8 @@ LOG_DIR="logs"
 WORK_DIR=${PWD}
 DATE="$(date +%Y%m%d-%H%M%S)"
 BOOT_NODES_FILE="boot-nodes/${NETWORK}.txt"
-WHITE_PEERS_FILE="white-peers-${NETWORK}.txt"
-BLACK_PEERS_FILE="black-peers-${NETWORK}.txt"
+ALLOW_PEERS_FILE="allow-peers-${NETWORK}.txt"
+DENY_PEERS_FILE="deny-peers-${NETWORK}.txt"
 RPC_API="admin,eth,debug,net,txpool,web3,XDPoS"
 
 if [[ ! -f "${BOOT_NODES_FILE}" ]]; then
@@ -121,7 +121,7 @@ mkdir -p "${LOG_DIR}"
 if [[ ! -d "${DATA_DIR}/keystore" ]]; then
     echo
     echo "init data dir for ${NETWORK}: ${DATA_DIR}"
-    ${XDC_BIN} --datadir "${DATA_DIR}" init ${NETWORK}
+    ${XDC_BIN} --datadir "${DATA_DIR}" init "${NETWORK}"
     if [[ -f "${SNAPSHOT_FILE}" ]]; then
         rm -f "${DATA_DIR}/XDC/nodekey"
     fi
@@ -173,41 +173,41 @@ if [[ "${BOOT_NODES}" != "" ]]; then
     )
 fi
 
-# setup whitelist for peers
-WHITE_PEERS=""
-if [[ -f "${WHITE_PEERS_FILE}" ]]; then
+# setup allow list for peers
+ALLOW_PEERS=""
+if [[ -f "${ALLOW_PEERS_FILE}" ]]; then
     echo
-    echo "read black peers from file: ${WHITE_PEERS_FILE}"
-    WHITE_PEERS=$(
-        sed -e 's/^[[:space:][:cntrl:]]*//' -e 's/[[:space:][:cntrl:]]*$//' "${WHITE_PEERS_FILE}" |
+    echo "read allow peers from file: ${ALLOW_PEERS_FILE}"
+    ALLOW_PEERS=$(
+        sed -e 's/^[[:space:][:cntrl:]]*//' -e 's/[[:space:][:cntrl:]]*$//' "${ALLOW_PEERS_FILE}" |
         grep -v '^[[:space:][:cntrl:]]*$' |
         paste -sd, - 2>/dev/null || echo ""
     )
 fi
 
-if [[ "${WHITE_PEERS}" != "" ]]; then
-    echo "${WHITE_PEERS}"
+if [[ "${ALLOW_PEERS}" != "" ]]; then
+    echo "${ALLOW_PEERS}"
     args+=(
-        --peers-whitelist "${WHITE_PEERS}"
+        --peers-allowlist "${ALLOW_PEERS}"
     )
 fi
 
-# setup balcklist for peers
-BLACK_PEERS=""
-if [[ -f "${BLACK_PEERS_FILE}" ]]; then
+# setup deny list for peers
+DENY_PEERS=""
+if [[ -f "${DENY_PEERS_FILE}" ]]; then
     echo
-    echo "read black peers from file: ${BLACK_PEERS_FILE}"
-    BLACK_PEERS=$(
-        sed -e 's/^[[:space:][:cntrl:]]*//' -e 's/[[:space:][:cntrl:]]*$//' "${BLACK_PEERS_FILE}" |
+    echo "read deny peers from file: ${DENY_PEERS_FILE}"
+    DENY_PEERS=$(
+        sed -e 's/^[[:space:][:cntrl:]]*//' -e 's/[[:space:][:cntrl:]]*$//' "${DENY_PEERS_FILE}" |
         grep -v '^[[:space:][:cntrl:]]*$' |
         paste -sd, - 2>/dev/null || echo ""
     )
 fi
 
-if [[ "${BLACK_PEERS}" != "" ]]; then
-    echo "${BLACK_PEERS}"
+if [[ "${DENY_PEERS}" != "" ]]; then
+    echo "${DENY_PEERS}"
     args+=(
-        --peers-blacklist "${BLACK_PEERS}"
+        --peers-denylist "${DENY_PEERS}"
     )
 fi
 
@@ -243,7 +243,7 @@ nohup "${XDC_BIN}" "${args[@]}" &>"${LOG_FILE}" &
 
 PID=$!
 PID_FILE="${CFG}-sync-${PID}.pid"
-echo ${PID} >${PID_FILE}
+echo ${PID} >"${PID_FILE}"
 
 echo
 echo "datadir = ${DATA_DIR}"

@@ -132,12 +132,12 @@ What is foundation wallet address? (default = xdc0000000000000000000000000000000
 
 Press enter to use default address: `xdc0000000000000000000000000000000000000068`.
 
-### 3.11 Input three addresses for foudation MultiSignWallet
+### 3.11 Input three addresses for foundation MultiSignWallet
 
 ![1678423021572](https://user-images.githubusercontent.com/7695325/224224824-0d1bc001-a78a-4df2-847e-a1d35e1ed163.png)
 
 ```text
-Which accounts are allowed to confirm in Foudation MultiSignWallet?
+Which accounts are allowed to confirm in Foundation MultiSignWallet?
 > xdc1B1465f33C43D0c91295d0E0Ed7c406aB48a3dBa
 > xdc7F39FCD52d18BAeDf705ea7D16ab5e3889Da468e
 > xdc1209Bd249F097C39801e0dd81730D48584Ff33C3
@@ -157,7 +157,7 @@ without `xdc` prefix.
 ![1678423230672](https://user-images.githubusercontent.com/7695325/224225059-d4a1ec7d-8875-4bf2-b356-8140316a88ea.png)
 
 ```text
-How many require for confirm tx in Foudation MultiSignWallet? (default = 2)
+How many require for confirm tx in Foundation MultiSignWallet? (default = 2)
 > 2
 ```
 

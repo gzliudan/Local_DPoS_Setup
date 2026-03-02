@@ -14,7 +14,7 @@
       "reward": 2000,
       "rewardCheckpoint": 900,
       "gap": 450,
-      "foudationWalletAddr": "0x85f33E1242d87a875301312BD4EbaEe8876517BA",
+      "foundationWalletAddr": "0x85f33E1242d87a875301312BD4EbaEe8876517BA",
       "SkipV1Validation": false,
       "v2": {
         "switchBlock": 0,

@@ -18,10 +18,11 @@ function help() {
     echo "    $0 --help         Display this help messages"
     echo "    $0 mainnet1       Start a sync node with mainnet1.env"
     echo "    $0 testnet2.env   Start a sync node with testnet2.env"
+    echo "    $0 mainnet1 --verbosity 5 --maxpeers 50   Forward extra args to XDC"
     echo
 }
 
-if [[ "$#" != 1 ]]; then
+if [[ "$#" -lt 1 ]]; then
     help
     exit 1
 fi
@@ -32,6 +33,7 @@ if [[ "${1}" == "-h" || "${1}" == "--help" ]]; then
 fi
 
 CFG_FILE="${1}"
+EXTRA_ARGS=("${@:2}")
 if [[ ! -f "${CFG_FILE}" ]]; then
     if [[ -f "${CFG_FILE}.env" ]]; then
         CFG_FILE="${CFG_FILE}.env"
@@ -237,6 +239,10 @@ if [[ -n "${SET_HEAD}" ]]; then
     args+=(
         --set-head "${SET_HEAD}"
     )
+fi
+
+if [[ "${#EXTRA_ARGS[@]}" -gt 0 ]]; then
+    args+=("${EXTRA_ARGS[@]}")
 fi
 
 nohup "${XDC_BIN}" "${args[@]}" &>"${LOG_FILE}" &

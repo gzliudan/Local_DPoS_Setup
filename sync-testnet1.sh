@@ -3,4 +3,4 @@ set -eo pipefail
 
 cd "$(dirname "$0")"
 
-./sync-by-cfg.sh testnet1
+./sync-by-cfg.sh testnet1 "$@"

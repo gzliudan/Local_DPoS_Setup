@@ -54,10 +54,10 @@ function start_node() {
     PID_FILE="${NODE_NAME}.pid"
     DATA_DIR="nodes/${NODE_NAME}"
     LOG_FILE="${LOG_DIR}/${NODE_NAME}-${DATE}.log"
-    PORT=$((${BASE_PORT} + ${NODE_ID}))
-    RPC_PORT=$((${BASE_RPC_PORT} + ${NODE_ID}))
-    WS_RPC_PORT=$((${BASE_WS_RPC_PORT} + ${NODE_ID}))
-    METRICS_PORT=$((${BASE_METRICS_PORT} + ${NODE_ID}))
+    PORT=$((BASE_PORT + NODE_ID))
+    RPC_PORT=$((BASE_RPC_PORT + NODE_ID))
+    WS_RPC_PORT=$((BASE_WS_RPC_PORT + NODE_ID))
+    METRICS_PORT=$((BASE_METRICS_PORT + NODE_ID))
 
     echo "Starting the node ${NODE_NAME}"
 
@@ -72,7 +72,7 @@ function start_node() {
             exit 5
         fi
 
-        WALLET=$(${XDC_BIN} account import --password .pwd --datadir "${DATA_DIR}" <(echo ${PRIVATE_KEY}) | awk -v FS="({|})" '{print $2}')
+        WALLET=$(${XDC_BIN} account import --password .pwd --datadir "${DATA_DIR}" <(echo "${PRIVATE_KEY}") | awk -v FS="({|})" '{print $2}')
         if [ ! -f genesis.json ]; then
             cp genesis/localnet.json genesis.json
         fi
@@ -81,11 +81,11 @@ function start_node() {
         WALLET=$(${XDC_BIN} account list --datadir "${DATA_DIR}" | head -n 1 | awk -v FS="({|})" '{print $2}')
     fi
 
-    if [ ${WALLET:0:3} = "xdc" ]; then
+    if [ "${WALLET:0:3}" = "xdc" ]; then
         WALLET=${WALLET:3}
     fi
 
-    if [ ${WALLET:0:2} != "0x" ]; then
+    if [ "${WALLET:0:2}" != "0x" ]; then
         WALLET="0x${WALLET}"
     fi
 
@@ -96,7 +96,7 @@ function start_node() {
     echo "LOG_FILE = ${LOG_FILE}"
     echo "WALLET = ${WALLET}"
 
-    nohup ${XDC_BIN} \
+    nohup "${XDC_BIN}" \
         --gcmode archive \
         --syncmode full \
         --bootnodes "${ENODE}" \
@@ -121,10 +121,10 @@ function start_node() {
         --metrics \
         --metrics-addr "0.0.0.0" \
         --metrics-port "${METRICS_PORT}" \
-        >${LOG_FILE} 2>&1 &
+        >"${LOG_FILE}" 2>&1 &
 
     PID=$!
-    echo ${PID} >${PID_FILE}
+    echo ${PID} >"${PID_FILE}"
     echo "node ${NODE_NAME} is running now, PID = ${PID}"
     echo
 }
@@ -139,7 +139,7 @@ if [[ $# == 1 ]] && [[ "$1" == "-h" || "$1" == "--help" ]]; then
     exit 0
 fi
 
-for arg in $@; do
+for arg in "$@"; do
     if [[ ${arg} =~ [^0-9] ]]; then
         echo "node_id ${arg} is not integer"
         exit 2
@@ -157,7 +157,10 @@ for arg in $@; do
 done
 
 if [ -f .env ]; then
-    export $(cat .env | sed '/^\s*#/d' | xargs)
+    set -a
+    # shellcheck disable=SC1091
+    . ./.env
+    set +a
 else
     echo "Not found file .env"
     exit 4
@@ -199,6 +202,6 @@ fi
 echo
 touch .pwd
 mkdir -p "${LOG_DIR}"
-for arg in $@; do
-    start_node ${arg}
+for arg in "$@"; do
+    start_node "${arg}"
 done

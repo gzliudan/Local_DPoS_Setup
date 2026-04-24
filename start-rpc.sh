@@ -36,25 +36,25 @@ function start_rpc() {
 
     DATA_DIR="nodes/${NODE_NAME}"
     LOG_FILE="${LOG_DIR}/${NODE_NAME}-${DATE}.log"
-    PORT=$((${BASE_PORT} + ${NODE_ID}))
-    RPC_PORT=$((${BASE_RPC_PORT} + ${NODE_ID}))
-    WS_RPC_PORT=$((${BASE_WS_RPC_PORT} + ${NODE_ID}))
+    PORT=$((BASE_PORT + NODE_ID))
+    RPC_PORT=$((BASE_RPC_PORT + NODE_ID))
+    WS_RPC_PORT=$((BASE_WS_RPC_PORT + NODE_ID))
 
-    mkdir -p ${DATA_DIR}
+    mkdir -p "${DATA_DIR}"
     if [ ! -d "${DATA_DIR}/XDC/chaindata" ]; then
         echo "init the RPC ${NODE_NAME}"
-        ${XDC_BIN} --datadir ${DATA_DIR} init genesis.json
+        ${XDC_BIN} --datadir "${DATA_DIR}" init genesis.json
         echo
     fi
 
     echo "Starting the RPC ${NODE_NAME}"
-    nohup ${XDC_BIN} \
+    nohup "${XDC_BIN}" \
         --gcmode archive \
         --syncmode full \
-        --bootnodes ${ENODE} \
-        --datadir ${DATA_DIR} \
-        --networkid ${NETWORK_ID} \
-        --verbosity ${VERBOSITY} \
+        --bootnodes "${ENODE}" \
+        --datadir "${DATA_DIR}" \
+        --networkid "${NETWORK_ID}" \
+        --verbosity "${VERBOSITY}" \
         --etherbase 0x000000000000000000000000000000000000dead \
         --port ${PORT} \
         --rpc \
@@ -67,10 +67,10 @@ function start_rpc() {
         --wsaddr 0.0.0.0 \
         --wsport ${WS_RPC_PORT} \
         --wsorigins "*" \
-        >${LOG_FILE} 2>&1 &
+        >"${LOG_FILE}" 2>&1 &
 
     PID=$!
-    echo ${PID} >${PID_FILE}
+    echo ${PID} >"${PID_FILE}"
 
     echo "the RPC ${NODE_NAME} is running now, PID = ${PID}"
     echo "PORT = ${PORT}, RPC_PORT = ${RPC_PORT}, WS_RPC_PORT = ${WS_RPC_PORT}"
@@ -88,7 +88,7 @@ if [[ $# == 1 ]] && [[ "$1" == "-h" || "$1" == "--help" ]]; then
     exit 0
 fi
 
-for arg in $@; do
+for arg in "$@"; do
     if [[ ${arg} =~ [^0-9] ]]; then
         echo "node_id ${arg} is not integer"
         exit 2
@@ -108,7 +108,10 @@ done
 ENODE="$(grep -Eo 'enode://[0-9a-f]*' bootnode.txt)@127.0.0.1:30301"
 
 if [ -f .env ]; then
-    export $(cat .env | sed '/^\s*#/d' | xargs)
+    set -a
+    # shellcheck disable=SC1091
+    . ./.env
+    set +a
 fi
 
 DATE=$(date +%Y%m%d-%H%M%S)
@@ -121,7 +124,7 @@ BASE_PORT="${OBSERVER_BASE_PORT:-31000}"
 BASE_RPC_PORT="${OBSERVER_BASE_RPC_PORT:-8645}"
 BASE_WS_RPC_PORT="${OBSERVER_BASE_WS_RPC_PORT:-9645}"
 
-mkdir -p ${LOG_DIR}
-for arg in $@; do
-    start_rpc ${arg}
+mkdir -p "${LOG_DIR}"
+for arg in "$@"; do
+    start_rpc "${arg}"
 done

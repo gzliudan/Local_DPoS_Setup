@@ -48,11 +48,88 @@ function start_bootnode() {
     echo "bootnode is running now: ${PID}"
 }
 
+function ensure_node_key() {
+    NODE_ID=$1
+    DATA_DIR="nodes/pn${NODE_ID}"
+    NODE_KEY_FILE="${DATA_DIR}/XDC/nodekey"
+
+    if [ ! -f "${NODE_KEY_FILE}" ]; then
+        echo "create node key for pn${NODE_ID}"
+        mkdir -p "${DATA_DIR}/XDC"
+        ${BOOTNODE_BIN_FILE} -genkey "${NODE_KEY_FILE}"
+    fi
+}
+
+function node_enode() {
+    NODE_ID=$1
+    NODE_KEY_FILE="nodes/pn${NODE_ID}/XDC/nodekey"
+    NODE_PORT=$((BASE_PORT + NODE_ID))
+
+    PUBKEY="$(${BOOTNODE_BIN_FILE} -nodekey "${NODE_KEY_FILE}" -writeaddress)"
+    echo "enode://${PUBKEY}@127.0.0.1:${NODE_PORT}"
+}
+
+function write_static_nodes_config() {
+    NODE_ID=$1
+    shift
+
+    NODE_NAME="pn${NODE_ID}"
+    DATA_DIR="nodes/${NODE_NAME}"
+    CONFIG_FILE="${DATA_DIR}/XDC/config.toml"
+
+    mkdir -p "${DATA_DIR}/XDC"
+
+    {
+        echo "[Node.P2P]"
+        echo "StaticNodes = ["
+        for PEER_ID in "$@"; do
+            if [ "${PEER_ID}" = "${NODE_ID}" ]; then
+                continue
+            fi
+            echo "  \"$(node_enode "${PEER_ID}")\","
+        done
+        echo "]"
+    } >"${CONFIG_FILE}"
+}
+
+function prepare_static_nodes() {
+    ALL_NODE_IDS=()
+
+    if [ -f .env ]; then
+        while IFS= read -r LINE; do
+            if [[ ${LINE} =~ ^[[:space:]]*PRIVATE_KEY_([0-9]+)[[:space:]]*= ]]; then
+                ALL_NODE_IDS+=("${BASH_REMATCH[1]}")
+            fi
+        done < .env
+    fi
+
+    if [ ${#ALL_NODE_IDS[@]} -eq 0 ]; then
+        for ENV_NAME in $(env | cut -d= -f1); do
+            if [[ ${ENV_NAME} =~ ^PRIVATE_KEY_([0-9]+)$ ]]; then
+                ALL_NODE_IDS+=("${BASH_REMATCH[1]}")
+            fi
+        done
+    fi
+
+    if [ ${#ALL_NODE_IDS[@]} -eq 0 ]; then
+        ALL_NODE_IDS=("$@")
+    fi
+
+    for NODE_ID in "${ALL_NODE_IDS[@]}"; do
+        ensure_node_key "${NODE_ID}"
+    done
+
+    for NODE_ID in "$@"; do
+        write_static_nodes_config "${NODE_ID}" "${ALL_NODE_IDS[@]}"
+    done
+}
+
 function start_node() {
     NODE_ID=$1
     NODE_NAME="pn${NODE_ID}"
     PID_FILE="${NODE_NAME}.pid"
     DATA_DIR="nodes/${NODE_NAME}"
+    CONFIG_FILE="${DATA_DIR}/XDC/config.toml"
     LOG_FILE="${LOG_DIR}/${NODE_NAME}-${DATE}.log"
     PORT=$((BASE_PORT + NODE_ID))
     RPC_PORT=$((BASE_RPC_PORT + NODE_ID))
@@ -97,6 +174,7 @@ function start_node() {
     echo "WALLET = ${WALLET}"
 
     nohup "${XDC_BIN}" \
+        --config "${CONFIG_FILE}" \
         --gcmode archive \
         --syncmode full \
         --bootnodes "${ENODE}" \
@@ -202,6 +280,7 @@ fi
 echo
 touch .pwd
 mkdir -p "${LOG_DIR}"
+prepare_static_nodes "$@"
 for arg in "$@"; do
     start_node "${arg}"
 done

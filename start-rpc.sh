@@ -35,6 +35,7 @@ function start_rpc() {
     fi
 
     DATA_DIR="nodes/${NODE_NAME}"
+    CONFIG_FILE="${DATA_DIR}/XDC/config.toml"
     LOG_FILE="${LOG_DIR}/${NODE_NAME}-${DATE}.log"
     PORT=$((BASE_PORT + NODE_ID))
     RPC_PORT=$((BASE_RPC_PORT + NODE_ID))
@@ -49,9 +50,9 @@ function start_rpc() {
 
     echo "Starting the RPC ${NODE_NAME}"
     nohup "${XDC_BIN}" \
+        --config "${CONFIG_FILE}" \
         --gcmode archive \
         --syncmode full \
-        --bootnodes "${ENODE}" \
         --datadir "${DATA_DIR}" \
         --networkid "${NETWORK_ID}" \
         --verbosity "${VERBOSITY}" \
@@ -76,6 +77,61 @@ function start_rpc() {
     echo "PORT = ${PORT}, RPC_PORT = ${RPC_PORT}, WS_RPC_PORT = ${WS_RPC_PORT}"
     echo "DATA_DIR = ${DATA_DIR}, LOG_FILE = ${LOG_FILE}"
     echo
+}
+
+function masternode_enode() {
+    MASTER_ID=$1
+    MASTER_NODE_KEY_FILE="nodes/pn${MASTER_ID}/XDC/nodekey"
+    MASTER_PORT=$((MASTER_BASE_PORT + MASTER_ID))
+
+    PUBKEY="$(${BOOTNODE_BIN_FILE} -nodekey "${MASTER_NODE_KEY_FILE}" -writeaddress)"
+    echo "enode://${PUBKEY}@127.0.0.1:${MASTER_PORT}"
+}
+
+function write_rpc_static_nodes_config() {
+    RPC_ID=$1
+    DATA_DIR="nodes/on${RPC_ID}"
+    CONFIG_FILE="${DATA_DIR}/XDC/config.toml"
+
+    mkdir -p "${DATA_DIR}/XDC"
+
+    {
+        echo "[Node.P2P]"
+        echo "StaticNodes = ["
+        for MASTER_ID in "${MASTER_NODE_IDS[@]}"; do
+            echo "  \"$(masternode_enode "${MASTER_ID}")\","
+        done
+        echo "]"
+    } >"${CONFIG_FILE}"
+}
+
+function prepare_rpc_static_nodes() {
+    MASTER_NODE_IDS=()
+
+    if [ -f .env ]; then
+        while IFS= read -r LINE; do
+            if [[ ${LINE} =~ ^[[:space:]]*PRIVATE_KEY_([0-9]+)[[:space:]]*= ]]; then
+                MASTER_NODE_IDS+=("${BASH_REMATCH[1]}")
+            fi
+        done < .env
+    fi
+
+    if [ ${#MASTER_NODE_IDS[@]} -eq 0 ]; then
+        echo "No master nodes found from PRIVATE_KEY_* in .env"
+        exit 5
+    fi
+
+    for MASTER_ID in "${MASTER_NODE_IDS[@]}"; do
+        if [ ! -f "nodes/pn${MASTER_ID}/XDC/nodekey" ]; then
+            echo "Not found masternode key: nodes/pn${MASTER_ID}/XDC/nodekey"
+            echo "Please start masternodes first (run-node.sh)"
+            exit 6
+        fi
+    done
+
+    for RPC_ID in "$@"; do
+        write_rpc_static_nodes_config "${RPC_ID}"
+    done
 }
 
 if [ $# == 0 ]; then
@@ -105,8 +161,6 @@ for arg in "$@"; do
     fi
 done
 
-ENODE="$(grep -Eo 'enode://[0-9a-f]*' bootnode.txt)@127.0.0.1:30301"
-
 if [ -f .env ]; then
     set -a
     # shellcheck disable=SC1091
@@ -116,15 +170,18 @@ fi
 
 DATE=$(date +%Y%m%d-%H%M%S)
 XDC_BIN="${XDC:-${HOME}/XDPoSChain/build/bin/XDC}"
+BOOTNODE_BIN_FILE="${XDC_BIN%/*}/bootnode"
 
 LOG_DIR="${LOG_DIR:-logs}"
 VERBOSITY="${VERBOSITY:-3}"
 NETWORK_ID="${NETWORK_ID:-5151}"
+MASTER_BASE_PORT="${BASE_PORT:-30000}"
 BASE_PORT="${OBSERVER_BASE_PORT:-31000}"
 BASE_RPC_PORT="${OBSERVER_BASE_RPC_PORT:-8645}"
 BASE_WS_RPC_PORT="${OBSERVER_BASE_WS_RPC_PORT:-9645}"
 
 mkdir -p "${LOG_DIR}"
+prepare_rpc_static_nodes "$@"
 for arg in "$@"; do
     start_rpc "${arg}"
 done

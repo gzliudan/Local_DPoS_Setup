@@ -22,32 +22,6 @@ function help() {
     echo
 }
 
-function set_enode() {
-    if [ ! -f bootnode.key ]; then
-        echo "create bootnode.key"
-        ${BOOTNODE_BIN_FILE} -genkey bootnode.key
-    fi
-
-    if [ ! -f bootnode.txt ]; then
-        echo "create bootnode.txt"
-        ${BOOTNODE_BIN_FILE} -nodekey bootnode.key >bootnode.txt 2>&1 &
-        PID=$!
-        sleep 1
-        kill ${PID}
-    fi
-
-    # ENODE="enode://62457be5ca9c9ba3913d1513c22ca963b94548a7db06e7a629fec5b654ab7b09a704cba22229107b3f54848ae58e845dcce98393b48be619cc2860d56dd57198@127.0.0.1:30301"
-    ENODE="$(grep -Eo 'enode://[0-9a-f]*' bootnode.txt)@127.0.0.1:30301"
-}
-
-function start_bootnode() {
-    echo "Starting the bootnode"
-    ${BOOTNODE_BIN_FILE} -nodekey bootnode.key --addr 0.0.0.0:30301 >/dev/null 2>&1 &
-    PID=$!
-    echo ${PID} >${BOOTNODE_PID_FILE}
-    echo "bootnode is running now: ${PID}"
-}
-
 function ensure_node_key() {
     NODE_ID=$1
     DATA_DIR="nodes/pn${NODE_ID}"
@@ -177,7 +151,6 @@ function start_node() {
         --config "${CONFIG_FILE}" \
         --gcmode archive \
         --syncmode full \
-        --bootnodes "${ENODE}" \
         --datadir "${DATA_DIR}" \
         --networkid "${NETWORK_ID}" \
         --verbosity "${VERBOSITY}" \
@@ -245,7 +218,6 @@ else
 fi
 
 DATE=$(date +%Y%m%d-%H%M%S)
-BOOTNODE_PID_FILE="bootnode.pid"
 
 LOG_DIR="${LOG_DIR:-logs}"
 VERBOSITY="${VERBOSITY:-3}"
@@ -260,22 +232,9 @@ XDC_BIN="${XDC:-${HOME}/XDPoSChain/build/bin/XDC}"
 BOOTNODE_BIN_FILE="${XDC_BIN%/*}/bootnode"
 
 echo
-set_enode
 echo "XDC = ${XDC_BIN}"
-echo "bootnode = ${BOOTNODE_BIN_FILE}"
-echo "ENODE = ${ENODE}"
-
-echo
-if [ -f ${BOOTNODE_PID_FILE} ]; then
-    PID=$(cat ${BOOTNODE_PID_FILE})
-    if [ -d "/proc/${PID}/fd" ]; then
-        echo "bootnode is already running: ${PID}"
-    else
-        start_bootnode
-    fi
-else
-    start_bootnode
-fi
+echo "bootnode tool = ${BOOTNODE_BIN_FILE}"
+echo "mode = static peers only"
 
 echo
 touch .pwd

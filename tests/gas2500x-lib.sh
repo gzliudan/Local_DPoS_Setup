@@ -222,7 +222,9 @@ CASE_ID="" CASE_NAME=""
 begin_case() { # <id> <name>
     CASE_ID=$1
     CASE_NAME=${2:-$1}
-    printf '%s: test - %s\n' "$CASE_ID" "$CASE_NAME"
+    # the test line carries the chain head at the moment the case starts
+    # (the case name stays visible in the runner transcript's pass line)
+    printf '%s: test - block %s\n' "$CASE_ID" "$(head3)"
 }
 
 pass_case() { # [evidence]

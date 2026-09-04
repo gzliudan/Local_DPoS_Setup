@@ -69,21 +69,24 @@ for item in "${SCHEDULE[@]}"; do
     fi
     f="tests/$script.sh"
     [ -x "$f" ] || { echo "SKIP $item (no $f)"; continue; }
-    out=$(bash "$f" "$args" 2>&1)
+    # stream the case output live through the stamp filter — capturing it in
+    # a variable would print every line at case end and stamp identical
+    # times on the start and verdict lines. The verdict is recovered from
+    # the transcript (each line is "date time Tnn: status - evidence").
+    id_num=${item%%-*}; id_num=${id_num#t}
+    case_id=$(printf 'T%02d' "$id_num")
+    bash "$f" "$args"
     rc=$?
-    printf '%s\n' "$out"
     if [ "$rc" -eq 0 ]; then
         passed=$((passed + 1))
     else
         failed=$((failed + 1))
     fi
-    # keep the newest case_result row emitted by this run (the case scripts
-    # print their verdict line themselves; re-derive the table row from it)
-    verdict=$(printf '%s\n' "$out" | grep -E '^T[0-9]+: (pass|fail|skip)' | tail -n 1)
+    verdict=$(grep -E " $case_id: (pass|fail|skip)" "$LOG" 2>/dev/null | tail -n 1)
     if [ -n "$verdict" ]; then
         rows+=("$verdict")
     else
-        rows+=("$item — no verdict line")
+        rows+=("$item - no verdict line")
     fi
 done
 
@@ -94,13 +97,13 @@ echo
 echo "| Case | Status | Evidence |"
 echo "|---|---|---|"
 for row in "${rows[@]}"; do
-    # "T02: pass - evidence ..." -> | T02 | pass | evidence ... |
+    # "2026-09-04 23:39:14 T02: pass - evidence ..." -> | T02 | pass | evidence |
     printf '%s\n' "$row" | awk -F' - ' '
         {
             head=$1; ev=$2;
-            split(head, h, " ");       # h: [T02:, pass]
-            id=h[1]; sub(/:$/, "", id);
-            printf "| %s | %s | %s |\n", id, h[2], (ev == "" ? "-" : ev)
+            split(head, h, " ");       # h: [date, time, T02:, pass]
+            id=h[3]; sub(/:$/, "", id);
+            printf "| %s | %s | %s |\n", id, h[4], (ev == "" ? "-" : ev)
         }'
 done
 

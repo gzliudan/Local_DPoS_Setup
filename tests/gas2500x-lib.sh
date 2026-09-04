@@ -47,8 +47,10 @@ case_result() { # <id> <PASS|FAIL|SKIP> <name> <evidence>
     local id=$1 status=$2 name=$3 evidence=$4
     evidence=$(printf '%s' "$evidence" | tr '\n' ' ')
     # verdict line goes to stdout (the runner aggregates these into its table);
-    # same "T1: ..." shape as begin_case's running line, no block number
-    printf '%s: %s - %s\n' "$id" "$status" "$evidence"
+    # status words are lowercase on the line (pass/fail/skip), no block number
+    local word
+    word=$(printf '%s' "$status" | tr '[:upper:]' '[:lower:]')
+    printf '%s: %s - %s\n' "$id" "$word" "$evidence"
     if [ -n "$RESULTS_FILE" ]; then
         printf '| %s | %s | %s | %s | %s |\n' \
             "$id" "$status" "$(result_block)" "$name" \
@@ -220,7 +222,7 @@ CASE_ID="" CASE_NAME=""
 begin_case() { # <id> <name>
     CASE_ID=$1
     CASE_NAME=${2:-$1}
-    printf '%s: running - %s\n' "$CASE_ID" "$CASE_NAME"
+    printf '%s: test - %s\n' "$CASE_ID" "$CASE_NAME"
 }
 
 pass_case() { # [evidence]

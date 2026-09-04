@@ -3,7 +3,7 @@
 #
 # Usage: gas2500x-run.sh [t1 t2 ...]   (default: all cases in execution order)
 # Results: printed to stdout, every line prefixed with the current date-time —
-# each case emits its own "Tn: PASS/FAIL — evidence" line as it
+# each case emits its own "Tn: pass/fail/skip - evidence" line as it
 # runs, and the runner prints a summary table at the end. The stamped console
 # output is also recorded in results/gas2500x-<timestamp>.log; no results
 # .md file is created.
@@ -79,7 +79,7 @@ for item in "${SCHEDULE[@]}"; do
     fi
     # keep the newest case_result row emitted by this run (the case scripts
     # print their verdict line themselves; re-derive the table row from it)
-    verdict=$(printf '%s\n' "$out" | grep -E '^T[0-9]+: (PASS|FAIL|SKIP)' | tail -n 1)
+    verdict=$(printf '%s\n' "$out" | grep -E '^T[0-9]+: (pass|fail|skip)' | tail -n 1)
     if [ -n "$verdict" ]; then
         rows+=("$verdict")
     else
@@ -94,11 +94,11 @@ echo
 echo "| Case | Status | Evidence |"
 echo "|---|---|---|"
 for row in "${rows[@]}"; do
-    # "T2: PASS - evidence ..." -> | T2 | PASS | evidence ... |
+    # "T02: pass - evidence ..." -> | T02 | pass | evidence ... |
     printf '%s\n' "$row" | awk -F' - ' '
         {
             head=$1; ev=$2;
-            split(head, h, " ");       # h: [T2:, PASS]
+            split(head, h, " ");       # h: [T02:, pass]
             id=h[1]; sub(/:$/, "", id);
             printf "| %s | %s | %s |\n", id, h[2], (ev == "" ? "-" : ev)
         }'

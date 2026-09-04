@@ -15,9 +15,15 @@ cd "$(dirname "$0")" || exit
 # live console view (tee): stdout+stderr of everything below lands in the file
 mkdir -p results
 LOG="results/gas2500x-$(date +%Y%m%d-%H%M%S).log"
-exec > >(tee "$LOG") 2>&1
-
 source tests/gas2500x-lib.sh
+
+echo "gas2500x test run $(date '+%F %T') — fork at block $FORK_BLOCK"
+echo "log: $LOG"
+echo
+
+# from here on everything (stdout+stderr) is duplicated into the log file;
+# the banner above stays console-only, so the log starts at the first case
+exec > >(tee "$LOG") 2>&1
 
 # the twice-cases run their pre side before the fork and their post side after
 declare -A RUN=(
@@ -41,10 +47,6 @@ SCHEDULE=(
 if [ $# -gt 0 ]; then
     SCHEDULE=("$@")
 fi
-
-echo "gas2500x test run $(date '+%F %T') — fork at block $FORK_BLOCK"
-echo "log: $LOG"
-echo
 
 failed=0
 passed=0

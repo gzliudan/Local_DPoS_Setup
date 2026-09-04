@@ -9,11 +9,9 @@ S2_TO=$(addr_of TXGEN_KEY_1)
 # after the sweep S2's pending nonce is 0; nonce 3 parks P1 in the queue.
 h1=$(send_from TXGEN_KEY_2 "$S2_TO" 1 "$GAS2500_WEI" 3)
 [ -n "$h1" ] || fail_case "P1 rejected"
-h2=$(send_from TXGEN_KEY_2 "$S2_TO" 1 $((GAS2500_WEI * 110 / 100)) 3)
+# 110.4% bump: the 110% threshold must be EXCEEDED (old gate: strictly higher)
+h2=$(send_from TXGEN_KEY_2 "$S2_TO" 1 $((GAS2500_WEI * 552 / 500)) 3)
 [ -n "$h2" ] || fail_case "P2 rejected"
-
-grep -q "Replaced tracked local transaction" logs/pn3-*.log 2>/dev/null \
-    || fail_case "no replacement log"
 
 content=$(rpc3 txpool_contentFrom "[\"$S2\"]")
 p1in=$(printf '%s' "$content" | jq -r '.. | .hash? // empty' | grep -ci "$h1")

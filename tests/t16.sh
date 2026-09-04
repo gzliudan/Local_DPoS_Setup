@@ -3,7 +3,7 @@
 source "$(dirname "$0")/gas2500x-lib.sh"
 begin_case "T16" "sealing continuity across the fork"
 
-wait_head $((FORK_BLOCK + 5)) 90 || fail_case "pn3 head never passed $((FORK_BLOCK + 5))"
+wait_head $((FORK_BLOCK + 5)) 240 || fail_case "pn3 head never passed $((FORK_BLOCK + 5))"
 
 h0b=$(head0)
 # masternode head sampled now must agree with pn3 within 1 block

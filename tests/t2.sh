@@ -10,7 +10,7 @@ S3_TO=$(addr_of TXGEN_KEY_1)   # send to S1's address; nonce 0 probe of S3
 hash=$(send_from TXGEN_KEY_3 "$S3_TO" 1000000000000 "$GAS50_WEI")
 [ -n "$hash" ] || fail_case "send rejected"
 
-status=$(receipt_field "$hash" status)
+status=$(hex2dec "$(receipt_field "$hash" status)")
 eff=$(hex2dec "$(receipt_field "$hash" effectiveGasPrice)")
 blocknum=$(hex2dec "$(receipt_field "$hash" blockNumber)")
 

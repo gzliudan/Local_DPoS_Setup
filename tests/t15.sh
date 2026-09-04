@@ -5,6 +5,10 @@ source "$(dirname "$0")/gas2500x-lib.sh"
 begin_case "T15" "eth_estimateGas on both sides (${1:-?} side)"
 
 side=${1:-pre}
+if [ "$side" = "pre" ]; then
+    h=$(head3)
+    [ "$h" -lt "$FORK_BLOCK" ] || skip_case "head $h >= fork $FORK_BLOCK; pre side missed the window"
+fi
 S1=$(addr_of TXGEN_KEY_1)
 est=$(rpc3 eth_estimateGas "[{\"from\":\"$(addr_of TXGEN_KEY_2)\",\"to\":\"$S1\",\"value\":\"0x1\"}]")
 [ "$est" = "null" ] && fail_case "estimateGas returned null"

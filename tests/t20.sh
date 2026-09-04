@@ -10,7 +10,7 @@ S1_TO=$(addr_of TXGEN_KEY_2)
 hash=$(send_from TXGEN_KEY_1 "$S1_TO" 1 "$GAS2500_WEI")
 [ -n "$hash" ] || fail_case "send rejected"
 
-status=$(receipt_field "$hash" status)
+status=$(hex2dec "$(receipt_field "$hash" status)")
 eff=$(hex2dec "$(receipt_field "$hash" effectiveGasPrice)")
 [ "$status" = "1" ] || fail_case "status=$status"
 [ "$eff" = "$GAS2500_WEI" ] || fail_case "effectiveGasPrice=$eff != $GAS2500_WEI"

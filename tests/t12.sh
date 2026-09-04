@@ -5,6 +5,10 @@ source "$(dirname "$0")/gas2500x-lib.sh"
 begin_case "T12" "eth_getBlockByNumber baseFeePerGas (${1:-?} side)"
 
 side=${1:-pre}
+if [ "$side" = "pre" ]; then
+    h=$(head3)
+    [ "$h" -lt "$FORK_BLOCK" ] || skip_case "head $h >= fork $FORK_BLOCK; pre side missed the window"
+fi
 bf=$(hex2dec "$(rpc3 eth_getBlockByNumber "[\"latest\", false]" | jq -r .baseFeePerGas)")
 case "$side" in
 pre)  [ "$bf" = "$GAS50_WEI" ]   || fail_case "latest baseFee=$bf, expected $GAS50_WEI" ;;

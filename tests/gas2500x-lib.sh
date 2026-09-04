@@ -95,8 +95,10 @@ rpc3() {
 
 hex2dec() { printf '%d' "$1" 2>/dev/null; }
 
-head3() { hex2dec "$(rpc3 eth_blockNumber | jq -r .)"; }
-head0() { hex2dec "$(rpc0 eth_blockNumber | jq -r .)"; }
+# head3/head0: current head; prints -1 when the RPC is unreachable. (A bare
+# hex2dec of an empty RPC reply would print 0 and mask node-down as head 0.)
+head3() { local h; h=$(rpc3 eth_blockNumber | jq -r .); case "$h" in 0x*) hex2dec "$h";; *) echo -1;; esac; }
+head0() { local h; h=$(rpc0 eth_blockNumber | jq -r .); case "$h" in 0x*) hex2dec "$h";; *) echo -1;; esac; }
 
 # txpool counters of pn3: prints "<pending> <queued>"
 pool3() {
@@ -139,26 +141,73 @@ addr_of() { # <key-env-name> — derive the address of a raw key from .env
 # send_from <key-env-name> <to> <value-wei> <gasprice-wei> [nonce]
 # Signs locally with cast and submits via pn3's RPC. Prints the tx hash on
 # success; on RPC rejection prints the error text to stderr and returns 1.
+# The send is async (--async): cast broadcasts and exits immediately instead
+# of waiting for a receipt — queued (nonce-gap) txs never seal, so a receipt
+# wait would stall every pool-seeding submission for its full timeout.
+# --legacy is REQUIRED: cast silently upgrades to EIP-1559 on London+ chains
+# (fee cap = --gas-price, tip = 1 wei), and a same-nonce replacement then
+# fails the "tip must strictly increase" gate no matter how much the fee cap
+# rises. Legacy txs put the whole bump into gasPrice (= tipCap = feeCap).
 send_from() {
     local keyvar=$1 to=$2 value=$3 gp=$4 nonce=${5:-}
-    local nonce_args=()
+    local nonce_args=() out
     [ -n "$nonce" ] && nonce_args=(--nonce "$nonce")
-    cast send "$to" --value "$value"wei --gas-price "$gp"wei --gas-limit 21000 \
-        --private-key "$(printenv "$keyvar")" --rpc-url "$RPC3" \
-        --chain-id "$CHAIN_ID" --json "${nonce_args[@]}" 2>/tmp/g2500-send-err |
-        jq -r .transactionHash
+    out=$(cast send "$to" --value "$value"wei --gas-price "$gp"wei \
+        --gas-limit 21000 --private-key "$(printenv "$keyvar")" \
+        --rpc-url "$RPC3" --chain-id "$CHAIN_ID" --json --async --legacy \
+        "${nonce_args[@]}" 2>/tmp/g2500-send-err)
+    # --async --json prints the bare hash on success, an error JSON on failure
+    if printf '%s' "$out" | grep -qE '^0x[0-9a-fA-F]{64}$'; then
+        printf '%s\n' "$out"
+        return 0
+    fi
+    printf '%s' "$out" | jq -r '.errors[0].message? // empty' 2>/dev/null >&2
+    grep -m1 . /tmp/g2500-send-err >&2 2>/dev/null || true
+    return 1
 }
 
 # expect_reject <keyvar> <to> <value> <gasprice> <needle> — assert the send is
 # rejected with an error containing <needle>; prints the error.
 expect_reject() {
     local keyvar=$1 to=$2 value=$3 gp=$4 needle=$5 out
+    # capture BOTH streams: cast --json prints its error JSON on stdout;
+    # --async keeps the accepted path from stalling on a receipt wait
     out=$(cast send "$to" --value "$value"wei --gas-price "$gp"wei \
         --gas-limit 21000 --private-key "$(printenv "$keyvar")" \
-        --rpc-url "$RPC3" --chain-id "$CHAIN_ID" --json 2>&1 >/dev/null) || true
+        --rpc-url "$RPC3" --chain-id "$CHAIN_ID" --json --async --legacy 2>&1) || true
     printf '%s' "$out" | grep -qi "$needle" && return 0
     printf '%s' "$out" >&2
     return 1
+}
+
+# wait_port_free <port> [timeout-s] — block until the local port refuses
+# connections (the previous owner died); else return 1. Without this a fast
+# stop/start sequence hands the new node a socket whose old owner is still
+# shutting down, and reads land on the wrong (dying) process.
+wait_port_free() {
+    local port=$1 timeout=${2:-20} t=0
+    while :; do
+        curl -s --noproxy '*' -m 1 "http://127.0.0.1:$port" >/dev/null 2>&1 || return 0
+        [ "$t" -ge "$timeout" ] && return 1
+        sleep 1
+        t=$((t + 1))
+    done
+}
+
+# pn0_enode — pn0's enode URL from its admin_nodeInfo
+pn0_enode() { rpc0 admin_nodeInfo | jq -r .enode; }
+
+# restore_pn3 — bring the regular (peered) pn3 back after the isolated
+# experiment: kill whatever is on 8548, put the real config back, start.
+# Shared by t29/t30 so every failure path still leaves a sane node behind.
+restore_pn3() {
+    ./stop-network.sh 3 >/dev/null 2>&1
+    pkill -f 'XDC --config nodes/pn3' 2>/dev/null
+    wait_port_free 8548 20
+    wait_port_free 6063 5
+    [ -f nodes/pn3/XDC/config.toml.bak ] &&
+        mv nodes/pn3/XDC/config.toml.bak nodes/pn3/XDC/config.toml 2>/dev/null
+    ./run-node.sh 3 >/dev/null 2>&1
 }
 
 # receipt_field <hash> <field> [timeout-s]

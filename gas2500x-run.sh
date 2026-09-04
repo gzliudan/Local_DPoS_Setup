@@ -2,10 +2,11 @@
 # gas2500x-run.sh — run all gas2500x test cases in order and summarize.
 #
 # Usage: gas2500x-run.sh [t1 t2 ...]   (default: all cases in execution order)
-# Results: printed to stdout — each case emits its own "Tn PASS/FAIL
-# (block ...) — evidence" line as it runs, and the runner prints a summary
-# table at the end. The full console output is also recorded in
-# results/gas2500x-<timestamp>.log; no results .md file is created.
+# Results: printed to stdout, every line prefixed with the current date-time —
+# each case emits its own "Tn PASS/FAIL (block ...) — evidence" line as it
+# runs, and the runner prints a summary table at the end. The stamped console
+# output is also recorded in results/gas2500x-<timestamp>.log; no results
+# .md file is created.
 # When the run finishes the network is stopped (all nodes) — the suite owns
 # the whole lifecycle; start it again with ./start-network.sh && ./run-node.sh 3.
 set -uo pipefail
@@ -21,9 +22,15 @@ echo "gas2500x test run $(date '+%F %T') — fork at block $FORK_BLOCK"
 echo "log: $LOG"
 echo
 
-# from here on everything (stdout+stderr) is duplicated into the log file;
-# the banner above stays console-only, so the log starts at the first case
-exec > >(tee "$LOG") 2>&1
+# from here on everything (stdout+stderr) is duplicated into the log file and
+# every line is prefixed with the current date-time; the banner above stays
+# console-only, so the log starts at the first case
+stamp_lines() {
+    while IFS= read -r line; do
+        printf '%(%F %T)T %s\n' -1 "$line"
+    done
+}
+exec > >(stamp_lines | tee "$LOG") 2>&1
 
 # the twice-cases run their pre side before the fork and their post side after
 declare -A RUN=(

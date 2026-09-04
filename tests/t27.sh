@@ -20,8 +20,8 @@ transcript=${RUN_LOG:-$(find results -maxdepth 1 -name 'gas2500x-*.log' -printf 
 if [ -z "$transcript" ] || [ ! -f "$transcript" ]; then
     fail_case "no run transcript found (results/gas2500x-*.log)"
 fi
-v02=$(grep -E 'T02: PASS' "$transcript" | tail -n 1)
-v20=$(grep -E 'T20: PASS' "$transcript" | tail -n 1)
+v02=$(grep -E 'T02: pass' "$transcript" | tail -n 1)
+v20=$(grep -E 'T20: pass' "$transcript" | tail -n 1)
 if [ -z "$v02" ] || [ -z "$v20" ]; then
     fail_case "run T02 and T20 first (no PASS verdicts in $transcript)"
 fi

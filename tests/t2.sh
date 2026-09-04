@@ -3,6 +3,8 @@
 source "$(dirname "$0")/gas2500x-lib.sh"
 begin_case "T02" "at-floor execution on the pre-fork tier (12.5 gwei)"
 
+# the pre-send head is needed below for the seal-latency window, so the
+# pre-fork guard is spelled out instead of require_pre_fork
 head=$(head3)
 [ "$head" -lt "$FORK_BLOCK" ] || skip_case "head $head >= fork $FORK_BLOCK; run before the fork"
 

@@ -1,14 +1,13 @@
 #!/bin/bash
-# T6 — queue seeding, sender S2: 10 transfers parked in the queue.
+# T6 — queue seeding, sender S2: 8 transfers parked in the queue.
 source "$(dirname "$0")/gas2500x-lib.sh"
 begin_case "T06" "queue seeding, sender S2 (10 queued)"
 
-head=$(head3)
-[ "$head" -lt "$FORK_BLOCK" ] || skip_case "head $head >= fork $FORK_BLOCK; run before the fork"
+require_pre_fork
 
 S2=$(addr_of TXGEN_KEY_2)
 S2_TO=$(addr_of TXGEN_KEY_1)
-pending=$(hex2dec "$(rpc3 eth_getTransactionCount "[\"$S2\", \"pending\"]" | jq -r .)")
+pending=$(pending_nonce "$S2")
 [ "$pending" = "0" ] || fail_case "S2 pending nonce is $pending, expected 0"
 
 # nonces 2..9 (8 txs, gap at 0..1; nonce 10 stays free for T8's replacement
@@ -22,5 +21,3 @@ read -r pend que <<<"$(pool3)"
 [ "$pend" = "0" ] || fail_case "pending=$pend"
 [ "$que" = "18" ] || fail_case "queued=$que, expected 18"
 pass_case "pending=0 queued=18"
-# remember the seeded S2 nonces for T8/T9
-printf '2..9\n' >/tmp/g2500-t6-seeded

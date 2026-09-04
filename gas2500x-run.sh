@@ -3,8 +3,8 @@
 #
 # Usage: gas2500x-run.sh [t1 t2 ...]   (default: all cases in execution order)
 # Results: printed to stdout, every line prefixed with the current date-time —
-# each case emits its own "Tn: pass/fail/skip - evidence" line as it
-# runs, and the runner prints a summary table at the end. The stamped console
+# each case emits its own "Tnn: pass/fail/skip output=<evidence>" verdict
+# line as it runs (the transcript IS the summary). The stamped console
 # output is also recorded in results/gas2500x-<timestamp>.log; no results
 # .md file is created.
 # When the run finishes the network is stopped (all nodes) — the suite owns
@@ -33,16 +33,9 @@ stamp_lines() {
 }
 exec > >(stamp_lines | tee "$LOG") 2>&1
 
-# the twice-cases run their pre side before the fork and their post side after
-declare -A RUN=(
-    [t10-pre]="t10 pre"   [t10-post]="t10 post"
-    [t11-pre]="t11 pre"   [t11-post]="t11 post"
-    [t12-pre]="t12 pre"   [t12-post]="t12 post"
-    [t13-pre]="t13 pre"   [t13-post]="t13 post"
-    [t14-pre]="t14 pre"   [t14-post]="t14 post"
-    [t15-pre]="t15 pre"   [t15-post]="t15 post"
-)
-# full ordered schedule: id = script (empty = pre/post instance of a script)
+# full ordered schedule: the twice-cases (t10-t15) run their pre side before
+# the fork and their post side after — a "<script>-<side>" entry runs
+# tests/<script>.sh with the side as its argument
 SCHEDULE=(
     t1 t2 t3 t4 t5 t6 t7 t8 t9
     t10-pre t11-pre t12-pre t13-pre t14-pre t15-pre
@@ -57,8 +50,6 @@ if [ $# -gt 0 ]; then
 fi
 
 failed=0
-passed=0
-rows=()
 i=0
 for item in "${SCHEDULE[@]}"; do
     # the chain seals a block every 2 s — a 3 s gap before each case makes
@@ -66,34 +57,21 @@ for item in "${SCHEDULE[@]}"; do
     # lines in a transcript are all distinct
     if [ "$i" -gt 0 ]; then sleep 3; fi
     i=$((i + 1))
-    script=${RUN[$item]:-$item}
-    label=${RUN[$item]:+$item}
+    script=$item
     args=""
-    if [ -n "$label" ]; then
+    case $item in
+    t1[0-5]-*)
         script=${item%-*}
         args=${item#*-}
-    fi
+        ;;
+    esac
     f="tests/$script.sh"
     [ -x "$f" ] || { echo "SKIP $item (no $f)"; continue; }
     # stream the case output live through the stamp filter — capturing it in
     # a variable would print every line at case end and stamp identical
-    # times on the start and verdict lines. The verdict is recovered from
-    # the transcript (each line is "date time Tnn: status - evidence").
-    id_num=${item%%-*}; id_num=${id_num#t}
-    case_id=$(printf 'T%02d' "$id_num")
-    bash "$f" "$args"
-    rc=$?
-    if [ "$rc" -eq 0 ]; then
-        passed=$((passed + 1))
-    else
-        failed=$((failed + 1))
-    fi
-    verdict=$(grep -E " $case_id: (pass|fail|skip)" "$LOG" 2>/dev/null | tail -n 1)
-    if [ -n "$verdict" ]; then
-        rows+=("$verdict")
-    else
-        rows+=("$item - no verdict line")
-    fi
+    # times on the start and verdict lines. Each case prints its own
+    # "Tnn: pass/fail/skip output=..." verdict line into the transcript.
+    bash "$f" "$args" || failed=$((failed + 1))
 done
 
 # the suite owns the network lifecycle: stop all nodes once the run is done

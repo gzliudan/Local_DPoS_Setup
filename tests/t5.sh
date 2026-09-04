@@ -1,17 +1,16 @@
 #!/bin/bash
-# T5 — queue seeding, sender S1: 60 transfers parked in the queue.
+# T5 — queue seeding, sender S1: 10 transfers parked in the queue.
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T05" "queue seeding, sender S1 (60 queued)"
+begin_case "T05" "queue seeding, sender S1 (10 queued)"
 
-head=$(head3)
-[ "$head" -lt "$FORK_BLOCK" ] || skip_case "head $head >= fork $FORK_BLOCK; run before the fork"
+require_pre_fork
 
 S1=$(addr_of TXGEN_KEY_1)
 S1_TO=$(addr_of TXGEN_KEY_2)
 # pending nonce of S1 must be 0; nonces 1..10 create the gap that parks the
 # batch in the queue. NOTE: the pool rejects nonces beyond pending+10
 # (common.LimitThresholdNonceInQueue), so 10 is the max one account can park.
-pending=$(hex2dec "$(rpc3 eth_getTransactionCount "[\"$S1\", \"pending\"]" | jq -r .)")
+pending=$(pending_nonce "$S1")
 [ "$pending" = "0" ] || fail_case "S1 pending nonce is $pending, expected 0"
 
 # submit nonces 1..10 WITHOUT the missing nonce 0

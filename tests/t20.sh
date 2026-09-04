@@ -3,8 +3,7 @@
 source "$(dirname "$0")/gas2500x-lib.sh"
 begin_case "T20" "at-floor execution on the new tier (625 gwei)"
 
-head=$(head3)
-[ "$head" -ge "$FORK_BLOCK" ] || fail_case "head $head < fork $FORK_BLOCK"
+require_post_fork
 
 S1_TO=$(addr_of TXGEN_KEY_2)
 hash=$(send_from TXGEN_KEY_1 "$S1_TO" 1 "$GAS2500_WEI")

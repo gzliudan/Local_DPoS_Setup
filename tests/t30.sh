@@ -14,7 +14,7 @@ if [ ! -f /tmp/g2500-t29-state ]; then
     skip_case "T29 revival did not run; no re-cross to observe"
 fi
 
-m0=$(meter3 txpool_belowfloor); m0=${m0:-0}
+m0=$(gauge3 txpool_belowfloor)
 enode=$(pn0_enode)
 [ -n "$enode" ] || { restore_pn3; fail_case "could not fetch pn0's enode"; }
 
@@ -37,8 +37,8 @@ ok=0
 m=""; k=""; pools=""
 for _ in $(seq 1 30); do
     sleep 3
-    m=$(meter3 txpool_belowfloor); m=${m:-0}
-    k=$(meter3 txpool_local_belowfloor); k=${k:-0}
+    m=$(gauge3 txpool_belowfloor)
+    k=$(gauge3 txpool_local_belowfloor)
     read -r p q <<<"$(pool3)"
     pools="$p/$q"
     if [ "$m" -ge 18 ] && [ "$k" -ge 18 ] && [ "$p" = "0" ] && [ "$q" -le 1 ]; then

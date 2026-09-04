@@ -20,13 +20,10 @@ XDC_BIN="${XDC:-$HOME/XDPoSChain/build/bin/XDC}"
 [ -x "$XDC_BIN" ] || fail_case "XDC binary not found"
 [ -d nodes/pn3/XDC/chaindata ] || fail_case "pn3 not initialized"
 
-k0=$(meter3 txpool_local_belowfloor); k0=${k0:-0}
+k0=$(gauge3 txpool_local_belowfloor)
 [ "$k0" -gt 0 ] || fail_case "gauge=0, nothing held back to revive"
 
-./stop-network.sh 3 >/dev/null 2>&1
-pkill -f 'XDC --config nodes/pn3' 2>/dev/null
-wait_port_free 8548 20 || true
-wait_port_free 6063 10 || true
+stop_pn3 10   # the dying node gets a wider metrics-release window here
 
 mv nodes/pn3/XDC/config.toml nodes/pn3/XDC/config.toml.bak 2>/dev/null
 printf '[Node.P2P]\nStaticNodes = [\n]\n' > nodes/pn3/XDC/config.toml
@@ -45,16 +42,11 @@ nohup "$XDC_BIN" --config nodes/pn3/XDC/config.toml --nodiscover --port 0 \
     >>logs/pn3-t29-isolated.log 2>&1 &
 echo $! >pn3.pid
 
-head=""
-for _ in $(seq 1 45); do
-    head=$(head3)
-    [ "$head" != "-1" ] && [ -n "$head" ] && break
-    sleep 1
-done
-if [ "$head" = "-1" ] || [ -z "$head" ]; then
+if ! wait_rpc3 45; then
     restore_pn3
     fail_case "isolated pn3 RPC did not come up"
 fi
+head=$(head3)
 if [ "$head" -ge "$FORK_BLOCK" ]; then
     restore_pn3
     fail_case "rollback to 30 did not take effect (head=$head)"
@@ -73,7 +65,7 @@ pools=""
 k=""
 for _ in $(seq 1 30); do
     sleep 3
-    k=$(meter3 txpool_local_belowfloor); k=${k:-0}
+    k=$(gauge3 txpool_local_belowfloor)
     read -r p q <<<"$(pool3)"
     pools="$p/$q"
     if [ "$k" = "0" ] && [ $((p + q)) -ge 18 ]; then revived=1; break; fi
@@ -85,7 +77,7 @@ fi
 
 # veto: no below-floor tx may ever be sealed afterwards — the node has no
 # peers and is not a signer, but assert the floor anyway
-bf=$(hex2dec "$(rpc3 eth_getBlockByNumber "[\"latest\", false]" | jq -r .baseFeePerGas)")
+bf=$(base_fee latest)
 if [ "$bf" != "$GAS50_WEI" ]; then
     restore_pn3
     fail_case "floor is not 12.5g after the rollback (bf=$bf)"

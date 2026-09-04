@@ -13,9 +13,9 @@ h1=$(send_from TXGEN_KEY_2 "$S2_TO" 1 "$GAS2500_WEI" 3)
 h2=$(send_from TXGEN_KEY_2 "$S2_TO" 1 $((GAS2500_WEI * 552 / 500)) 3)
 [ -n "$h2" ] || fail_case "P2 rejected"
 
-content=$(rpc3 txpool_contentFrom "[\"$S2\"]")
-p1in=$(printf '%s' "$content" | jq -r '.. | .hash? // empty' | grep -ci "$h1")
+hashes=$(pool_hashes_from "$S2")
+p1in=$(printf '%s' "$hashes" | grep -ci "$h1")
 [ "$p1in" = "0" ] || fail_case "P1 still in pool"
-p2in=$(printf '%s' "$content" | jq -r '.. | .hash? // empty' | grep -ci "$h2")
+p2in=$(printf '%s' "$hashes" | grep -ci "$h2")
 [ "$p2in" = "1" ] || fail_case "P2 not in pool"
 pass_case "P2 replaced P1 at nonce 3 (625g tier)"

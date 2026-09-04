@@ -13,10 +13,10 @@ before=$(journal_size)
 que0=$(pool3 | awk '{print $2}')
 sleep 65   # one full recheck period
 
-k=$(meter3 txpool_local_belowfloor); k=${k:-0}
+k=$(gauge3 txpool_local_belowfloor)
 sleep 65   # one more recheck under observation
 
-k2=$(meter3 txpool_local_belowfloor); k2=${k2:-0}
+k2=$(gauge3 txpool_local_belowfloor)
 read -r pend que <<<"$(pool3)"
 after=$(journal_size)
 [ "$k" -gt 0 ] || fail_case "gauge=0, no hold-back observed"

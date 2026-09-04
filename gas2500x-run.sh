@@ -90,32 +90,9 @@ for item in "${SCHEDULE[@]}"; do
     fi
 done
 
-echo
-echo "==================== summary ===================="
-printf 'passed=%d failed=%d\n' "$passed" "$failed"
-echo
-echo "| Case | Status | Evidence |"
-echo "|---|---|---|"
-for row in "${rows[@]}"; do
-    # "2026-09-04 23:39:14 T02: pass output=evidence ..." ->
-    # | T02 | pass | evidence ... |
-    printf '%s\n' "$row" | awk '
-        {
-            sub(/^[0-9-]+ [0-9:]+ /, "")   # drop the date-time stamp
-            split($0, h, " ")              # h: [T02:, pass, output=evidence ...]
-            id = h[1]; sub(/:$/, "", id)
-            status = h[2]
-            ev = $0
-            sub(/^[^ ]+ [^ ]+ output=/, "", ev)   # everything after "output="
-            printf "| %s | %s | %s |\n", id, status, (ev == "" ? "-" : ev)
-        }'
-done
-
 # the suite owns the network lifecycle: stop all nodes once the run is done
-echo
-echo "stopping the network ..."
+# (quietly - no stop chatter in the transcript)
 ./stop-network.sh >/dev/null 2>&1 || true
 pkill -f 'XDC --config nodes/pn3' 2>/dev/null || true   # observer is not in the .pid files
-echo "network stopped"
 
 [ "$failed" = "0" ] || exit 1

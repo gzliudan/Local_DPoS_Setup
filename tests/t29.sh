@@ -23,13 +23,11 @@ XDC_BIN="${XDC:-$HOME/XDPoSChain/build/bin/XDC}"
 k0=$(meter3 txpool_local_belowfloor); k0=${k0:-0}
 [ "$k0" -gt 0 ] || fail_case "gauge=0, nothing held back to revive"
 
-echo "  stopping regular pn3"
 ./stop-network.sh 3 >/dev/null 2>&1
 pkill -f 'XDC --config nodes/pn3' 2>/dev/null
 wait_port_free 8548 20 || true
 wait_port_free 6063 10 || true
 
-echo "  starting pn3 isolated (--nodiscover, --port 0, --set-head 30)"
 mv nodes/pn3/XDC/config.toml nodes/pn3/XDC/config.toml.bak 2>/dev/null
 printf '[Node.P2P]\nStaticNodes = [\n]\n' > nodes/pn3/XDC/config.toml
 

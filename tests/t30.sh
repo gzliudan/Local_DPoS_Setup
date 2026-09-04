@@ -18,7 +18,6 @@ m0=$(meter3 txpool_belowfloor); m0=${m0:-0}
 enode=$(pn0_enode)
 [ -n "$enode" ] || { restore_pn3; fail_case "could not fetch pn0's enode"; }
 
-echo "  re-connecting the rewound pn3 to pn0"
 if ! rpc3 admin_addPeer "[\"$enode\"]" >/dev/null; then
     restore_pn3
     fail_case "admin_addPeer failed"

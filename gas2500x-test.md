@@ -18,6 +18,30 @@ shipped by three XDPoSChain commits on `dev-upgrade`:
 Node under test baseline: `XDPoSChain` `dev-upgrade` @ `5501a1f1e5` (contains
 all three commits). Rebuild before the test day: `cd ~/XDPoSChain && make all`.
 
+## 0. Quick start
+
+All commands run from `~/Local_DPoS_Setup`. This branch (`gas2500x`) keeps
+`"gas2500xBlock": 90` in `genesis.json` permanently — no file restoration is
+needed before or after a test run.
+
+```bash
+# start the network (3 masternodes) + the observer
+./start-network.sh && ./run-node.sh 3
+
+# run the whole suite (auto-stops the network when done;
+# transcript lands in results/gas2500x-<timestamp>.log)
+./gas2500x-run.sh
+
+# run one case (network must be up)
+tests/t2.sh
+
+# stop everything manually
+./stop-network.sh
+
+# fresh state for the next run (stop → wipe datadirs → start)
+./stop-network.sh && ./reset.sh -f && ./start-network.sh && ./run-node.sh 3
+```
+
 ## 1. Topology
 
 Three masternodes (pn0–pn2, genesis signers, 2/3 ≥ 0.666 quorum) plus a fourth
@@ -93,7 +117,7 @@ Shell layer, `bash` + `curl` + `jq` + `cast` (foundry) only, all under
   verdict line to stdout, and the runner records the whole run in
   `results/gas2500x-<timestamp>.log` (no results `.md` is created).
 - **`tests/t1.sh` … `tests/t31.sh`** — one script per test case; each prints
-  its verdict line (`Tn: pass/fail/skip - evidence`) to stdout, and the
+  its verdict line (`Tn: pass output=...`) to stdout, and the
   runner keeps the whole transcript in `results/`.
 - **`gas2500x-run.sh`** (repo root, next to `start-network.sh`) — runs all
   cases in order (the twice-cases run pre before the fork and post after it)
@@ -352,8 +376,3 @@ transactions (they cannot be crafted on a running network).
 - **Steps:** plain `./stop-network.sh 3 && ./run-node.sh 3`.
 - **Expected:** the txs stay held back (gauge = k, pool empty) — the journal
   persists the hold-back state and no resubmit storm happens.
-
-**After the run** (cleanup is not a test case, just the way back to the
-unmodified genesis): remove the `"gas2500xBlock": 90` line from `genesis.json`,
-then `./stop-network.sh && ./reset.sh -f` and restart with
-`./start-network.sh && ./run-node.sh 3`.

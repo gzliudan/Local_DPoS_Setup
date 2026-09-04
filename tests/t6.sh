@@ -1,7 +1,7 @@
 #!/bin/bash
 # T6 — queue seeding, sender S2: 10 transfers parked in the queue.
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T6" "queue seeding, sender S2 (10 queued)"
+begin_case "T06" "queue seeding, sender S2 (10 queued)"
 
 head=$(head3)
 [ "$head" -lt "$FORK_BLOCK" ] || skip_case "head $head >= fork $FORK_BLOCK; run before the fork"

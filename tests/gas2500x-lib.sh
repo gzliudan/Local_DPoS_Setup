@@ -10,7 +10,7 @@
 #   and TXGEN_KEY_1/2/3 (raw sender keys S1/S2/S3).
 # Requirements: bash, curl, jq, cast (foundry).
 #
-# Results: printed to stdout — one "T2 PASS (block 90) — evidence" line per
+# Results: printed to stdout — one "T02: PASS - evidence" line per case
 # case verdict. No results file is created unless the caller exports
 # RESULTS_FILE themselves (opt-in for standalone debugging).
 

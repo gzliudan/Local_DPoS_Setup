@@ -1,7 +1,7 @@
 #!/bin/bash
 # T2 — at-floor execution on the pre-fork tier: S3 sends at exactly 12.5 gwei.
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T2" "at-floor execution on the pre-fork tier (12.5 gwei)"
+begin_case "T02" "at-floor execution on the pre-fork tier (12.5 gwei)"
 
 head=$(head3)
 [ "$head" -lt "$FORK_BLOCK" ] || skip_case "head $head >= fork $FORK_BLOCK; run before the fork"

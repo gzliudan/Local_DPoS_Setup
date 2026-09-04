@@ -1,7 +1,7 @@
 #!/bin/bash
 # T7 — the queued batch is not sealed: blocks stay empty while txs sit queued.
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T7" "the queued batch is not sealed"
+begin_case "T07" "the queued batch is not sealed"
 
 head0=$(head3)
 for i in $(seq 1 10); do

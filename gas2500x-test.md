@@ -25,7 +25,7 @@ Three masternodes (pn0–pn2, genesis signers, 2/3 ≥ 0.666 quorum) plus a four
 
 - pn0–pn2 keep sealing throughout the whole plan — no quorum risk, no timeout
   wobble, masternode data untouched by the set-head experiment.
-- The bulk transactions of cases T5/T6 are submitted to **pn3** (RPC 8548),
+- The bulk transactions of cases T05/T06 are submitted to **pn3** (RPC 8548),
   so all tracker/journal/hold-back state lands on pn3, and the floor-drop
   experiment (T29) rewinds pn3 only. A non-signer cannot finalize anything on
   its own (1 vote < 1.998), so it just stalls at the rewound head without
@@ -55,7 +55,7 @@ via the node, so `eth_sendTransaction` works for every case.
 - **Gas2500x floor:** 625,000,000,000 wei = 625 gwei
 - **Floor resolution height:** head+1 (with `gas2500xBlock: 90`, the reset
   landing on head 90 sweeps)
-- **Replacement bump:** 10% (pool policy; unit-test pinned, see T8/T23)
+- **Replacement bump:** 10% (pool policy; unit-test pinned, see T08/T23)
 - **Tracker recheck:** 10 s after start, then every 60 s
   (`locals.recheckInterval`)
 
@@ -105,11 +105,11 @@ Twice-cases take an argument when run alone:
 
 Cases are ordered by execution time, and **each case verifies exactly one
 result** — one action (or one passive observation) with its expected outcome.
-Observation-only cases (T4, T7, T17–T19, ...) share the trigger of the action
+Observation-only cases (T04, T07, T17–T19, ...) share the trigger of the action
 case they observe and add no new submissions; probe cases marked "twice" run
 the same call on both sides of the fork. Fork height: **90**
 (≈180 s after genesis at 2 s blocks). Hard timing rule: all pre-fork
-submissions (T1–T9, plus the pre sides of T13/T14) must complete before
+submissions (T01–T09, plus the pre sides of T13/T14) must complete before
 head ≈ 85 — queued (gap) transactions survive until the fork regardless, but
 miss the window and the reset/start cycle starts over.
 
@@ -120,7 +120,7 @@ transactions (they cannot be crafted on a running network).
 
 ### Scheduled fork at block 90
 
-### T1 — fund the senders
+### T01 — fund the senders
 
 - **When:** head 20–25.
 - **Steps:**
@@ -133,7 +133,7 @@ transactions (they cannot be crafted on a running network).
 - **Expected:** `eth_getBalance` on pn3's RPC (8548) reflects all four new
   balances; the funding txs are sealed within ~2 blocks.
 
-### T2 — at-floor execution on the pre-fork tier (12.5 gwei)
+### T02 — at-floor execution on the pre-fork tier (12.5 gwei)
 
 - **When:** head 25–30.
 - **Steps:** S3 submits one executable transfer at **exactly 12.5 gwei** and
@@ -142,23 +142,23 @@ transactions (they cannot be crafted on a running network).
   gwei, status 1; S3's nonce advances 0 → 1. The pre-fork floor admits a tx at
   exactly the floor.
 
-### T3 — below-floor rejection on the pre-fork tier (12.5 gwei − 1)
+### T03 — below-floor rejection on the pre-fork tier (12.5 gwei − 1)
 
 - **When:** head 30–35.
 - **Steps:** S3 submits one executable transfer at 12.5 gwei − 1 wei
   (12499999999).
-- **Expected:** rejected with `under min gas price`; nothing sealed. With T2:
+- **Expected:** rejected with `under min gas price`; nothing sealed. With T02:
   the pre-fork floor is exactly 12.5 gwei, inclusive.
 
-### T4 — the below-floor reject is not tracked (#2541)
+### T04 — the below-floor reject is not tracked (#2541)
 
-- **When:** immediately after T3.
+- **When:** immediately after T03.
 - **Steps:** compare the journal size (`nodes/pn3/XDC/transactions.rlp`)
-  across T3 and one tracker rotation; read the gauge `txpool/local/belowfloor`.
+  across T03 and one tracker rotation; read the gauge `txpool/local/belowfloor`.
 - **Expected:** journal size unchanged, gauge stays 0 — a non-temporary reject
   never enters the tracker or the journal.
 
-### T5 — queue seeding, sender S1 (60 queued)
+### T05 — queue seeding, sender S1 (60 queued)
 
 - **When:** head 30–40.
 - **Steps:** S1 submits 60 transfers at nonces 1–60 (`--count 60
@@ -170,7 +170,7 @@ transactions (they cannot be crafted on a running network).
 - **Expected:** pn3 `txpool_status` shows `pending=0, queued=60`; pn0–pn2
   pools stay empty (queued transactions are not announced).
 
-### T6 — queue seeding, sender S2 (10 queued)
+### T06 — queue seeding, sender S2 (10 queued)
 
 - **When:** head 35–45.
 - **Steps:** S2 submits 10 transfers at nonces 3–12 (`--count 10
@@ -178,7 +178,7 @@ transactions (they cannot be crafted on a running network).
   64-slot per-account queue cap.
 - **Expected:** pn3 queued 60 → 70, pending stays 0; pn0–pn2 pools empty.
 
-### T7 — the queued batch is not sealed
+### T07 — the queued batch is not sealed
 
 - **When:** head 40–60 (passive).
 - **Steps:** sample `eth_getBlockTransactionCountByNumber` over ~10
@@ -186,7 +186,7 @@ transactions (they cannot be crafted on a running network).
 - **Expected:** count 0 on every sampled block — the only pooled txs are
   queued and cannot be sealed; the head advances on empty blocks.
 
-### T8 — same-nonce replacement accepted (pre-fork, #2541)
+### T08 — same-nonce replacement accepted (pre-fork, #2541)
 
 - **When:** head 45–60.
 - **Steps:**
@@ -195,9 +195,9 @@ transactions (they cannot be crafted on a running network).
 - **Expected:** P2 accepted; the tracker logs `Replaced tracked local
   transaction` and holds only P2; the pool's nonce-20 slot holds only P2.
 
-### T9 — journal load converges on the replacement (pre-fork, #2541)
+### T09 — journal load converges on the replacement (pre-fork, #2541)
 
-- **When:** head 60–80, after T8.
+- **When:** head 60–80, after T08.
 - **Steps:** restart pn3 (`./stop-network.sh 3 && ./run-node.sh 3`).
 - **Expected:** after the journal load the pool holds only P2 at nonce 20; P1
   never wins the nonce back. (Pending-side replacement rules — the 10% bump,
@@ -231,7 +231,7 @@ transactions (they cannot be crafted on a running network).
 
 - **When:** pre side head ≈ 55; post side head ≈ 105.
 - **Steps:** from pn3's unlocked account P3, submit one `eth_sendTransaction`
-  with no gasPrice argument; follow the receipt. (P3 was funded in T1;
+  with no gasPrice argument; follow the receipt. (P3 was funded in T01;
   `eth_sendTransaction` signs from the node's keystore, which is why it uses
   P3 and not the raw senders.)
 - **Expected:** the tx defaults to the tier-aware suggestion — sealed at
@@ -287,14 +287,14 @@ transactions (they cannot be crafted on a running network).
 - **Steps:** S1 submits one executable transfer at **exactly 625 gwei** (the
   sweep freed S1's executable nonce 0) and the receipt is fetched.
 - **Expected:** sealed within ~2 blocks; receipt `effectiveGasPrice` = 625
-  gwei; S1's nonce advances to 1 — mirror of T2 on the new tier.
+  gwei; S1's nonce advances to 1 — mirror of T02 on the new tier.
 
 ### T21 — below-floor rejection on the new tier (625 gwei − 1)
 
 - **When:** head 100–110, after T20.
 - **Steps:** S1 submits one executable transfer at 624999999999.
 - **Expected:** rejected with `under min gas price`. With T20: the post-fork
-  floor is exactly 625 gwei, inclusive — the same boundary T3 probed, now at
+  floor is exactly 625 gwei, inclusive — the same boundary T03 probed, now at
   the new tier.
 
 ### T22 — the post-fork reject is not tracked (#2541)
@@ -312,7 +312,7 @@ transactions (they cannot be crafted on a running network).
      sweep, so the tx parks in the queue behind missing nonces 0–2, tracked.
   2. S2 submits P2 at the same nonce 3 with P2 ≥ 1.1 × P1 (e.g. 690 gwei).
 - **Expected:** P2 accepted; log `Replaced tracked local transaction`; the
-  nonce-3 slot holds only P2. Same mechanics as T8 at the new price.
+  nonce-3 slot holds only P2. Same mechanics as T08 at the new price.
 
 ### T24 — journal load converges on the new-tier replacement (#2541)
 
@@ -337,17 +337,17 @@ transactions (they cannot be crafted on a running network).
 
 ### T27 — effectiveGasPrice matches the block's base fee on both tiers (#2516)
 
-- **When:** head ≥ 95, once the T2 and T20 receipts exist.
+- **When:** head ≥ 95, once the T02 and T20 receipts exist.
 - **Steps:** compare each receipt's `effectiveGasPrice` with the
-  `baseFeePerGas` of its own block (T2's tx: 12.5 gwei; T20's tx: 625 gwei).
+  `baseFeePerGas` of its own block (T02's tx: 12.5 gwei; T20's tx: 625 gwei).
 - **Expected:** every receipt matches its block — pre-fork txs paid the 12.5
   gwei tier, post-fork txs pay 625 gwei, no cross-tier mixing.
 
 ### T28 — the `--gasprice 1` knob is inert (#2516)
 
-- **When:** any time after T3 and T21.
+- **When:** any time after T03 and T21.
 - **Steps:** confirm every node still runs with `--gasprice 1` (stock
-  `run-node.sh`; check the process command line); cross-reference the T3 and
+  `run-node.sh`; check the process command line); cross-reference the T03 and
   T21 rejections.
 - **Expected:** with `--gasprice 1` present the enforced floor was still 12.5
   gwei, then 625 gwei — the floor is a pure function of the chain config; the

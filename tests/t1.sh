@@ -1,7 +1,7 @@
 #!/bin/bash
 # T1 — fund the senders S1/S2/S3 (and confirm P3) from pn0's prefunded signer.
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T1" "fund the senders"
+begin_case "T01" "fund the senders"
 
 # S1..S3 need gas money for T2/T5/T6/T8/T20+: send 1 XDC each from pn0's
 # prefunded signer (PRIVATE_KEY_0) at the current suggested price.

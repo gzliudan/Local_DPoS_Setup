@@ -14,4 +14,4 @@ status=$(hex2dec "$(receipt_field "$hash" status)")
 eff=$(hex2dec "$(receipt_field "$hash" effectiveGasPrice)")
 [ "$status" = "1" ] || fail_case "status=$status"
 [ "$eff" = "$GAS2500_WEI" ] || fail_case "effectiveGasPrice=$eff != $GAS2500_WEI"
-pass_case "sealed at $eff wei (block $(hex2dec "$(receipt_field "$hash" blockNumber)"))"
+pass_case "sealed at $eff wei"

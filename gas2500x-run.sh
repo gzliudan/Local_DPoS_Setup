@@ -3,7 +3,7 @@
 #
 # Usage: gas2500x-run.sh [t1 t2 ...]   (default: all cases in execution order)
 # Results: printed to stdout, every line prefixed with the current date-time —
-# each case emits its own "Tn PASS/FAIL (block ...) — evidence" line as it
+# each case emits its own "Tn: PASS/FAIL — evidence" line as it
 # runs, and the runner prints a summary table at the end. The stamped console
 # output is also recorded in results/gas2500x-<timestamp>.log; no results
 # .md file is created.
@@ -16,6 +16,7 @@ cd "$(dirname "$0")" || exit
 # live console view (tee): stdout+stderr of everything below lands in the file
 mkdir -p results
 LOG="results/gas2500x-$(date +%Y%m%d-%H%M%S).log"
+export RUN_LOG="$LOG"   # case scripts (t27) read sibling verdicts from it
 source tests/gas2500x-lib.sh
 
 echo "gas2500x test run $(date '+%F %T') — fork at block $FORK_BLOCK"

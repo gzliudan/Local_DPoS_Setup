@@ -2,7 +2,7 @@
 # T9 — journal load converges on the replacement (pre-fork, #2541):
 # after a restart the pool holds only P2 at nonce 20.
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T9" "journal load converges on the replacement (pre-fork)"
+begin_case "T09" "journal load converges on the replacement (pre-fork)"
 
 S2=$(addr_of TXGEN_KEY_2)
 

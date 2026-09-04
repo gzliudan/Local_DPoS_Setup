@@ -12,13 +12,18 @@ check() { # <hash> <want>
     [ "$eff" = "$want" ] || fail_case "tx $hash: eff=$eff want=$want"
     [ "$bf" = "$want" ] || fail_case "block $blk: baseFee=$bf want=$want"
 }
-# T2's tx (12.5 gwei tier) — last S3 tx sealed pre-fork; find via S3's receipt
-# stored by T2: re-derive by scanning S3's last pre-fork receipt is complex,
-# so T27 relies on T2/T20 having recorded them in the results file.
-h12=$(grep '^| T2 ' "$RESULTS_FILE" 2>/dev/null | tail -n 1)
-h20=$(grep '^| T20 ' "$RESULTS_FILE" 2>/dev/null | tail -n 1)
-if [ -z "$h12" ] || [ -z "$h20" ]; then
-    fail_case "run T2 and T20 first (results file empty)"
+# T02's tx (12.5 gwei tier) — last S3 tx sealed pre-fork; find via S3's receipt
+# stored by T02: re-derive by scanning S3's last pre-fork receipt is complex,
+# so T27 checks the run transcript (the runner records each case's verdict
+# line in results/gas2500x-<timestamp>.log and exports RUN_LOG for it).
+transcript=${RUN_LOG:-$(find results -maxdepth 1 -name 'gas2500x-*.log' -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -n 1 | cut -d' ' -f2-)}
+if [ -z "$transcript" ] || [ ! -f "$transcript" ]; then
+    fail_case "no run transcript found (results/gas2500x-*.log)"
+fi
+v02=$(grep -E 'T02: PASS' "$transcript" | tail -n 1)
+v20=$(grep -E 'T20: PASS' "$transcript" | tail -n 1)
+if [ -z "$v02" ] || [ -z "$v20" ]; then
+    fail_case "run T02 and T20 first (no PASS verdicts in $transcript)"
 fi
 
 # T2/T20 evidence strings carry the seal price; verify against current chain

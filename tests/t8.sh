@@ -2,7 +2,7 @@
 # T8 — same-nonce replacement accepted (pre-fork, #2541):
 # P2 (>= 1.1 x P1) replaces P1 in the queue and in the tracker.
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T8" "same-nonce replacement accepted (pre-fork)"
+begin_case "T08" "same-nonce replacement accepted (pre-fork)"
 
 h=$(head3)
 [ "$h" -lt "$FORK_BLOCK" ] || skip_case "head $h >= fork $FORK_BLOCK; run before the fork"

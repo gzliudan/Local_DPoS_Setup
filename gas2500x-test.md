@@ -16,15 +16,23 @@ shipped by three XDPoSChain commits on `dev-upgrade`:
   not a temporary reject and must not enter the tracker.
 
 Node under test baseline: `XDPoSChain` `dev-upgrade` @ `5501a1f1e5` (contains
-all three commits). Rebuild before the test day: `cd ~/XDPoSChain && make all`.
+all three commits).
 
-## 0. Quick start
+## Quick start
 
 All commands run from `~/Local_DPoS_Setup`. This branch (`gas2500x`) keeps
 `"gas2500xBlock": 90` in `genesis.json` permanently — no file restoration is
-needed before or after a test run.
+needed before or after a test run. Everything runs with `bash`, `curl`, `jq`
+and foundry's `cast`; sender keys (S1/S2/S3) live in `.env` as raw hex and
+every submission is signed locally with `cast send --private-key ... --legacy`;
+only T13 signs through pn3's unlocked keystore (`eth_sendTransaction` as
+account P3).
 
 ```bash
+# one-time setup (if not done yet)
+cp .env.sample .env                 # sender/node keys
+cd ~/XDPoSChain && make all         # fresh XDC + bootnode binaries; cd back
+
 # start the network (3 masternodes) + the observer
 ./start-network.sh && ./run-node.sh 3
 
@@ -42,7 +50,7 @@ tests/t2.sh
 ./stop-network.sh && ./reset.sh -f && ./start-network.sh && ./run-node.sh 3
 ```
 
-## 1. Topology
+## Topology
 
 Three masternodes (pn0–pn2, genesis signers, 2/3 ≥ 0.666 quorum) plus a fourth
 **observer node pn3** that is *not* in the genesis signer list:
@@ -60,20 +68,7 @@ Three masternodes (pn0–pn2, genesis signers, 2/3 ≥ 0.666 quorum) plus a four
 Port map: pn0 RPC 8545 / metrics 6060, pn1 8546/6061, pn2 8547/6062,
 **pn3 8548/6063** (regular `run-node.sh 3` uses 8548/6063 too).
 
-## 2. One-time environment setup
-
-```bash
-cd ~/Local_DPoS_Setup
-cp .env.sample .env            # if .env does not exist yet
-cd ~/XDPoSChain && make all    # fresh XDC + bootnode binaries
-```
-
-Everything runs with `bash`, `curl`, `jq` and foundry's `cast`. Sender keys
-(S1/S2/S3) live in `.env` as raw hex and every submission is signed locally
-with `cast send --private-key ... --legacy`; only T13 signs through pn3's
-unlocked keystore (`eth_sendTransaction` as account P3).
-
-## 3. Key numbers
+## Key numbers
 
 - **Gas50x floor = `InitialBaseFee`:** 12,500,000,000 wei = 12.5 gwei
 - **Gas2500x floor:** 625,000,000,000 wei = 625 gwei
@@ -85,29 +80,7 @@ unlocked keystore (`eth_sendTransaction` as account P3).
 - **Tracker recheck:** 10 s after start, then every 60 s
   (`locals.recheckInterval`)
 
-## 4. Genesis configuration (scheduled fork)
-
-The tested configuration mirrors the mainnet shape — every historical fork
-active since genesis, the new fork scheduled at a future height — with the
-future height pinned to block 90 so the 12.5 g → 625 g transition (sweep,
-hold-back, revival) happens within minutes:
-
-- inject `"gas2500xBlock": 90` into `genesis.json`; London/EIP1559 stay
-  backfilled to 0 ≤ 90, so the BASEFEE-window guard is satisfied;
-- this plan exercises only the scheduled-fork `genesis.json` directly — no
-  backup copy is kept; the unmodified baseline (2500x tier active from block 0
-  through the Localnet backfill) is not exercised by this plan;
-
-**Every config switch needs a clean slate**: a config change on an existing
-datadir is refused by the config-mismatch guard.
-
-```bash
-# edit genesis.json: inject "gas2500xBlock": 90 into config
-# each switch:
-./stop-network.sh && ./reset.sh -f && ./start-network.sh && ./run-node.sh 3
-```
-
-## 5. Test scripts
+## Test scripts
 
 Shell layer, `bash` + `curl` + `jq` + `cast` (foundry) only, all under
 `tests/`:
@@ -127,7 +100,7 @@ Run one case: `tests/t2.sh`. Run everything: `./gas2500x-run.sh`.
 Twice-cases take an argument when run alone:
 `tests/t10.sh pre` / `tests/t10.sh post`.
 
-## 6. Test cases
+## Test cases
 
 Cases are ordered by execution time, and **each case verifies exactly one
 result** — one action (or one passive observation) with its expected outcome.

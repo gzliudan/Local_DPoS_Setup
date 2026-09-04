@@ -5,6 +5,8 @@
 # Results: a fresh results/gas2500x-results-<timestamp>.md per run (one
 # markdown table row per case) plus a printed summary table; earlier result
 # files are never overwritten or appended to.
+# When the run finishes the network is stopped (all nodes) — the suite owns
+# the whole lifecycle; start it again with ./start-network.sh && ./run-node.sh 3.
 set -uo pipefail
 cd "$(dirname "$0")" || exit
 
@@ -22,7 +24,7 @@ export RESULTS_FILE
 # create the per-run file up front with the table header, so the header is
 # always there and the summary tail succeeds even when every case skips
 mkdir -p results
-printf '| Case | Name | Status | Block | Evidence |\n|---|---|---|---|---|\n' > "$RESULTS_FILE"
+printf '| Case | Status | Block | Name | Evidence |\n|---|---|---|---|---|\n' > "$RESULTS_FILE"
 
 source tests/gas2500x-lib.sh
 
@@ -79,5 +81,13 @@ echo
 echo "| Case | Status | Evidence |"
 echo "|---|---|---|"
 tail -n ${#SCHEDULE[@]} "$RESULTS_FILE" | grep '^| T' | tail -n ${#SCHEDULE[@]} |
-    awk -F'|' '{gsub(/^ +| +$/,"",$2); printf "| %s | %s |%s\n", $2, $5, $6}'
+    awk -F'|' '{gsub(/^ +| +$/,"",$2); gsub(/^ +| +$/,"",$3); printf "| %s | %s |%s\n", $2, $3, $6}'
+
+# the suite owns the network lifecycle: stop all nodes once the run is done
+echo
+echo "stopping the network ..."
+./stop-network.sh >/dev/null 2>&1 || true
+pkill -f 'XDC --config nodes/pn3' 2>/dev/null || true   # observer is not in the .pid files
+echo "network stopped"
+
 [ "$failed" = "0" ] || exit 1

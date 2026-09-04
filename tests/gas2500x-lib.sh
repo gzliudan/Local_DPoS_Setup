@@ -11,7 +11,7 @@
 # Requirements: bash, curl, jq, cast (foundry).
 #
 # Result file: one markdown table row per case:
-#   markdown table row | T2 | name | PASS | 90 | evidence |
+#   markdown table row | T2 | PASS | 90 | name | evidence |
 # gas2500x-run.sh pre-sets RESULTS_FILE to a per-run timestamped file so
 # earlier runs are never overwritten; standalone case runs append to the
 # shared results/gas2500x-results.md.
@@ -33,7 +33,7 @@ FORK_BLOCK="${FORK_BLOCK:-90}"
 # shellcheck disable=SC2034
 GAS50_WEI=12500000000                 # 12.5 gwei
 # shellcheck disable=SC2034
-GAS2500_WEI=62500000000               # 625 gwei
+GAS2500_WEI=625000000000              # 625 gwei
 RESULTS_DIR="$ROOT/results"
 # keep a caller-provided RESULTS_FILE (gas2500x-run.sh sets a per-run file
 # and exports it); standalone case runs fall back to the shared default
@@ -47,7 +47,7 @@ mkdir -p "$RESULTS_DIR"
 # case scripts run; this fallback only fires for a standalone case run that
 # starts a fresh default results file.
 if [ ! -s "$RESULTS_FILE" ]; then
-    printf '| Case | Name | Status | Block | Evidence |\n|---|---|---|---|---|\n' \
+    printf '| Case | Status | Block | Name | Evidence |\n|---|---|---|---|---|\n' \
         >"$RESULTS_FILE"
 fi
 
@@ -67,7 +67,7 @@ case_result() { # <id> <PASS|FAIL|SKIP> <name> <evidence>
     # markdown table row; the table header is the runner's job
     # (gas2500x-run.sh) and is written when the file is created
     printf '| %s | %s | %s | %s | %s |\n' \
-        "$id" "$name" "$status" "$(result_block)" \
+        "$id" "$status" "$(result_block)" "$name" \
         "$(printf '%s' "$evidence" | sed 's/|/\\|/g' | tr '\n' ' ')" \
         >>"$RESULTS_FILE"
     printf '%s %s (block %s) — %s\n' "$id" "$status" "$(result_block)" "$evidence"

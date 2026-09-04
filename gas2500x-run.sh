@@ -90,17 +90,16 @@ echo
 echo "==================== summary ===================="
 printf 'passed=%d failed=%d\n' "$passed" "$failed"
 echo
-echo "| Case | Status | Block | Evidence |"
-echo "|---|---|---|---|"
+echo "| Case | Status | Evidence |"
+echo "|---|---|---|"
 for row in "${rows[@]}"; do
-    # "T2: PASS (block 6) — evidence ..." -> | T2 | PASS | 6 | evidence ... |
-    printf '%s\n' "$row" | awk -F' — ' '
+    # "T2: PASS - evidence ..." -> | T2 | PASS | evidence ... |
+    printf '%s\n' "$row" | awk -F' - ' '
         {
             head=$1; ev=$2;
-            split(head, h, " ");       # h: [T2:, PASS, (block, 6)]
+            split(head, h, " ");       # h: [T2:, PASS]
             id=h[1]; sub(/:$/, "", id);
-            blk=h[4]; sub(/\)$/, "", blk);
-            printf "| %s | %s | %s | %s |\n", id, h[2], (blk == "" ? "-" : blk), (ev == "" ? "-" : ev)
+            printf "| %s | %s | %s |\n", id, h[2], (ev == "" ? "-" : ev)
         }'
 done
 

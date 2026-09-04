@@ -43,23 +43,12 @@ if [ -n "$RESULTS_FILE" ]; then
     fi
 fi
 
-# result_block: the pn3 head at the moment the verdict is written — the block
-# number replaces the wall-clock timestamp so results are chain-orderable.
-# Fallback: -1 when the node is unreachable (e.g. a case that killed pn3).
-result_block() {
-    local bn
-    bn=$(curl -s -X POST -H 'Content-Type: application/json' \
-        --data '{"jsonrpc":"2.0","id":1,"method":"eth_blockNumber","params":[]}' \
-        "$RPC3" | jq -r '.result // empty' 2>/dev/null)
-    [ -n "$bn" ] && printf '%d' "$bn" 2>/dev/null || echo -1
-}
-
 case_result() { # <id> <PASS|FAIL|SKIP> <name> <evidence>
     local id=$1 status=$2 name=$3 evidence=$4
     evidence=$(printf '%s' "$evidence" | tr '\n' ' ')
     # verdict line goes to stdout (the runner aggregates these into its table);
-    # same "T1: ..." shape as begin_case's running line
-    printf '%s: %s (block %s) — %s\n' "$id" "$status" "$(result_block)" "$evidence"
+    # same "T1: ..." shape as begin_case's running line, no block number
+    printf '%s: %s - %s\n' "$id" "$status" "$evidence"
     if [ -n "$RESULTS_FILE" ]; then
         printf '| %s | %s | %s | %s | %s |\n' \
             "$id" "$status" "$(result_block)" "$name" \
@@ -231,7 +220,7 @@ CASE_ID="" CASE_NAME=""
 begin_case() { # <id> <name>
     CASE_ID=$1
     CASE_NAME=${2:-$1}
-    printf '%s: running (%s)\n' "$CASE_ID" "$CASE_NAME"
+    printf '%s: running - %s\n' "$CASE_ID" "$CASE_NAME"
 }
 
 pass_case() { # [evidence]

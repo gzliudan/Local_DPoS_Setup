@@ -97,13 +97,17 @@ echo
 echo "| Case | Status | Evidence |"
 echo "|---|---|---|"
 for row in "${rows[@]}"; do
-    # "2026-09-04 23:39:14 T02: pass - evidence ..." -> | T02 | pass | evidence |
-    printf '%s\n' "$row" | awk -F' - ' '
+    # "2026-09-04 23:39:14 T02: pass output=evidence ..." ->
+    # | T02 | pass | evidence ... |
+    printf '%s\n' "$row" | awk '
         {
-            head=$1; ev=$2;
-            split(head, h, " ");       # h: [date, time, T02:, pass]
-            id=h[3]; sub(/:$/, "", id);
-            printf "| %s | %s | %s |\n", id, h[4], (ev == "" ? "-" : ev)
+            sub(/^[0-9-]+ [0-9:]+ /, "")   # drop the date-time stamp
+            split($0, h, " ")              # h: [T02:, pass, output=evidence ...]
+            id = h[1]; sub(/:$/, "", id)
+            status = h[2]
+            ev = $0
+            sub(/^[^ ]+ [^ ]+ output=/, "", ev)   # everything after "output="
+            printf "| %s | %s | %s |\n", id, status, (ev == "" ? "-" : ev)
         }'
 done
 

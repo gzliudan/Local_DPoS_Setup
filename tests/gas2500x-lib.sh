@@ -50,7 +50,7 @@ case_result() { # <id> <PASS|FAIL|SKIP> <name> <evidence>
     # status words are lowercase on the line (pass/fail/skip), no block number
     local word
     word=$(printf '%s' "$status" | tr '[:upper:]' '[:lower:]')
-    printf '%s: %s - %s\n' "$id" "$word" "$evidence"
+    printf '%s: %s output=%s\n' "$id" "$word" "$evidence"
     if [ -n "$RESULTS_FILE" ]; then
         printf '| %s | %s | %s | %s | %s |\n' \
             "$id" "$status" "$(result_block)" "$name" \
@@ -224,7 +224,7 @@ begin_case() { # <id> <name>
     CASE_NAME=${2:-$1}
     # the test line carries the chain head at the moment the case starts
     # (the case name stays visible in the runner transcript's pass line)
-    printf '%s: test - block %s\n' "$CASE_ID" "$(head3)"
+    printf '%s: test number=%s\n' "$CASE_ID" "$(head3)"
 }
 
 pass_case() { # [evidence]

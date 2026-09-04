@@ -68,15 +68,14 @@ hold-back, revival) happens within minutes:
 
 - inject `"gas2500xBlock": 90` into `genesis.json`; London/EIP1559 stay
   backfilled to 0 ≤ 90, so the BASEFEE-window guard is satisfied;
-- the first mutation backs the original up to `genesis.json.stock`
-  (the stock baseline runs the 2500x tier from block 0 through the Localnet
-  backfill and is not exercised by this plan);
+- this plan exercises only the scheduled-fork `genesis.json` directly — no
+  backup copy is kept; the unmodified baseline (2500x tier active from block 0
+  through the Localnet backfill) is not exercised by this plan;
 
 **Every config switch needs a clean slate**: a config change on an existing
 datadir is refused by the config-mismatch guard.
 
 ```bash
-cp genesis.json genesis.json.stock   # once, before the first edit
 # edit genesis.json: inject "gas2500xBlock": 90 into config
 # each switch:
 ./stop-network.sh && ./reset.sh -f && ./start-network.sh && ./run-node.sh 3
@@ -94,11 +93,12 @@ Shell layer, `bash` + `curl` + `jq` + `cast` (foundry) only, all under
 - **`tests/t1.sh` … `tests/t31.sh`** — one script per test case; each prints
   PASS or FAIL with its evidence and appends a markdown table row to the
   result file.
-- **`tests/gas2500x-run.sh`** — runs all cases in order (the twice-cases run
-  pre before the fork and post after it) and prints a summary.
+- **`gas2500x-run.sh`** (repo root, next to `start-network.sh`) — runs all
+  cases in order (the twice-cases run pre before the fork and post after it)
+  and prints a summary.
 
-Run one case: `tests/t2.sh`. Run everything:
-`tests/gas2500x-run.sh`. Twice-cases take an argument when run alone:
+Run one case: `tests/t2.sh`. Run everything: `./gas2500x-run.sh`.
+Twice-cases take an argument when run alone:
 `tests/t10.sh pre` / `tests/t10.sh post`.
 
 ## 6. Test cases
@@ -379,7 +379,7 @@ transactions (they cannot be crafted on a running network).
 - **Expected:** the txs stay held back (gauge = k, pool empty) — the journal
   persists the hold-back state and no resubmit storm happens.
 
-**After the run** (cleanup is not a test case, just the way back to the stock
-state): restore `genesis.json` (keep your own backup before `gas2500xBlock`
-was injected), then `./stop-network.sh && ./reset.sh -f` and restart on the
-unmodified genesis.
+**After the run** (cleanup is not a test case, just the way back to the
+unmodified genesis): remove the `"gas2500xBlock": 90` line from `genesis.json`,
+then `./stop-network.sh && ./reset.sh -f` and restart with
+`./start-network.sh && ./run-node.sh 3`.

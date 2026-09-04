@@ -6,7 +6,7 @@
 # markdown table row per case) plus a printed summary table; earlier result
 # files are never overwritten or appended to.
 set -uo pipefail
-cd "$(dirname "$0")/.." || exit
+cd "$(dirname "$0")" || exit
 
 # one results file per run: pre-set RESULTS_FILE before sourcing the lib and
 # export it so each case script (separate bash process) inherits the same file

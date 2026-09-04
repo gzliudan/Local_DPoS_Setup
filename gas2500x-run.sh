@@ -2,29 +2,13 @@
 # gas2500x-run.sh — run all gas2500x test cases in order and summarize.
 #
 # Usage: gas2500x-run.sh [t1 t2 ...]   (default: all cases in execution order)
-# Results: a fresh results/gas2500x-results-<timestamp>.md per run (one
-# markdown table row per case) plus a printed summary table; earlier result
-# files are never overwritten or appended to.
+# Results: printed to stdout only — each case emits its own "Tn PASS/FAIL
+# (block ...) — evidence" line as it runs, and the runner prints a summary
+# table at the end. No results file is created.
 # When the run finishes the network is stopped (all nodes) — the suite owns
 # the whole lifecycle; start it again with ./start-network.sh && ./run-node.sh 3.
 set -uo pipefail
 cd "$(dirname "$0")" || exit
-
-# one results file per run: pre-set RESULTS_FILE before sourcing the lib and
-# export it so each case script (separate bash process) inherits the same file
-ts=$(date +%Y%m%d-%H%M%S)
-RESULTS_FILE="$PWD/results/gas2500x-results-$ts.md"
-n=1
-while [ -e "$RESULTS_FILE" ]; do
-    RESULTS_FILE="$PWD/results/gas2500x-results-$ts-$n.md"
-    n=$((n + 1))
-done
-export RESULTS_FILE
-
-# create the per-run file up front with the table header, so the header is
-# always there and the summary tail succeeds even when every case skips
-mkdir -p results
-printf '| Case | Status | Block | Name | Evidence |\n|---|---|---|---|---|\n' > "$RESULTS_FILE"
 
 source tests/gas2500x-lib.sh
 
@@ -52,11 +36,11 @@ if [ $# -gt 0 ]; then
 fi
 
 echo "gas2500x test run $(date '+%F %T') — fork at block $FORK_BLOCK"
-echo "results: $RESULTS_FILE"
 echo
 
 failed=0
 passed=0
+rows=()
 for item in "${SCHEDULE[@]}"; do
     script=${RUN[$item]:-$item}
     label=${RUN[$item]:+$item}
@@ -67,10 +51,21 @@ for item in "${SCHEDULE[@]}"; do
     fi
     f="tests/$script.sh"
     [ -x "$f" ] || { echo "SKIP $item (no $f)"; continue; }
-    if bash "$f" "$args"; then
+    out=$(bash "$f" "$args" 2>&1)
+    rc=$?
+    printf '%s\n' "$out"
+    if [ "$rc" -eq 0 ]; then
         passed=$((passed + 1))
     else
         failed=$((failed + 1))
+    fi
+    # keep the newest case_result row emitted by this run (the case scripts
+    # print their verdict line themselves; re-derive the table row from it)
+    verdict=$(printf '%s\n' "$out" | grep -E '^T[0-9]+ (PASS|FAIL|SKIP)' | tail -n 1)
+    if [ -n "$verdict" ]; then
+        rows+=("$verdict")
+    else
+        rows+=("$item — no verdict line")
     fi
 done
 
@@ -78,10 +73,18 @@ echo
 echo "==================== summary ===================="
 printf 'passed=%d failed=%d\n' "$passed" "$failed"
 echo
-echo "| Case | Status | Evidence |"
-echo "|---|---|---|"
-tail -n ${#SCHEDULE[@]} "$RESULTS_FILE" | grep '^| T' | tail -n ${#SCHEDULE[@]} |
-    awk -F'|' '{gsub(/^ +| +$/,"",$2); gsub(/^ +| +$/,"",$3); printf "| %s | %s |%s\n", $2, $3, $6}'
+echo "| Case | Status | Block | Evidence |"
+echo "|---|---|---|---|"
+for row in "${rows[@]}"; do
+    # "T2 PASS (block 6) — evidence ..." -> | T2 | PASS | 6 | evidence ... |
+    printf '%s\n' "$row" | awk -F' — ' '
+        {
+            head=$1; ev=$2;
+            split(head, h, " ");       # h: [T2, PASS, (block, 6)]
+            blk=h[4]; sub(/\)$/, "", blk);
+            printf "| %s | %s | %s | %s |\n", h[1], h[2], (blk == "" ? "-" : blk), (ev == "" ? "-" : ev)
+        }'
+done
 
 # the suite owns the network lifecycle: stop all nodes once the run is done
 echo

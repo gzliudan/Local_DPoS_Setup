@@ -10,11 +10,9 @@
 #   and TXGEN_KEY_1/2/3 (raw sender keys S1/S2/S3).
 # Requirements: bash, curl, jq, cast (foundry).
 #
-# Result file: one markdown table row per case:
-#   markdown table row | T2 | PASS | 90 | name | evidence |
-# gas2500x-run.sh pre-sets RESULTS_FILE to a per-run timestamped file so
-# earlier runs are never overwritten; standalone case runs append to the
-# shared results/gas2500x-results.md.
+# Results: printed to stdout — one "T2 PASS (block 90) — evidence" line per
+# case verdict. No results file is created unless the caller exports
+# RESULTS_FILE themselves (opt-in for standalone debugging).
 
 set -o pipefail
 
@@ -34,21 +32,15 @@ FORK_BLOCK="${FORK_BLOCK:-90}"
 GAS50_WEI=12500000000                 # 12.5 gwei
 # shellcheck disable=SC2034
 GAS2500_WEI=625000000000              # 625 gwei
-RESULTS_DIR="$ROOT/results"
-# keep a caller-provided RESULTS_FILE (gas2500x-run.sh sets a per-run file
-# and exports it); standalone case runs fall back to the shared default
-RESULTS_FILE="${RESULTS_FILE:-$RESULTS_DIR/gas2500x-results.md}"
+RESULTS_FILE="${RESULTS_FILE:-}"
 
-# ---------------------------------------------------------------- result file
-mkdir -p "$RESULTS_DIR"
-
-# Table header is written when the results file is created, never per row.
-# gas2500x-run.sh pre-creates the per-run file with the header before the
-# case scripts run; this fallback only fires for a standalone case run that
-# starts a fresh default results file.
-if [ ! -s "$RESULTS_FILE" ]; then
-    printf '| Case | Status | Block | Name | Evidence |\n|---|---|---|---|---|\n' \
-        >"$RESULTS_FILE"
+if [ -n "$RESULTS_FILE" ]; then
+    mkdir -p "$(dirname "$RESULTS_FILE")"
+    # table header on first creation, so the file is standalone-readable
+    if [ ! -s "$RESULTS_FILE" ]; then
+        printf '| Case | Status | Block | Name | Evidence |\n|---|---|---|---|---|\n' \
+            >"$RESULTS_FILE"
+    fi
 fi
 
 # result_block: the pn3 head at the moment the verdict is written — the block
@@ -64,13 +56,15 @@ result_block() {
 
 case_result() { # <id> <PASS|FAIL|SKIP> <name> <evidence>
     local id=$1 status=$2 name=$3 evidence=$4
-    # markdown table row; the table header is the runner's job
-    # (gas2500x-run.sh) and is written when the file is created
-    printf '| %s | %s | %s | %s | %s |\n' \
-        "$id" "$status" "$(result_block)" "$name" \
-        "$(printf '%s' "$evidence" | sed 's/|/\\|/g' | tr '\n' ' ')" \
-        >>"$RESULTS_FILE"
+    evidence=$(printf '%s' "$evidence" | tr '\n' ' ')
+    # verdict line goes to stdout (the runner aggregates these into its table)
     printf '%s %s (block %s) — %s\n' "$id" "$status" "$(result_block)" "$evidence"
+    if [ -n "$RESULTS_FILE" ]; then
+        printf '| %s | %s | %s | %s | %s |\n' \
+            "$id" "$status" "$(result_block)" "$name" \
+            "$(printf '%s' "$evidence" | sed 's/|/\\|/g')" \
+            >>"$RESULTS_FILE"
+    fi
 }
 
 # ------------------------------------------------------------------ rpc utils

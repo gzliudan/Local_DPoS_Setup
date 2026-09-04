@@ -78,7 +78,7 @@ for item in "${SCHEDULE[@]}"; do
     fi
     # keep the newest case_result row emitted by this run (the case scripts
     # print their verdict line themselves; re-derive the table row from it)
-    verdict=$(printf '%s\n' "$out" | grep -E '^T[0-9]+ (PASS|FAIL|SKIP)' | tail -n 1)
+    verdict=$(printf '%s\n' "$out" | grep -E '^T[0-9]+: (PASS|FAIL|SKIP)' | tail -n 1)
     if [ -n "$verdict" ]; then
         rows+=("$verdict")
     else
@@ -93,13 +93,14 @@ echo
 echo "| Case | Status | Block | Evidence |"
 echo "|---|---|---|---|"
 for row in "${rows[@]}"; do
-    # "T2 PASS (block 6) — evidence ..." -> | T2 | PASS | 6 | evidence ... |
+    # "T2: PASS (block 6) — evidence ..." -> | T2 | PASS | 6 | evidence ... |
     printf '%s\n' "$row" | awk -F' — ' '
         {
             head=$1; ev=$2;
-            split(head, h, " ");       # h: [T2, PASS, (block, 6)]
+            split(head, h, " ");       # h: [T2:, PASS, (block, 6)]
+            id=h[1]; sub(/:$/, "", id);
             blk=h[4]; sub(/\)$/, "", blk);
-            printf "| %s | %s | %s | %s |\n", h[1], h[2], (blk == "" ? "-" : blk), (ev == "" ? "-" : ev)
+            printf "| %s | %s | %s | %s |\n", id, h[2], (blk == "" ? "-" : blk), (ev == "" ? "-" : ev)
         }'
 done
 

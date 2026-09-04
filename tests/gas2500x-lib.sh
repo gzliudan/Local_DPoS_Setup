@@ -57,8 +57,9 @@ result_block() {
 case_result() { # <id> <PASS|FAIL|SKIP> <name> <evidence>
     local id=$1 status=$2 name=$3 evidence=$4
     evidence=$(printf '%s' "$evidence" | tr '\n' ' ')
-    # verdict line goes to stdout (the runner aggregates these into its table)
-    printf '%s %s (block %s) — %s\n' "$id" "$status" "$(result_block)" "$evidence"
+    # verdict line goes to stdout (the runner aggregates these into its table);
+    # same "T1: ..." shape as begin_case's running line
+    printf '%s: %s (block %s) — %s\n' "$id" "$status" "$(result_block)" "$evidence"
     if [ -n "$RESULTS_FILE" ]; then
         printf '| %s | %s | %s | %s | %s |\n' \
             "$id" "$status" "$(result_block)" "$name" \

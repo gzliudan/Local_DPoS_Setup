@@ -23,10 +23,9 @@ all three commits).
 All commands run from `~/Local_DPoS_Setup`. This branch (`gas2500x`) keeps
 `"gas2500xBlock": 90` in `genesis.json` permanently — no file restoration is
 needed before or after a test run. Everything runs with `bash`, `curl`, `jq`
-and foundry's `cast`; sender keys (S1/S2/S3) live in `.env` as raw hex and
-every submission is signed locally with `cast send --private-key ... --legacy`;
-only T13 signs through pn3's unlocked keystore (`eth_sendTransaction` as
-account P3).
+and foundry's `cast`; all signer keys (S1/S2/S3 and P3) live in `.env` as raw
+hex and every submission is signed locally with
+`cast send --private-key ... --legacy`.
 
 ```bash
 # one-time setup (if not done yet)
@@ -47,7 +46,7 @@ tests/t2.sh
 ./stop-network.sh
 
 # fresh state for the next run (stop → wipe datadirs → start)
-./stop-network.sh && ./reset.sh -f && ./start-network.sh && ./run-node.sh 3
+./stop-network.sh && ./reset.sh && ./start-network.sh && ./run-node.sh 3
 ```
 
 ## Topology
@@ -57,23 +56,23 @@ Three masternodes (pn0–pn2, genesis signers, 2/3 ≥ 0.666 quorum) plus a four
 
 - pn0–pn2 keep sealing throughout the whole plan — no quorum risk, no timeout
   wobble, masternode data untouched by the set-head experiment.
-- The bulk transactions of cases T05/T06 are submitted to **pn3** (RPC 8548),
-  so all tracker/journal/hold-back state lands on pn3, and the floor-drop
-  experiment (T29) rewinds pn3 only. A non-signer cannot finalize anything on
+- Every pool case submits its transactions via **pn3** (RPC 8548), so all
+  tracker/journal/hold-back state lands on pn3, and the floor-drop experiment
+  (T29) rewinds pn3 only. A non-signer cannot finalize anything on
   its own (1 vote < 1.998), so it just stalls at the rewound head without
   producing fork garbage.
-- pn0's prefunded signer funds S1/S2/S3 (1 XDC each) and pn3's own keystore
-  account P3 (10 XDC) in T01.
+- pn0's prefunded signer funds S1/S2/S3 (1 XDC each) and pn3's own account P3
+  (10 XDC) in T01.
 
-Port map: pn0 RPC 8545 / metrics 6060, pn1 8546/6061, pn2 8547/6062,
-**pn3 8548/6063** (regular `run-node.sh 3` uses 8548/6063 too).
+Port map (stock `run-node.sh`): pn0 RPC 8545 / metrics 6060, pn1 8546/6061,
+pn2 8547/6062, **pn3 8548/6063**.
 
 ## Key numbers
 
 - **Gas50x floor = `InitialBaseFee`:** 12,500,000,000 wei = 12.5 gwei
 - **Gas2500x floor:** 625,000,000,000 wei = 625 gwei
-- **Floor resolution height:** head+1 (with `gas2500xBlock: 90`, the reset
-  landing on head 90 sweeps)
+- **Floor resolution height:** head+1 (with `gas2500xBlock: 90`, the sweep
+  fires when the head crosses 90)
 - **Replacement bump:** 10% (pool policy; unit-test pinned) — a replacement
   must exceed the old price by strictly more than 10%, so the cases use
   112% / 110.4% bumps (see T08/T23)
@@ -85,33 +84,31 @@ Port map: pn0 RPC 8545 / metrics 6060, pn1 8546/6061, pn2 8547/6062,
 Shell layer, `bash` + `curl` + `jq` + `cast` (foundry) only, all under
 `tests/`:
 
-- **`tests/gas2500x-lib.sh`** — shared helpers: RPC via cast/curl+jq, local
-  signing from the `.env` raw keys, pass/fail assertion; each case prints its
-  verdict line to stdout, and the runner records the whole run in
-  `results/gas2500x-<timestamp>.log` (no results `.md` is created).
-- **`tests/t1.sh` … `tests/t31.sh`** — one script per test case; each prints
-  its verdict line (`Tn: pass output=...`) to stdout, and the
-  runner keeps the whole transcript in `results/`.
+- **`tests/gas2500x-lib.sh`** — shared helpers (RPC via curl+jq, local `cast`
+  signing from the `.env` raw keys, fork-window guards, pool/meter/journal
+  readers) plus the case frame: every case ends in one verdict line
+  `Tnn: pass|fail|skip output=<evidence>` on stdout.
+- **`tests/t1.sh` … `tests/t31.sh`** — one script per test case; the
+  twice-cases (t10–t15) take `pre`/`post` when run alone:
+  `tests/t10.sh post`.
 - **`gas2500x-run.sh`** (repo root, next to `start-network.sh`) — runs all
-  cases in order (the twice-cases run pre before the fork and post after it),
+  cases in schedule order (pre sides before the fork, post sides after),
   waiting 3 s between cases so each starts on a strictly higher block
-  (blocks seal every 2 s); verdicts stream live, no summary table at the end.
-
-Run one case: `tests/t2.sh`. Run everything: `./gas2500x-run.sh`.
-Twice-cases take an argument when run alone:
-`tests/t10.sh pre` / `tests/t10.sh post`.
+  (blocks seal every 2 s); the whole stamped run is recorded in
+  `results/gas2500x-<timestamp>.log` (no results `.md` is created) and the
+  network is stopped when the run ends.
 
 ## Test cases
 
 Cases are ordered by execution time, and **each case verifies exactly one
 result** — one action (or one passive observation) with its expected outcome.
-Observation-only cases (T04, T07, T17–T19, ...) share the trigger of the
-action case they observe and add no new submissions; the T10–T15 probes run
-the same call on both sides of the fork (pre before it, post after). Fork height: **90**
-(≈180 s after genesis at 2 s blocks). Hard timing rule: all pre-fork
-submissions (T01–T09, plus the pre sides of T13/T14) must complete before
-head ≈ 85 — queued (gap) transactions survive until the fork regardless, but
-miss the window and the reset/start cycle starts over.
+Observation-only cases (T04, T07, T17–T19, T22, T26–T28) share the trigger of
+the action case they observe and add no new submissions; the T10–T15 probes
+run the same call on both sides of the fork (pre before it, post after).
+Fork height: **90** (≈180 s after genesis at 2 s blocks). Hard timing rule:
+all pre-fork submissions (T01–T09, plus T13's pre side) must complete before
+head ≈ 85 — if the window is missed, reset the chain (Quick start) and start
+over. Queued (gap) transactions survive until the fork regardless.
 
 Out of scope here (covered by unit tests): TRC21/XDCx tier pricing
 (`GetGasPriceForTRC21`, XDCx disabled locally), concurrent TrackAll races,
@@ -123,9 +120,9 @@ transactions (they cannot be crafted on a running network).
 - **Steps:**
   1. Fund S1, S2 and S3 with 1 XDC each via pn0's signer at the suggested
      12.5 gwei.
-  2. Fund pn3's own unlocked keystore account P3 with 10 XDC (address via
-     `XDC account list --datadir nodes/pn3`) — P3 signs `eth_sendTransaction`
-     later, which requires a keystore key.
+  2. Fund P3 — pn3's own account (address via
+     `XDC account list --datadir nodes/pn3`) — with 10 XDC; P3's key signs
+     T13's default-price transfer.
 - **Expected:** `eth_getBalance` on pn3's RPC (8548) reflects all four new
   balances; the funding txs are sealed within ~2 blocks.
 
@@ -213,14 +210,13 @@ transactions (they cannot be crafted on a running network).
   post-fork; block 89 carries 12.5 gwei and block 90 carries 625 gwei — the
   step is visible between the two blocks.
 
-### T13 — `eth_sendTransaction` without gasPrice (#2516)
+### T13 — the tier-aware default gas price (#2516)
 
-- **Steps:** from pn3's unlocked account P3, submit one `eth_sendTransaction`
-  with no gasPrice argument; follow the receipt. (P3 was funded in T01;
-  `eth_sendTransaction` signs from the node's keystore, which is why it uses
-  P3 and not the raw senders.)
-- **Expected:** the tx defaults to the tier-aware suggestion — sealed at
-  `effectiveGasPrice` 12.5 gwei pre-fork and 625 gwei post-fork.
+- **Steps:** P3 (pn3's own account, funded in T01) submits one transfer with
+  no gas price at all; cast signs locally and omits the price, so the tx
+  carries the node's tier-aware suggested gas price. Follow the receipt.
+- **Expected:** sealed at `effectiveGasPrice` 12.5 gwei pre-fork and 625 gwei
+  post-fork — the default price follows the tier.
 
 ### T14 — `txpool_contentFrom` mirrors the queue (#2532)
 
@@ -291,7 +287,8 @@ transactions (they cannot be crafted on a running network).
 
 ### T24 — journal load converges on the new-tier replacement (#2541)
 
-- **Steps:** restart pn3.
+- **Steps:** restart pn3 and let the tracker's first recheck (~10 s) reload
+  the journal into the pool.
 - **Expected:** only P2 at nonce 3 after the load; P1 never returns.
 
 ### T25 — a swept transaction cannot re-enter at the old price (#2532/#2541)
@@ -303,9 +300,9 @@ transactions (they cannot be crafted on a running network).
 ### T26 — no tracker revival within the recheck (#2541)
 
 - **Steps:** wait one recheck; re-read pools, gauge and journal size.
-- **Expected:** the gauge stays k, no `need-resubmit` success log, pools stay
-  empty — the tracker holds the txs back instead of retrying them into a
-  rejection loop.
+- **Expected:** the gauge stays k and the pools stay stable across the
+  rechecks (no refill, no growth, journal unchanged) — the tracker holds the
+  txs back instead of retrying them into a rejection loop.
 
 ### T27 — effectiveGasPrice matches the block's base fee on both tiers (#2516)
 

@@ -87,9 +87,9 @@ Shell layer, `bash` + `curl` + `jq` + `cast` (foundry) only, all under
 `tests/`:
 
 - **`tests/gas2500x-lib.sh`** — shared helpers: RPC via cast/curl+jq, local
-  signing from the `.env` raw keys, pass/fail assertion, result-file writer
-  (per-run `results/gas2500x-results-<timestamp>.md` when driven by the
-  runner, shared `results/gas2500x-results.md` when a case runs alone).
+  signing from the `.env` raw keys, pass/fail assertion; each case prints its
+  verdict line to stdout, and the runner records the whole run in
+  `results/gas2500x-<timestamp>.log` (no results `.md` is created).
 - **`tests/t1.sh` … `tests/t31.sh`** — one script per test case; each prints
   PASS or FAIL with its evidence and appends a markdown table row to the
   result file.

@@ -4,7 +4,12 @@
 source "$(dirname "$0")/gas2500x-lib.sh"
 begin_case "T31" "the hold-back survives a restart"
 
-k0=$(meter3 txpool_local_belowfloor); k0=${k0:-0}
+k0=0
+for _ in $(seq 1 8); do
+    k0=$(meter3 txpool_local_belowfloor); k0=${k0:-0}
+    [ "$k0" -gt 0 ] && break
+    sleep 5
+done
 [ "$k0" -gt 0 ] || fail_case "gauge=0 before restart, nothing to persist"
 
 ./stop-network.sh 3 >/dev/null 2>&1

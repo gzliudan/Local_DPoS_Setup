@@ -30,7 +30,10 @@ wait_head $((FORK_BLOCK + 5)) 300 || {
 }
 
 # the sweep runs inside the pool's head-event handler at the crossing; the
-# tracker's gauge is only updated on its next recheck (up to 60 s later)
+# tracker's gauge is only updated on its next recheck (up to 60 s later).
+# P2 (110.4%, above the new floor) LEGITIMATELY survives the sweep and stays
+# queued behind its nonce gap — only below-floor txs are dropped, so allow
+# one queued straggler.
 ok=0
 m=""; k=""; pools=""
 for _ in $(seq 1 30); do
@@ -39,7 +42,7 @@ for _ in $(seq 1 30); do
     k=$(meter3 txpool_local_belowfloor); k=${k:-0}
     read -r p q <<<"$(pool3)"
     pools="$p/$q"
-    if [ "$m" -ge 18 ] && [ "$k" -ge 18 ] && [ "$p" = "0" ] && [ "$q" = "0" ]; then
+    if [ "$m" -ge 18 ] && [ "$k" -ge 18 ] && [ "$p" = "0" ] && [ "$q" -le 1 ]; then
         ok=1; break
     fi
 done

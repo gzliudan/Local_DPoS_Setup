@@ -3,7 +3,6 @@
 source "$(dirname "$0")/gas2500x-lib.sh"
 begin_case "T1" "fund the senders"
 
-head0
 # S1..S3 need gas money for T2/T5/T6/T8/T20+: send 1 XDC each from pn0's
 # prefunded signer (PRIVATE_KEY_0) at the current suggested price.
 for s in TXGEN_KEY_1 TXGEN_KEY_2 TXGEN_KEY_3; do

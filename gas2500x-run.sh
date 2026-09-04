@@ -59,7 +59,13 @@ fi
 failed=0
 passed=0
 rows=()
+i=0
 for item in "${SCHEDULE[@]}"; do
+    # the chain seals a block every 2 s — a 3 s gap before each case makes
+    # every case start on a strictly higher block, so the "test number="
+    # lines in a transcript are all distinct
+    if [ "$i" -gt 0 ]; then sleep 3; fi
+    i=$((i + 1))
     script=${RUN[$item]:-$item}
     label=${RUN[$item]:+$item}
     args=""

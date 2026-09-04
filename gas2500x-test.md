@@ -93,8 +93,9 @@ Shell layer, `bash` + `curl` + `jq` + `cast` (foundry) only, all under
   its verdict line (`Tn: pass output=...`) to stdout, and the
   runner keeps the whole transcript in `results/`.
 - **`gas2500x-run.sh`** (repo root, next to `start-network.sh`) — runs all
-  cases in order (the twice-cases run pre before the fork and post after it)
-  and prints a summary.
+  cases in order (the twice-cases run pre before the fork and post after it),
+  waiting 3 s between cases so each starts on a strictly higher block
+  (blocks seal every 2 s); verdicts stream live, no summary table at the end.
 
 Run one case: `tests/t2.sh`. Run everything: `./gas2500x-run.sh`.
 Twice-cases take an argument when run alone:

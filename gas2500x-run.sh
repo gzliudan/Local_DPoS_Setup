@@ -2,13 +2,20 @@
 # gas2500x-run.sh — run all gas2500x test cases in order and summarize.
 #
 # Usage: gas2500x-run.sh [t1 t2 ...]   (default: all cases in execution order)
-# Results: printed to stdout only — each case emits its own "Tn PASS/FAIL
+# Results: printed to stdout — each case emits its own "Tn PASS/FAIL
 # (block ...) — evidence" line as it runs, and the runner prints a summary
-# table at the end. No results file is created.
+# table at the end. The full console output is also recorded in
+# results/gas2500x-<timestamp>.log; no results .md file is created.
 # When the run finishes the network is stopped (all nodes) — the suite owns
 # the whole lifecycle; start it again with ./start-network.sh && ./run-node.sh 3.
 set -uo pipefail
 cd "$(dirname "$0")" || exit
+
+# record the whole run in results/gas2500x-<timestamp>.log while keeping the
+# live console view (tee): stdout+stderr of everything below lands in the file
+mkdir -p results
+LOG="results/gas2500x-$(date +%Y%m%d-%H%M%S).log"
+exec > >(tee "$LOG") 2>&1
 
 source tests/gas2500x-lib.sh
 
@@ -36,6 +43,7 @@ if [ $# -gt 0 ]; then
 fi
 
 echo "gas2500x test run $(date '+%F %T') — fork at block $FORK_BLOCK"
+echo "log: $LOG"
 echo
 
 failed=0

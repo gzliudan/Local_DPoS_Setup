@@ -284,7 +284,7 @@ gauge3() {
 journal_size() { stat -c %s "$ROOT/nodes/pn3/XDC/transactions.rlp" 2>/dev/null || echo 0; }
 
 # -------------------------------------------------------- fork window guards
-# require_pre_fork [why] — SKIP the case unless the head is still below the
+# require_pre_fork [why] — skip the case unless the head is still below the
 # fork (a pre-fork case run after the fork has missed its window)
 require_pre_fork() {
     local h why=${1:-run before the fork}
@@ -292,7 +292,7 @@ require_pre_fork() {
     [ "$h" -lt "$FORK_BLOCK" ] || skip_case "head $h >= fork $FORK_BLOCK; $why"
 }
 
-# require_post_fork — FAIL unless the head is past the fork
+# require_post_fork — fail unless the head is past the fork
 require_post_fork() {
     local h
     h=$(head3)
@@ -300,7 +300,7 @@ require_post_fork() {
 }
 
 # fork_side <pre|post> — guard for the two-sided cases (t10-t15): a pre run
-# past the fork SKIPs, anything but pre|post is a usage failure
+# past the fork skips, anything but pre|post is a usage failure
 fork_side() {
     case "$1" in
     pre)  require_pre_fork "pre side missed the window" ;;
@@ -322,14 +322,13 @@ CASE_ID="" CASE_NAME=""
 # only used by the opt-in results-file rows
 result_block() { head3; }
 
-case_result() { # <id> <PASS|FAIL|SKIP> <name> <evidence>
+case_result() { # <id> <pass|fail|skip> <name> <evidence>
     local id=$1 status=$2 name=$3 evidence=$4
     evidence=$(printf '%s' "$evidence" | tr '\n' ' ')
     # verdict line goes to stdout (the runner's transcript aggregates these);
-    # status words are lowercase on the line, no block number
-    local word
-    word=$(printf '%s' "$status" | tr '[:upper:]' '[:lower:]')
-    printf '%s: %s output=%s\n' "$id" "$word" "$evidence"
+    # the status word is lowercase everywhere — on the verdict line and in
+    # the opt-in results-file row — and there is no block number on the line
+    printf '%s: %s output=%s\n' "$id" "$status" "$evidence"
     if [ -n "$RESULTS_FILE" ]; then
         printf '| %s | %s | %s | %s | %s |\n' \
             "$id" "$status" "$(result_block)" "$name" \
@@ -347,18 +346,18 @@ begin_case() { # <id> <name>
 }
 
 pass_case() { # [evidence]
-    case_result "$CASE_ID" PASS "$CASE_NAME" "${1:-ok}"
+    case_result "$CASE_ID" pass "$CASE_NAME" "${1:-ok}"
     exit 0
 }
 
 fail_case() { # [evidence]
-    case_result "$CASE_ID" FAIL "$CASE_NAME" "${1:-failed}"
+    case_result "$CASE_ID" fail "$CASE_NAME" "${1:-failed}"
     exit 1
 }
 
 # skip_case: the case's precondition is not met on the current chain (e.g. a
 # pre-fork case run after the fork) — neither a failure nor a pass.
 skip_case() { # [evidence]
-    case_result "$CASE_ID" SKIP "$CASE_NAME" "${1:-precondition not met}"
+    case_result "$CASE_ID" skip "$CASE_NAME" "${1:-precondition not met}"
     exit 0
 }

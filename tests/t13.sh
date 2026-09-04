@@ -1,9 +1,10 @@
 #!/bin/bash
-# T13 — eth_sendTransaction without gasPrice on both sides (#2516):
-# the node signs P3's tx with the tier-aware default price.
-# Usage: t13.sh pre|post  (P3 = pn3's unlocked keystore account, PRIVATE_KEY_3)
+# T13 — the tier-aware default gas price on both sides (#2516):
+# P3's transfer is signed locally with NO gas price, so the node fills in
+# the tier-aware suggested price.
+# Usage: t13.sh pre|post  (P3 = pn3's own account, PRIVATE_KEY_3)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T13" "eth_sendTransaction without gasPrice (${1:-?} side)"
+begin_case "T13" "the tier-aware default gas price (${1:-?} side)"
 
 side=${1:-pre}
 fork_side "$side"

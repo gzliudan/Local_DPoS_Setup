@@ -95,8 +95,10 @@ Shell layer, `bash` + `curl` + `jq` + `cast` (foundry) only, all under
   cases in schedule order (pre sides before the fork, post sides after),
   waiting 3 s between cases so each starts on a strictly higher block
   (blocks seal every 2 s); the whole stamped run is recorded in
-  `results/gas2500x-<timestamp>.log` (no results `.md` is created) and the
-  network is stopped when the run ends.
+  `results/gas2500x-<timestamp>.log` — the log opens with
+  `start: cases=N` and closes with `end: pass=X fail=Y skip=Z`
+  (no results `.md` is created) — and the network is stopped when the run
+  ends.
 
 ## Test cases
 

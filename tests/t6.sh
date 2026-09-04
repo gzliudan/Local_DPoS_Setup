@@ -1,7 +1,7 @@
 #!/bin/bash
 # T6 — queue seeding, sender S2: 8 transfers parked in the queue.
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T06" "queue seeding, sender S2 (10 queued)"
+begin_case "T06" "queue seeding, sender S2 (8 queued)"
 
 require_pre_fork
 

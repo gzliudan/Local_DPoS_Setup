@@ -3,10 +3,11 @@
 #
 # Usage: gas2500x-run.sh [t1 t2 ...]   (default: all cases in execution order)
 # Results: printed to stdout, every line prefixed with the current date-time —
-# each case emits its own "Tnn: pass/fail/skip output=<evidence>" verdict
-# line as it runs (the transcript IS the summary). The stamped console
-# output is also recorded in results/gas2500x-<timestamp>.log; no results
-# .md file is created.
+# the log opens with "start: cases=N", every case streams its
+# "Tnn: pass/fail/skip output=<evidence>" verdict line, and the log closes
+# with "end: pass=X fail=Y skip=Z". The stamped console output is
+# also recorded in results/gas2500x-<timestamp>.log; no results .md file
+# is created.
 # When the run finishes the network is stopped (all nodes) — the suite owns
 # the whole lifecycle; start it again with ./start-network.sh && ./run-node.sh 3.
 set -uo pipefail
@@ -25,7 +26,7 @@ echo
 
 # from here on everything (stdout+stderr) is duplicated into the log file and
 # every line is prefixed with the current date-time; the banner above stays
-# console-only, so the log starts at the first case
+# console-only, so the log opens with the start line
 stamp_lines() {
     while IFS= read -r line; do
         printf '%(%F %T)T %s\n' -1 "$line"
@@ -49,7 +50,12 @@ if [ $# -gt 0 ]; then
     SCHEDULE=("$@")
 fi
 
+# first line of the log (the console banner above is not part of it)
+echo "start: cases=${#SCHEDULE[@]}"
+
+passed=0
 failed=0
+skipped=0
 i=0
 for item in "${SCHEDULE[@]}"; do
     # the chain seals a block every 2 s — a 3 s gap before each case makes
@@ -66,17 +72,35 @@ for item in "${SCHEDULE[@]}"; do
         ;;
     esac
     f="tests/$script.sh"
-    [ -x "$f" ] || { echo "SKIP $item (no $f)"; continue; }
+    if [ ! -x "$f" ]; then
+        echo "skip $item (no $f)"
+        skipped=$((skipped + 1))
+        continue
+    fi
     # stream the case output live through the stamp filter — capturing it in
     # a variable would print every line at case end and stamp identical
     # times on the start and verdict lines. Each case prints its own
-    # "Tnn: pass/fail/skip output=..." verdict line into the transcript.
-    bash "$f" "$args" || failed=$((failed + 1))
+    # "Tnn: pass/fail/skip output=..." verdict line; the last one matching
+    # this case's id decides the tally (a case that crashes before printing
+    # a verdict counts as failed — skip exits 0, so the rc alone cannot
+    # separate pass from skip).
+    id_num=${item%%-*}; id_num=${id_num#t}
+    case_id=$(printf 'T%02d' "$id_num")
+    bash "$f" "$args"
+    verdict=$(grep -E " $case_id: (pass|fail|skip)" "$LOG" 2>/dev/null | tail -n 1)
+    case $verdict in
+    *" pass "*) passed=$((passed + 1)) ;;
+    *" skip "*) skipped=$((skipped + 1)) ;;
+    *)          failed=$((failed + 1)) ;;
+    esac
 done
 
 # the suite owns the network lifecycle: stop all nodes once the run is done
 # (quietly - no stop chatter in the transcript)
 ./stop-network.sh >/dev/null 2>&1 || true
 pkill -f 'XDC --config nodes/pn3' 2>/dev/null || true   # observer is not in the .pid files
+
+# last line of the log
+echo "end: pass=$passed fail=$failed skip=$skipped"
 
 [ "$failed" = "0" ] || exit 1

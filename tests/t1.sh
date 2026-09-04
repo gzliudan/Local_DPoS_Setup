@@ -4,7 +4,7 @@ source "$(dirname "$0")/gas2500x-lib.sh"
 begin_case "T01" "fund the senders"
 
 # Funding list: S1..S3 need gas money for T2/T5/T6/T8/T20+ (1 XDC each) and
-# P3 (pn3's own unlocked keystore account, signs T13's send) needs 10 XDC.
+# P3 (pn3's own account, sender of T13's default-price tx) needs 10 XDC.
 # Sent from pn0's prefunded signer (PRIVATE_KEY_0) at the current suggested
 # price; the sends stay synchronous (no --async) so the funds are confirmed
 # before the pool cases start.

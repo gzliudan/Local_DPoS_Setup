@@ -24,10 +24,10 @@ function stop_rpc() {
     NODE_NAME=${PID_FILE%.*}
 
     if [ -f "${PID_FILE}" ]; then
-        PID=$(cat ${PID_FILE})
+        PID=$(cat "${PID_FILE}")
 
         if [ -d "/proc/${PID}/fd" ]; then
-            kill ${PID}
+            kill "${PID}"
             echo -n "Stopping node ${NODE_NAME} ${PID} "
             while true; do
                 echo -n "."
@@ -51,18 +51,19 @@ if [[ $# == 1 ]] && [[ "$1" == "-h" || "$1" == "--help" ]]; then
 fi
 
 if [ $# == 0 ]; then
-    for PID_FILE in $(ls on*.pid 2>/dev/null); do
-        stop_rpc ${PID_FILE}
+    for PID_FILE in on*.pid; do
+        [ -e "${PID_FILE}" ] || continue
+        stop_rpc "${PID_FILE}"
     done
 else
-    for arg in $@; do
+    for arg in "$@"; do
         if [[ ${arg} =~ [^0-9] ]]; then
             echo "node_id ${arg} is not integer"
             exit 1
         fi
     done
 
-    for arg in $@; do
+    for arg in "$@"; do
         stop_rpc "on${arg}.pid"
     done
 fi

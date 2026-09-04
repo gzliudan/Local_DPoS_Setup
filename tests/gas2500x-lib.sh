@@ -19,6 +19,12 @@ set -o pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT" || exit
 
+# every target in this harness (RPC, metrics, cast sends) is loopback — never
+# route curl/cast through a proxy even when the environment exports
+# http_proxy/https_proxy (both curl and cast honor no_proxy/NO_PROXY)
+export no_proxy='127.0.0.1,localhost'
+export NO_PROXY="$no_proxy"
+
 [ -f .env ] && set -a && . ./.env && set +a
 
 RPC0="http://127.0.0.1:8545"          # pn0 (masternode, prefunded signer)

@@ -229,12 +229,19 @@ expect_reject() {
 # Prints cast's --json output with stderr merged: a bare hash when accepted,
 # an error JSON when rejected. The 60000 gas allowance covers the minimal
 # runtime (~53k estimate).
+#
+# ORDER MATTERS: `cast send --create CODE` is a clap subcommand — every
+# option (wallet, value, gas, nonce) must come BEFORE "--create $code",
+# anything after it dies with "unexpected argument". Verified against
+# cast 1.8: send [OPTS] --create <CODE> works, send --create <CODE> [OPTS]
+# does not.
 _cast_create() {
     local keyvar=$1 mode=$2 gp=$3 code=$4 nonce=${5:-}
     local cast_args=(
-        send --create "$code" --value 0wei --gas-limit 60000
+        send
         --private-key "$(printenv "$keyvar")" --rpc-url "$RPC3"
         --chain-id "$CHAIN_ID" --json --async
+        --value 0wei --gas-limit 60000
     )
     case $mode in
     legacy) cast_args+=(--legacy --gas-price "$gp"wei) ;;
@@ -243,6 +250,7 @@ _cast_create() {
     *)      echo "cast_create: bad mode $mode" >&2; return 2 ;;
     esac
     [ -n "$nonce" ] && cast_args+=(--nonce "$nonce")
+    cast_args+=(--create "$code")
     cast "${cast_args[@]}" 2>&1
 }
 

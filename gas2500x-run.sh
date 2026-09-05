@@ -133,7 +133,10 @@ for item in "${SCHEDULE[@]}"; do
     # each case prints its own verdict line; the last one matching this
     # case's id decides the tally (a crash without a verdict counts as
     # failed — skip exits 0, so rc alone cannot separate pass from skip)
+    # strip the leading zero FIRST: printf 'T%02d' treats 08/09 as invalid
+    # octal literals (seen as "printf: 08: invalid octal number" in run 24)
     id_num=${item%%-*}; id_num=${id_num#t}
+    id_num=${id_num#0}
     case_id=$(printf 'T%02d' "$id_num")
     # per-case wall-time expectation printed on the test line (ceil of the
     # last full run's elapsed, minimum 1 — see the EXPECTED table)

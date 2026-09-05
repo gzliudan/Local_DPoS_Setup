@@ -1,11 +1,11 @@
 #!/bin/bash
-# T03 — below-floor rejection on the pre-fork tier: 12499999999 wei.
+# T03 — eth_gasPrice reports the pre-fork tier price (12.5 gwei), #2516.
+# (The post-fork half of this check is T37.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T03" "below-floor rejection on the pre-fork tier (12499999999 wei)" 0.0
+begin_case "T03" "eth_gasPrice reports the tier price (pre-fork tier)" 0.0
 
-require_pre_fork
+require_pre_fork "pre side missed the window"
 
-S1_TO=$(addr_of TXGEN_KEY_1)
-expect_reject TXGEN_KEY_3 "$S1_TO" 1000000000000 $((GAS50_WEI - 1)) \
-    "under min gas price" || fail_case "not rejected with under min gas price"
-pass_case "rejected: under min gas price"
+gp=$(hex2dec "$(rpc0 eth_gasPrice | jq -r .)")
+[ "$gp" = "$GAS50_WEI" ] || fail_case "gasPrice=$gp, expected $GAS50_WEI"
+pass_case "gasPrice=$gp wei"

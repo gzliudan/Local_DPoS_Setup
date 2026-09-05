@@ -1,24 +1,18 @@
 #!/bin/bash
-# T10 — S4 parks an above-floor (700 gwei) transfer in the queue behind a
-# nonce gap; 700 gwei is admitted under the pre-fork floor and is the only
-# above-625gwei tx in any pool at the fork — the sweep must keep it
-# (T24 asserts that; T25 seals it post-fork). #2532
+# T10 — the below-floor reject is not tracked (#2541).
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T10" "an above-floor pre-fork tx survives the sweep (pre-fork tier)" 0.0
+begin_case "T10" "the below-floor reject is not tracked" 65.0
 
-require_pre_fork "pre side missed the window"
+before=$(journal_size)
+gauge=$(gauge3 txpool_local_belowfloor)
 
-S4_ADDR=$(addr_of TXGEN_KEY_4)
-S4_TO=$(addr_of TXGEN_KEY_1)
-MARKER=/tmp/g2500-t10-hashes
-SURVIVOR_WEI=700000000000    # 700 gwei — strictly above the 625 gwei floor
+# sleep one tracker rotation (recheck every 60 s) so a wrong implementation
+# would have had time to resubmit/journal the rejected tx
+sleep 65
 
-# pending-side txs are mined within seconds; the queue behind a nonce gap
-# is the only place a tx survives to the fork
-nonce=$(pending_nonce "$S4_ADDR")
-hash=$(send_from TXGEN_KEY_4 "$S4_TO" 1 "$SURVIVOR_WEI" "$((nonce + 1))")
-[ -n "$hash" ] || fail_case "send rejected"
-que=$(content_from "$S4_ADDR" | jq '.queued | length')
-[ "$que" = "1" ] || fail_case "S4 tx not queued (queued=$que)"
-printf '%s\n' "$hash" >"$MARKER"
-pass_case "S4 nonce $((nonce + 1)) parked queued at $SURVIVOR_WEI wei"
+after=$(journal_size)
+gauge2=$(gauge3 txpool_local_belowfloor)
+
+[ "$before" = "$after" ] || fail_case "journal grew: $before -> $after"
+[ "$gauge2" = "$gauge" ] || fail_case "gauge moved: $gauge -> $gauge2"
+pass_case "journal $before bytes unchanged, gauge $gauge"

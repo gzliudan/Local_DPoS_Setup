@@ -1,14 +1,16 @@
 #!/bin/bash
-# T16 — eth_estimateGas returns the standard 21000 for a plain transfer
-# (read-only probe), #2516. (The post-fork half of this check is T42.)
+# T16 — a legacy creation at the tier floor seals on the pre-fork tier (12.5 gwei).
+# (The other half of this tx pair is T49.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T16" "eth_estimateGas works (pre-fork tier)" 0.0
+begin_case "T16" "creation at the tier floor seals (legacy, pre-fork tier)" 2.1
 
 require_pre_fork "pre side missed the window"
 
-S1=$(addr_of TXGEN_KEY_1)
-est=$(rpc3 eth_estimateGas "[{\"from\":\"$(addr_of TXGEN_KEY_2)\",\"to\":\"$S1\",\"value\":\"0x1\"}]")
-[ "$est" = "null" ] && fail_case "estimateGas returned null"
-gas=$(hex2dec "$(printf '%s' "$est" | jq -r .)")
-[ "$gas" = "21000" ] || fail_case "estimate=$gas, expected 21000"
-pass_case "estimateGas=$gas"
+floor=$GAS50_WEI
+n=$(pending_nonce "$(addr_of TXGEN_KEY_5)")
+
+h=$(create_from TXGEN_KEY_5 legacy "$floor" "$CREATION_CODE" "$n" 2>&1) ||
+    fail_case "legacy $floor creation rejected: $h"
+e=$(receipt_field "$h" effectiveGasPrice 60) || fail_case "never sealed"
+[ "$(hex2dec "$e")" = "$floor" ] || fail_case "effective=$(hex2dec "$e")"
+pass_case "sealed at $floor wei"

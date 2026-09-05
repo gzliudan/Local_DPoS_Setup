@@ -1,11 +1,25 @@
 #!/bin/bash
-# T12 — eth_maxPriorityFeePerGas suggests a tip below the pre-fork tier
-# price (12.5 gwei), #2516. (The post-fork half of this check is T38.)
+# T12 — queue seeding, sender S2: 8 transfers parked in the queue.
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T12" "eth_maxPriorityFeePerGas suggests a tip below the tier price (pre-fork tier)" 0.0
+begin_case "T12" "queue seeding, sender S2 (8 queued)" 0.3
 
-require_pre_fork "pre side missed the window"
+require_pre_fork
 
-tip=$(hex2dec "$(rpc0 eth_maxPriorityFeePerGas | jq -r .)") || fail_case "RPC error"
-[ "$tip" -lt "$GAS50_WEI" ] || fail_case "tip=$tip not below tier price $GAS50_WEI"
-pass_case "tip suggestion=$tip wei (< $GAS50_WEI)"
+S2=$(addr_of TXGEN_KEY_2)
+S2_TO=$(addr_of TXGEN_KEY_1)
+pending=$(pending_nonce "$S2")
+[ "$pending" = "0" ] || fail_case "S2 pending nonce is $pending, expected 0"
+
+# nonces 2..9 (8 txs, gap at 0..1; nonce 10 stays free for T13's replacement
+# pair and the pending+10 cap caps us at nonce 10 anyway)
+for n in $(seq 2 9); do
+    send_from TXGEN_KEY_2 "$S2_TO" 1 "$GAS50_WEI" "$n" >/dev/null 2>&1 \
+        || fail_case "submit nonce $n failed"
+done
+
+read -r _ que <<<"$(pool3)"
+# signer-exempt pending read — see pending_regular in the lib
+pend=$(pending_regular)
+[ "$pend" = "0" ] || fail_case "pending=$pend, expected 0"
+[ "$que" = "18" ] || fail_case "queued=$que, expected 18"
+pass_case "pending=0 (signers excluded) queued=18"

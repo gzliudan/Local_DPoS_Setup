@@ -1,17 +1,14 @@
 #!/bin/bash
-# T40 — the tier-aware default gas price on the post-fork tier (625 gwei):
-# P3's transfer is signed locally with NO gas price, #2516.
-# (The pre-fork half of this check is T14; P3 = pn3's own account,
-# PRIVATE_KEY_3.)
+# T40 — txpool_contentFrom shows S1's queue empty after the fork sweep
+# (queued=0), #2532. (The pre-fork half of this check is T14.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T40" "the tier-aware default gas price (post-fork tier)" 2.0
+begin_case "T40" "txpool_contentFrom mirrors the queue (post-fork tier)" 0.0
 
 # no guard: the runner schedules this well after the fork
 
-P3_TO=$(addr_of TXGEN_KEY_1)
-hash=$(_cast_send "$RPC3" PRIVATE_KEY_3 "$P3_TO" 1 "" "" --async 2>/dev/null)
-case "$hash" in 0x*) ;; *) fail_case "send rejected" ;; esac
-
-eff=$(hex2dec "$(receipt_field "$hash" effectiveGasPrice)")
-[ "$eff" = "$GAS2500_WEI" ] || fail_case "effectiveGasPrice=$eff, expected $GAS2500_WEI"
-pass_case "default-price tx sealed at $eff wei"
+S1=$(addr_of TXGEN_KEY_1)
+content=$(content_from "$S1")
+pend=$(printf '%s' "$content" | jq '[.pending[]] | length')
+que=$(printf '%s' "$content" | jq '[.queued[]] | length')
+[ "$que" = "0" ] || fail_case "queued=$que, expected 0 after the sweep"
+pass_case "contentFrom: pending=$pend queued=$que"

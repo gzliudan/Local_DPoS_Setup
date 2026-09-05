@@ -1,15 +1,15 @@
 #!/bin/bash
-# T48 — a legacy creation below the tier floor is rejected on the post-fork tier (625 gwei).
-# (The other half of this tx pair is T17.)
+# T48 — an EIP-1559 creation below the tier floor is rejected on the post-fork tier (625 gwei).
+# (The other half of this tx pair is T08.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T48" "creation below the tier floor is rejected (legacy, post-fork tier)" 0.0
+begin_case "T48" "creation below the tier floor is rejected (1559, post-fork tier)" 0.0
 
-# no guard: the runner schedules this after the fork, past the t43-t45 saga
+# no guard: the runner schedules this after the fork, past the t43 … t45 saga
 
 floor=$GAS2500_WEI
 n=$(pending_nonce "$(addr_of TXGEN_KEY_5)")
 
-expect_create_reject TXGEN_KEY_5 legacy "$((floor - 1))" "$CREATION_CODE" \
+expect_create_reject TXGEN_KEY_5 maxfee "$((floor - 1))" "$CREATION_CODE" \
     "under min gas price" "$n" \
-    || fail_case "legacy $((floor - 1)) creation was not rejected"
-pass_case "rejected: under min gas price (legacy $((floor - 1)) wei)"
+    || fail_case "1559 fee-cap $((floor - 1)) creation was not rejected"
+pass_case "rejected: under min gas price (fee cap $((floor - 1)) wei)"

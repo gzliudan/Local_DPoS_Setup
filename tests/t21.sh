@@ -1,18 +1,24 @@
 #!/bin/bash
-# T21 — an EIP-1559 creation at the tier floor seals on the pre-fork tier (12.5 gwei).
-# (The other half of this tx pair is T52.)
+# T21 — S4 parks an above-floor (700 gwei) transfer in the queue behind a
+# nonce gap; 700 gwei is admitted under the pre-fork floor and is the only
+# above-625gwei tx in any pool at the fork — the sweep must keep it
+# (T24 asserts that; T30 seals it post-fork). #2532
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T21" "creation at the tier floor seals (1559, pre-fork tier)" 2.1
+begin_case "T21" "an above-floor pre-fork tx survives the sweep (pre-fork tier)" 0.0
 
 require_pre_fork "pre side missed the window"
 
-floor=$GAS50_WEI
-n=$(pending_nonce "$(addr_of TXGEN_KEY_5)")
+S4_ADDR=$(addr_of TXGEN_KEY_4)
+S4_TO=$(addr_of TXGEN_KEY_1)
+MARKER=/tmp/g2500-t21-hashes
+SURVIVOR_WEI=700000000000    # 700 gwei — strictly above the 625 gwei floor
 
-h=$(create_from TXGEN_KEY_5 maxfee "$floor" "$CREATION_CODE" "$n" 2>&1) ||
-    fail_case "1559 fee-cap $floor creation rejected: $h"
-e=$(receipt_field "$h" effectiveGasPrice 60) || fail_case "never sealed"
-t=$(receipt_field "$h" type 5)
-[ "$(hex2dec "$t")" = "2" ] || fail_case "type=$(hex2dec "${t:-?}"), expected 2"
-[ "$(hex2dec "$e")" = "$floor" ] || fail_case "effective=$(hex2dec "$e")"
-pass_case "sealed at $floor wei (type 2)"
+# pending-side txs are mined within seconds; the queue behind a nonce gap
+# is the only place a tx survives to the fork
+nonce=$(pending_nonce "$S4_ADDR")
+hash=$(send_from TXGEN_KEY_4 "$S4_TO" 1 "$SURVIVOR_WEI" "$((nonce + 1))")
+[ -n "$hash" ] || fail_case "send rejected"
+que=$(content_from "$S4_ADDR" | jq '.queued | length')
+[ "$que" = "1" ] || fail_case "S4 tx not queued (queued=$que)"
+printf '%s\n' "$hash" >"$MARKER"
+pass_case "S4 nonce $((nonce + 1)) parked queued at $SURVIVOR_WEI wei"

@@ -1,12 +1,18 @@
 #!/bin/bash
-# T26 — sweep observables on pn3 (#2532): meter and trace log.
+# T26 — the sweep leaves a hold-back gauge (#2541): pn3=k, masternodes 0.
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T26" "sweep observables on pn3" 0.0
+begin_case "T26" "the sweep leaves a hold-back gauge" 0.0
 
-m=$(meter3 txpool_belowfloor)
-[ -n "$m" ] || fail_case "meter txpool/belowfloor missing"
-[ "$m" -ge 18 ] || fail_case "meter=$m, expected >= 18 (T05 10 + T06 8 + T08 P2)"
-
-grep -q "reason=below-gas-price-floor" logs/pn3-*.log 2>/dev/null \
-    || fail_case "no 'Dropped pooled transaction ... reason=below-gas-price-floor' in logs"
-pass_case "meter=$m, drop log found"
+# the hold-back materializes at the tracker's next recheck (10 s/60 s cadence)
+k=0
+for _ in $(seq 1 15); do
+    k=$(gauge3 txpool_local_belowfloor)
+    [ "$k" -gt 0 ] && break
+    sleep 5
+done
+[ "$k" -gt 0 ] || fail_case "gauge=0 after 75 s, expected the held-back count"
+for port in 6060 6061 6062; do
+    v=$(meter_port "$port" txpool_local_belowfloor)
+    [ "${v:-0}" = "0" ] || fail_case "masternode :$port gauge=$v, expected 0"
+done
+pass_case "pn3 gauge=k($k), masternodes 0"

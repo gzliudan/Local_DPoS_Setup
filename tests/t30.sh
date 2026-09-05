@@ -1,19 +1,26 @@
 #!/bin/bash
-# T30 — the post-fork reject is not tracked (#2541).
+# T30 — filling S4's nonce gap at the new floor promotes the parked 700 gwei
+# survivor and it seals at its OWN price — the sweep only drops, it never
+# reprices. The runner places this case right after T24 and well before
+# t43's rewind so the seal block is re-imported by t44's sync. #2532
+# (The pre-fork half of this pair is T21.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T30" "the post-fork reject is not tracked" 130.0
+begin_case "T30" "an above-floor pre-fork tx survives the sweep (post-fork tier)" 2.1
 
-# give the tracker one full recheck to settle the pre-fork remnant (the tx
-# journalled by T08 is EXPECTED to land in hold-back at the next recheck);
-# stability is then asserted across a further full recheck window.
-sleep 65
-before=$(journal_size)
-k=$(gauge3 txpool_local_belowfloor)
+S4_ADDR=$(addr_of TXGEN_KEY_4)
+S4_TO=$(addr_of TXGEN_KEY_1)
+MARKER=/tmp/g2500-t21-hashes
+SURVIVOR_WEI=700000000000    # 700 gwei — strictly above the 625 gwei floor
 
-sleep 65   # one more tracker rotation — the window under test
+# the pre side (T21) must have seeded the survivor on this chain
+[ -f "$MARKER" ] || skip_case "no T21 pre side on this chain (no $MARKER)"
+hash=$(tail -n 1 "$MARKER")
+gap=$(send_from TXGEN_KEY_4 "$S4_TO" 1 "$GAS2500_WEI" "$(pending_nonce "$S4_ADDR")")
+[ -n "$gap" ] || fail_case "gap fill rejected"
 
-after=$(journal_size)
-k2=$(gauge3 txpool_local_belowfloor)
-[ "$before" = "$after" ] || fail_case "journal grew: $before -> $after"
-[ "$k2" = "$k" ] || fail_case "gauge moved: $k -> $k2"
-pass_case "journal $before bytes unchanged, gauge stable at k($k)"
+status=$(hex2dec "$(receipt_field "$hash" status 60)")
+eff=$(hex2dec "$(receipt_field "$hash" effectiveGasPrice 5)")
+blocknum=$(hex2dec "$(receipt_field "$hash" blockNumber 5)")
+[ "$status" = "1" ] || fail_case "survivor not sealed (status=$status)"
+[ "$eff" = "$SURVIVOR_WEI" ] || fail_case "effectiveGasPrice=$eff != $SURVIVOR_WEI"
+pass_case "survivor sealed in block $blocknum at $eff wei"

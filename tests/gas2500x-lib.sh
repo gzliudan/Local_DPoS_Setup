@@ -13,7 +13,7 @@
 #   S1/S2/S3/S4).
 # Requirements: bash, curl, jq, cast (foundry).
 #
-# Results: one "T02: pass number=<head> result=<evidence>" verdict line per
+# Results: one "T09: pass number=<head> result=<evidence>" verdict line per
 # case on stdout (the runner stamps and tees these into
 # results/gas2500x-<ts>.log).
 # No results .md file is created unless the caller exports RESULTS_FILE
@@ -147,8 +147,8 @@ addr_of() { # <key-env-name> — derive the address of a raw key from .env
 # same-nonce replacement then fails the "tip must strictly increase" gate no
 # matter how much the fee cap rises. Legacy txs put the whole bump into
 # gasPrice (= tipCap = feeCap). An empty gas price omits the flag — the node
-# then signs at the tier-aware default price (t13).
-# The EIP-1559 cases (t32/t33) pass --priority-gas-price in the extras; cast
+# then signs at the tier-aware default price (t05).
+# The EIP-1559 cases (t53 send / t46 reject) pass --priority-gas-price in the extras; cast
 # then treats the gas-price positional as the max fee per gas, and the two
 # flavors are mutually exclusive, so those skip --legacy instead.
 _cast_send() {
@@ -183,7 +183,7 @@ _cast_send() {
 # wait would stall every pool-seeding submission for its full timeout.
 send_from() {
     local keyvar=$1 to=$2 value=$3 gp=$4 nonce=${5:-}
-    # optional tail: extra cast args (the EIP-1559 tip flag of t32)
+    # optional tail: extra cast args (the EIP-1559 tip flag of t53)
     local extras=()
     if [ "$#" -gt 5 ]; then shift 5; extras=("$@"); fi
     # per-process error file: parallel case runs must not clobber each other
@@ -206,7 +206,7 @@ send_from() {
 # error otherwise.
 expect_reject() {
     local keyvar=$1 to=$2 value=$3 gp=$4 needle=$5 nonce=${6:-}
-    # optional tail: extra cast args (the EIP-1559 tip flag of t33)
+    # optional tail: extra cast args (the EIP-1559 tip flag of t46)
     local extras=()
     if [ "$#" -gt 6 ]; then shift 6; extras=("$@"); fi
     # capture BOTH streams: cast --json prints its error JSON on stdout;
@@ -355,8 +355,8 @@ restart_pn3() {
 pn0_enode() { rpc0 admin_nodeInfo | jq -r .enode; }
 
 # restore_pn3 — bring the regular (peered) pn3 back after the isolated
-# experiment (t29): kill whatever is on 8548, put the real config back,
-# start. Shared by t29/t30 so every failure path still leaves a sane node.
+# experiment (t43): kill whatever is on 8548, put the real config back,
+# start. Shared by t43/t44 so every failure path still leaves a sane node.
 restore_pn3() {
     stop_pn3 10
     [ -f nodes/pn3/XDC/config.toml.bak ] &&

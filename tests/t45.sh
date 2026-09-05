@@ -18,7 +18,7 @@ sleep 65   # one recheck: a broken implementation would resubmit here
 k1=$(gauge3 txpool_local_belowfloor)
 read -r _ que <<<"$(pool3)"
 pend=$(pending_regular)   # signer-exempt — consensus signing txs transit here
-# the journal legitimately reloads ABOVE-floor txs (T32's P2) into the pool
+# the journal legitimately reloads ABOVE-floor txs (T33's P2) into the pool
 # at the first recheck; a resubmit STORM would keep growing the queue across
 # rechecks, so compare against the baseline sampled right after the restart
 if [ "$pend" != "0" ] || [ "$que" -gt 1 ]; then

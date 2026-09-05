@@ -3,10 +3,10 @@
 source "$(dirname "$0")/gas2500x-lib.sh"
 begin_case "T01" "fund the senders" 1.3
 
-# Funding list: S1..S3 need gas money for T02/T05/T06/T08/T28+ and S4 for T10's
-# above-floor survivor (1 XDC each); S5 (T17's creation-pricing probes) gets
+# Funding list: S1..S3 need gas money for T09/T11/T12/T13/T29+ and S4 for T21's
+# above-floor survivor (1 XDC each); S5 (T07's creation-pricing probes) gets
 # 2 XDC (four ~53k-gas creates per side); P3 (pn3's own account, sender of
-# T14's default-price tx) needs 10 XDC.
+# T15's default-price tx) needs 10 XDC.
 # All six transfers are submitted ASYNC with explicit sequential nonces, so
 # the whole batch rides ONE block (~2 s) instead of six serial receipt waits
 # (~2 s each — the old 10.8 s T01). The receipts are then confirmed

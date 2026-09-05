@@ -1,7 +1,7 @@
 #!/bin/bash
 # T39 — the tier step is visible across the fork boundary blocks: fork-1
 # carries the 12.5 gwei base fee, fork carries 625 gwei, #2516.
-# (The pre-fork half of this check is T13.)
+# (The pre-fork half of this check is T05.)
 source "$(dirname "$0")/gas2500x-lib.sh"
 begin_case "T39" "block baseFeePerGas carries the tier price (post-fork tier)" 0.0
 

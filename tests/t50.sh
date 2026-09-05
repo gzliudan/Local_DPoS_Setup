@@ -1,10 +1,10 @@
 #!/bin/bash
 # T50 — a legacy creation above the tier floor seals on the post-fork tier (625 gwei).
-# (The other half of this tx pair is T19.)
+# (The other half of this tx pair is T17.)
 source "$(dirname "$0")/gas2500x-lib.sh"
 begin_case "T50" "creation above the tier floor seals (legacy, post-fork tier)" 1.0
 
-# no guard: the runner schedules this after the fork, past the t43-t45 saga
+# no guard: the runner schedules this after the fork, past the t43 … t45 saga
 
 floor=$GAS2500_WEI
 n=$(pending_nonce "$(addr_of TXGEN_KEY_5)")

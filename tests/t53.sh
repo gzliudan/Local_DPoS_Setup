@@ -1,19 +1,26 @@
 #!/bin/bash
-# T53 — an EIP-1559 creation with tip 0 seals at the base fee on the post-fork tier (625 gwei).
-# (The other half of this tx pair is T22.)
+# T53 — EIP-1559 admission at the new floor (#2516): the pool floor compares
+# a dynamic-fee tx's fee CAP (DynamicFeeTx.gasPrice is the fee cap), so a
+# type-2 tx with fee cap = 625 gwei is admitted exactly where the legacy tx
+# of T29 is, and it seals at the floor: effectiveGasPrice =
+# min(feeCap, baseFee + tip) = 625 gwei.
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T53" "creation with tip 0 seals at the base fee (post-fork tier)" 2.0
+begin_case "T53" "EIP-1559 at-floor admission on the new tier (fee cap = 625 gwei)" 2.1
 
-# no guard: the runner schedules this after the fork, past the t43-t45 saga
+require_post_fork
 
-floor=$GAS2500_WEI
-n=$(pending_nonce "$(addr_of TXGEN_KEY_5)")
+S1_ADDR=$(addr_of TXGEN_KEY_1)
+S1_TO=$(addr_of TXGEN_KEY_2)
+nonce=$(pending_nonce "$S1_ADDR")
+# cast 1.8: on a non-legacy send --gas-price IS the max fee per gas
+hash=$(send_from TXGEN_KEY_1 "$S1_TO" 1 "$GAS2500_WEI" "$nonce" \
+    --priority-gas-price 1000000000wei)
+[ -n "$hash" ] || fail_case "send rejected"
 
-h=$(create_from TXGEN_KEY_5 tip 0 "$CREATION_CODE" "$n" 2>&1) ||
-    fail_case "tip-0 creation rejected: $h"
-e=$(receipt_field "$h" effectiveGasPrice 60) || fail_case "never sealed"
-t=$(receipt_field "$h" type 5)
-[ "$(hex2dec "$t")" = "2" ] || fail_case "type=$(hex2dec "${t:-?}"), expected 2"
-[ "$(hex2dec "$e")" = "$floor" ] ||
-    fail_case "effective=$(hex2dec "$e"), expected the base fee ($floor)"
-pass_case "sealed at $(hex2dec "$e") wei (tip 0, type 2)"
+status=$(hex2dec "$(receipt_field "$hash" status)")
+eff=$(hex2dec "$(receipt_field "$hash" effectiveGasPrice)")
+txtype=$(receipt_field "$hash" type)
+[ "$status" = "1" ] || fail_case "status=$status"
+[ "$txtype" = "0x2" ] || fail_case "type=$txtype, expected a 0x2 dynamic-fee tx"
+[ "$eff" = "$GAS2500_WEI" ] || fail_case "effectiveGasPrice=$eff != $GAS2500_WEI"
+pass_case "type-2 tx sealed at $eff wei"

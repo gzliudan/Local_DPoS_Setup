@@ -6,7 +6,7 @@ begin_case "T34" "no tracker revival within the recheck" 130.0
 
 before=$(journal_size)
 
-# settle: after T32's restart the journal reloads its txs into the POOL at
+# settle: after T33's restart the journal reloads its txs into the POOL at
 # the tracker's first recheck — the above-floor P2 returning is CORRECT
 # behavior; wait for the pool to stabilize before asserting no revival of
 # the BELOW-FLOOR hold-backs

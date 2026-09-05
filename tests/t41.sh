@@ -1,14 +1,14 @@
 #!/bin/bash
-# T41 — txpool_contentFrom shows S1's queue empty after the fork sweep
-# (queued=0), #2532. (The pre-fork half of this check is T15.)
+# T41 — eth_estimateGas returns the standard 21000 post-fork (read-only
+# probe), #2516. (The pre-fork half of this check is T06.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T41" "txpool_contentFrom mirrors the queue (post-fork tier)" 0.0
+begin_case "T41" "eth_estimateGas works (post-fork tier)" 0.0
 
 # no guard: the runner schedules this well after the fork
 
 S1=$(addr_of TXGEN_KEY_1)
-content=$(content_from "$S1")
-pend=$(printf '%s' "$content" | jq '[.pending[]] | length')
-que=$(printf '%s' "$content" | jq '[.queued[]] | length')
-[ "$que" = "0" ] || fail_case "queued=$que, expected 0 after the sweep"
-pass_case "contentFrom: pending=$pend queued=$que"
+est=$(rpc3 eth_estimateGas "[{\"from\":\"$(addr_of TXGEN_KEY_2)\",\"to\":\"$S1\",\"value\":\"0x1\"}]")
+[ "$est" = "null" ] && fail_case "estimateGas returned null"
+gas=$(hex2dec "$(printf '%s' "$est" | jq -r .)")
+[ "$gas" = "21000" ] || fail_case "estimate=$gas, expected 21000"
+pass_case "estimateGas=$gas"

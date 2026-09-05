@@ -1,29 +1,22 @@
 #!/bin/bash
-# T09 — journal load converges on the replacement (pre-fork, #2541):
-# after a restart the pool holds only P2 at nonce 10.
+# T09 — at-floor execution on the pre-fork tier: S3 sends at exactly 12.5 gwei.
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T09" "journal load converges on the replacement (pre-fork)" 12.1
+begin_case "T09" "at-floor execution on the pre-fork tier (12.5 gwei)" 2.1
 
-S2=$(addr_of TXGEN_KEY_2)
+# the pre-send head is needed below for the seal-latency window, so the
+# pre-fork guard is spelled out instead of require_pre_fork
+head=$(head3)
+[ "$head" -lt "$FORK_BLOCK" ] || skip_case "head $head >= fork $FORK_BLOCK; run before the fork"
 
-restart_pn3 || fail_case "pn3 restart failed"
+S3_TO=$(addr_of TXGEN_KEY_1)   # send to S1's address; nonce 0 probe of S3
+hash=$(send_from TXGEN_KEY_3 "$S3_TO" 1000000000000 "$GAS50_WEI")
+[ -n "$hash" ] || fail_case "send rejected"
 
-# the journal load only re-populates the tracker's in-memory table; the txs
-# re-enter the POOL at the tracker's first recheck (timer: 10 s after start)
-for _ in $(seq 1 20); do
-    [ "$(pool_txs_from "$S2")" -ge 9 ] && break
-    sleep 5
-done
+status=$(hex2dec "$(receipt_field "$hash" status)")
+eff=$(hex2dec "$(receipt_field "$hash" effectiveGasPrice)")
+blocknum=$(hex2dec "$(receipt_field "$hash" blockNumber)")
 
-# after the load: S2 holds T06's 2..9 (8 txs) plus P2 at nonce 10 — and P1
-# (the superseded tx) must be gone
-count=$(pool_txs_from "$S2")
-[ "$count" = "9" ] || fail_case "pool holds $count txs at S2, expected 9 (2..9 + P2)"
-content=$(content_from "$S2")
-n10=$(printf '%s' "$content" | jq '[.. | objects | select(.nonce? == "0xa")] | length')
-[ "$n10" = "1" ] || fail_case "nonce 10 slot holds $n10 txs, expected 1 (P2)"
-p1h=$(head -n 1 /tmp/g2500-t8-hashes 2>/dev/null)
-if [ -n "$p1h" ] && printf '%s' "$content" | grep -qi "$p1h"; then
-    fail_case "superseded P1 ($p1h) still in the pool after the load"
-fi
-pass_case "journal load keeps only P2 at nonce 10 (9 S2 txs total)"
+[ "$status" = "1" ] || fail_case "status=$status"
+[ "$eff" = "$GAS50_WEI" ] || fail_case "effectiveGasPrice=$eff != $GAS50_WEI"
+[ $((blocknum - head)) -le 2 ] || fail_case "sealed late: head=$head block=$blocknum"
+pass_case "sealed in block $blocknum at $eff wei"

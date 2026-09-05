@@ -1,18 +1,11 @@
 #!/bin/bash
-# T04 — the below-floor reject is not tracked (#2541).
+# T04 — eth_maxPriorityFeePerGas suggests a tip below the pre-fork tier
+# price (12.5 gwei), #2516. (The post-fork half of this check is T38.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T04" "the below-floor reject is not tracked" 65.0
+begin_case "T04" "eth_maxPriorityFeePerGas suggests a tip below the tier price (pre-fork tier)" 0.0
 
-before=$(journal_size)
-gauge=$(gauge3 txpool_local_belowfloor)
+require_pre_fork "pre side missed the window"
 
-# sleep one tracker rotation (recheck every 60 s) so a wrong implementation
-# would have had time to resubmit/journal the rejected tx
-sleep 65
-
-after=$(journal_size)
-gauge2=$(gauge3 txpool_local_belowfloor)
-
-[ "$before" = "$after" ] || fail_case "journal grew: $before -> $after"
-[ "$gauge2" = "$gauge" ] || fail_case "gauge moved: $gauge -> $gauge2"
-pass_case "journal $before bytes unchanged, gauge $gauge"
+tip=$(hex2dec "$(rpc0 eth_maxPriorityFeePerGas | jq -r .)") || fail_case "RPC error"
+[ "$tip" -lt "$GAS50_WEI" ] || fail_case "tip=$tip not below tier price $GAS50_WEI"
+pass_case "tip suggestion=$tip wei (< $GAS50_WEI)"

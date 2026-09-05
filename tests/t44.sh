@@ -23,7 +23,7 @@ if ! rpc3 admin_addPeer "[\"$enode\"]" >/dev/null; then
     fail_case "admin_addPeer failed"
 fi
 
-# T10's above-floor pair seals a few blocks past the fork; the rewind's
+# T21's above-floor pair seals a few blocks past the fork; the rewind's
 # revival resubmits both (their nonces are unspent again at head 30), so the
 # sync must re-import their seal blocks for the pool to drop them before the
 # poll below — hence +20 instead of the old +5.

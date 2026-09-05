@@ -1,17 +1,15 @@
 #!/bin/bash
-# T47 — EIP-1559 rejection below the new floor (#2516): a type-2 tx whose fee
-# cap is 1 wei under 625 gwei hits the same admission floor as a legacy tx
-# (T29 is the legacy mirror) and is rejected with "under min gas price".
+# T47 — a legacy creation below the tier floor is rejected on the post-fork tier (625 gwei).
+# (The other half of this tx pair is T07.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T47" "EIP-1559 below-floor rejection (fee cap = 625 gwei - 1)" 0.0
+begin_case "T47" "creation below the tier floor is rejected (legacy, post-fork tier)" 0.0
 
-require_post_fork
+# no guard: the runner schedules this after the fork, past the t43 … t45 saga
 
-S1_ADDR=$(addr_of TXGEN_KEY_1)
-S1_TO=$(addr_of TXGEN_KEY_2)
-nonce=$(pending_nonce "$S1_ADDR")
-# cast 1.8: on a non-legacy send --gas-price IS the max fee per gas
-expect_reject TXGEN_KEY_1 "$S1_TO" 1 "$((GAS2500_WEI - 1))" \
-    "under min gas price" "$nonce" --priority-gas-price 1000000000wei \
-    || fail_case "type-2 tx with fee cap $((GAS2500_WEI - 1)) was admitted"
-pass_case "rejected: under min gas price (fee cap $((GAS2500_WEI - 1)) wei)"
+floor=$GAS2500_WEI
+n=$(pending_nonce "$(addr_of TXGEN_KEY_5)")
+
+expect_create_reject TXGEN_KEY_5 legacy "$((floor - 1))" "$CREATION_CODE" \
+    "under min gas price" "$n" \
+    || fail_case "legacy $((floor - 1)) creation was not rejected"
+pass_case "rejected: under min gas price (legacy $((floor - 1)) wei)"

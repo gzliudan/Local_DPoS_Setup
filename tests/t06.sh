@@ -1,25 +1,14 @@
 #!/bin/bash
-# T06 — queue seeding, sender S2: 8 transfers parked in the queue.
+# T06 — eth_estimateGas returns the standard 21000 for a plain transfer
+# (read-only probe), #2516. (The post-fork half of this check is T41.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T06" "queue seeding, sender S2 (8 queued)" 0.3
+begin_case "T06" "eth_estimateGas works (pre-fork tier)" 0.0
 
-require_pre_fork
+require_pre_fork "pre side missed the window"
 
-S2=$(addr_of TXGEN_KEY_2)
-S2_TO=$(addr_of TXGEN_KEY_1)
-pending=$(pending_nonce "$S2")
-[ "$pending" = "0" ] || fail_case "S2 pending nonce is $pending, expected 0"
-
-# nonces 2..9 (8 txs, gap at 0..1; nonce 10 stays free for T08's replacement
-# pair and the pending+10 cap caps us at nonce 10 anyway)
-for n in $(seq 2 9); do
-    send_from TXGEN_KEY_2 "$S2_TO" 1 "$GAS50_WEI" "$n" >/dev/null 2>&1 \
-        || fail_case "submit nonce $n failed"
-done
-
-read -r _ que <<<"$(pool3)"
-# signer-exempt pending read — see pending_regular in the lib
-pend=$(pending_regular)
-[ "$pend" = "0" ] || fail_case "pending=$pend, expected 0"
-[ "$que" = "18" ] || fail_case "queued=$que, expected 18"
-pass_case "pending=0 (signers excluded) queued=18"
+S1=$(addr_of TXGEN_KEY_1)
+est=$(rpc3 eth_estimateGas "[{\"from\":\"$(addr_of TXGEN_KEY_2)\",\"to\":\"$S1\",\"value\":\"0x1\"}]")
+[ "$est" = "null" ] && fail_case "estimateGas returned null"
+gas=$(hex2dec "$(printf '%s' "$est" | jq -r .)")
+[ "$gas" = "21000" ] || fail_case "estimate=$gas, expected 21000"
+pass_case "estimateGas=$gas"

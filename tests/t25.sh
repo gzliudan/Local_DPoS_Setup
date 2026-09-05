@@ -1,26 +1,12 @@
 #!/bin/bash
-# T25 — filling S4's nonce gap at the new floor promotes the parked 700 gwei
-# survivor and it seals at its OWN price — the sweep only drops, it never
-# reprices. The runner places this case right after T24 and well before
-# t43's rewind so the seal block is re-imported by t44's sync. #2532
-# (The pre-fork half of this pair is T10.)
+# T25 — sweep observables on pn3 (#2532): meter and trace log.
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T25" "an above-floor pre-fork tx survives the sweep (post-fork tier)" 2.1
+begin_case "T25" "sweep observables on pn3" 0.0
 
-S4_ADDR=$(addr_of TXGEN_KEY_4)
-S4_TO=$(addr_of TXGEN_KEY_1)
-MARKER=/tmp/g2500-t10-hashes
-SURVIVOR_WEI=700000000000    # 700 gwei — strictly above the 625 gwei floor
+m=$(meter3 txpool_belowfloor)
+[ -n "$m" ] || fail_case "meter txpool/belowfloor missing"
+[ "$m" -ge 18 ] || fail_case "meter=$m, expected >= 18 (T11 10 + T12 8 + T13 P2)"
 
-# the pre side (T10) must have seeded the survivor on this chain
-[ -f "$MARKER" ] || skip_case "no T10 pre side on this chain (no $MARKER)"
-hash=$(tail -n 1 "$MARKER")
-gap=$(send_from TXGEN_KEY_4 "$S4_TO" 1 "$GAS2500_WEI" "$(pending_nonce "$S4_ADDR")")
-[ -n "$gap" ] || fail_case "gap fill rejected"
-
-status=$(hex2dec "$(receipt_field "$hash" status 60)")
-eff=$(hex2dec "$(receipt_field "$hash" effectiveGasPrice 5)")
-blocknum=$(hex2dec "$(receipt_field "$hash" blockNumber 5)")
-[ "$status" = "1" ] || fail_case "survivor not sealed (status=$status)"
-[ "$eff" = "$SURVIVOR_WEI" ] || fail_case "effectiveGasPrice=$eff != $SURVIVOR_WEI"
-pass_case "survivor sealed in block $blocknum at $eff wei"
+grep -q "reason=below-gas-price-floor" logs/pn3-*.log 2>/dev/null \
+    || fail_case "no 'Dropped pooled transaction ... reason=below-gas-price-floor' in logs"
+pass_case "meter=$m, drop log found"

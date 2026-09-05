@@ -1,21 +1,19 @@
 #!/bin/bash
-# T31 — same-nonce replacement accepted on the new tier (#2541).
+# T31 — the post-fork reject is not tracked (#2541).
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T31" "same-nonce replacement accepted on the new tier" 0.1
+begin_case "T31" "the post-fork reject is not tracked" 130.0
 
-S2=$(addr_of TXGEN_KEY_2)
-S2_TO=$(addr_of TXGEN_KEY_1)
+# give the tracker one full recheck to settle the pre-fork remnant (the tx
+# journalled by T13 is EXPECTED to land in hold-back at the next recheck);
+# stability is then asserted across a further full recheck window.
+sleep 65
+before=$(journal_size)
+k=$(gauge3 txpool_local_belowfloor)
 
-# after the sweep S2's pending nonce is 0; nonce 3 parks P1 in the queue.
-h1=$(send_from TXGEN_KEY_2 "$S2_TO" 1 "$GAS2500_WEI" 3)
-[ -n "$h1" ] || fail_case "P1 rejected"
-# 110.4% bump: the 110% threshold must be EXCEEDED (old gate: strictly higher)
-h2=$(send_from TXGEN_KEY_2 "$S2_TO" 1 $((GAS2500_WEI * 552 / 500)) 3)
-[ -n "$h2" ] || fail_case "P2 rejected"
+sleep 65   # one more tracker rotation — the window under test
 
-hashes=$(pool_hashes_from "$S2")
-p1in=$(printf '%s' "$hashes" | grep -ci "$h1")
-[ "$p1in" = "0" ] || fail_case "P1 still in pool"
-p2in=$(printf '%s' "$hashes" | grep -ci "$h2")
-[ "$p2in" = "1" ] || fail_case "P2 not in pool"
-pass_case "P2 replaced P1 at nonce 3 (625g tier)"
+after=$(journal_size)
+k2=$(gauge3 txpool_local_belowfloor)
+[ "$before" = "$after" ] || fail_case "journal grew: $before -> $after"
+[ "$k2" = "$k" ] || fail_case "gauge moved: $k -> $k2"
+pass_case "journal $before bytes unchanged, gauge stable at k($k)"

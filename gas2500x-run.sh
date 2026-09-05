@@ -38,7 +38,6 @@ echo
 # out of the transcript.
 ./stop-network.sh >/dev/null 2>&1 || true
 ./stop-rpc.sh >/dev/null 2>&1 || true
-pkill -f 'XDC --config nodes/pn3' 2>/dev/null || true   # observer has no .pid file
 ./reset.sh >/dev/null
 ./start-network.sh >/dev/null
 ./run-node.sh 3 >/dev/null
@@ -194,7 +193,7 @@ done
 # the suite owns the network lifecycle: stop all nodes once the run is done
 # (quietly - no stop chatter in the transcript)
 ./stop-network.sh >/dev/null 2>&1 || true
-pkill -f 'XDC --config nodes/pn3' 2>/dev/null || true   # observer is not in the .pid files
+./stop-rpc.sh >/dev/null 2>&1 || true
 
 # last line of the log
 echo "end: pass=$passed fail=$failed skip=$skipped"

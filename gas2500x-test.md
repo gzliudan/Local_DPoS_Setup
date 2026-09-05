@@ -94,8 +94,10 @@ Shell layer, `bash` + `curl` + `jq` + `cast` (foundry) only, all under
   `tests/t10.sh post`.
 - **`gas2500x-run.sh`** (repo root, next to `start-network.sh`) — runs all
   cases in schedule order (pre sides before the fork, post sides after),
-  waiting 3 s between cases so each starts on a strictly higher block
-  (blocks seal every 2 s); the whole stamped run is recorded in
+  starting each case only once pn3's head has moved strictly past the
+  previous case's verdict-time block (the verdict line's `number=`; the
+  chain seals a block every 2 s, so the wait is usually ~2 s); the whole
+  stamped run is recorded in
   `results/gas2500x-<timestamp>.log` — the log opens with
   `start: cases=N` and closes with `end: pass=X fail=Y skip=Z`
   (no results `.md` is created) — and the network is stopped when the run

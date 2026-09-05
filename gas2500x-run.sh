@@ -78,13 +78,27 @@ echo "start: cases=${#SCHEDULE[@]}"
 passed=0
 failed=0
 skipped=0
-i=0
+# block-advance gate between cases: each verdict line carries the chain head
+# at verdict time ("number="), and the next case may start as soon as pn3's
+# head moves strictly past it — no fixed sleep. A case ending right after a
+# seal waits ~2 s, one ending right before waits ~4 s, and every
+# "test number=" still lands on a strictly higher block than the previous
+# case's.
+prev_num=""
 for item in "${SCHEDULE[@]}"; do
-    # the chain seals a block every 2 s — a 3 s gap before each case makes
-    # every case start on a strictly higher block, so the "test number="
-    # lines in a transcript are all distinct
-    if [ "$i" -gt 0 ]; then sleep 3; fi
-    i=$((i + 1))
+    if [[ "$prev_num" =~ ^[0-9]+$ ]]; then
+        t=0
+        while :; do
+            head=$(head3)
+            # -1 = pn3's RPC is down: the gate cannot be satisfied and the
+            # case about to run will fail on its own guards — stop waiting
+            [ "$head" = "-1" ] && break
+            [ "$head" -gt "$prev_num" ] && break
+            [ "$t" -ge 30 ] && break   # the chain stalled — proceed anyway
+            sleep 1
+            t=$((t + 1))
+        done
+    fi
     script=$item
     args=""
     case $item in
@@ -124,6 +138,11 @@ for item in "${SCHEDULE[@]}"; do
         [ -n "$verdict" ] && break
         sleep 0.2
     done
+    # remember this case's verdict-time head for the next case's gate; a
+    # crashed case (no verdict, or no number= in it) leaves the previous
+    # number in place instead of disabling the gate
+    new_num=$(printf '%s' "$verdict" | grep -o ' number=[0-9]*' | head -n 1 | cut -d= -f2)
+    [ -n "$new_num" ] && prev_num=$new_num
     case $verdict in
     *" pass "*) passed=$((passed + 1)) ;;
     *" skip "*) skipped=$((skipped + 1)) ;;

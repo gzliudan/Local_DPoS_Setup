@@ -65,7 +65,7 @@ done
 # the creation txs are in the journal at the rewind (the pre-side seals
 # are inert — mined before the fork, stale-removed on re-sync).
 SCHEDULE=(
-    t1 t2 t3 t4 t5 t6 t7 t8 t9 t34-pre
+    t01 t02 t03 t04 t05 t06 t07 t08 t09 t34-pre
     t10-pre t11-pre t12-pre t13-pre t14-pre t15-pre
     t35 t36 t37 t38 t39 t40
     t16 t17 t34-post t18 t19
@@ -81,7 +81,7 @@ SCHEDULE=(
 # 0.1s both map to 1). Source run: results/gas2500x-20260905-101010.log.
 # Regenerate after timing-changing edits.
 declare -A EXPECTED=(
-    [t1]=11 [t2]=3 [t3]=1 [t4]=65 [t5]=1 [t6]=1 [t7]=21 [t8]=1 [t9]=13
+    [t01]=11 [t02]=3 [t03]=1 [t04]=65 [t05]=1 [t06]=1 [t07]=21 [t08]=1 [t09]=13
     [t34-pre]=1
     [t10-pre]=1 [t11-pre]=1 [t12-pre]=1 [t13-pre]=2 [t14-pre]=1 [t15-pre]=1
     [t35]=1 [t36]=1 [t37]=1 [t38]=1 [t39]=1 [t40]=1

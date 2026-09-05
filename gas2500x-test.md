@@ -85,7 +85,7 @@ Shell layer, `bash` + `curl` + `jq` + `cast` (foundry) only, all under
   on stdout. The expected time is injected by the runner from its per-item
   `EXPECTED` table (ceil of the last full run's elapsed, min 1); standalone
   case runs default to 1s.
-- **`tests/t1.sh` … `tests/t46.sh`** — one script per test case, one case ID
+- **`tests/t01.sh` … `tests/t46.sh`** — one script per test case, one case ID
   per script. The runner drives everything; the only remaining twice-cases
   (T10–T15, T34) are invoked internally as pre/post sides.
 - **`gas2500x-run.sh`** (repo root, next to `start-network.sh`) — the only

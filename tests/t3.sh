@@ -1,7 +1,7 @@
 #!/bin/bash
-# T3 — below-floor rejection on the pre-fork tier: 12.5 gwei − 1 wei.
+# T3 — below-floor rejection on the pre-fork tier: 12499999999 wei.
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T03" "below-floor rejection on the pre-fork tier (12.5 gwei − 1)"
+begin_case "T03" "below-floor rejection on the pre-fork tier (12499999999 wei)"
 
 require_pre_fork
 

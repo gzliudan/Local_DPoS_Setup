@@ -145,7 +145,7 @@ transactions (they cannot be crafted on a running network).
   gwei, status 1; S3's nonce advances 0 → 1. The pre-fork floor admits a tx at
   exactly the floor.
 
-### T03 — below-floor rejection on the pre-fork tier (12.5 gwei − 1)
+### T03 — below-floor rejection on the pre-fork tier (12499999999 wei)
 
 - **Steps:** S3 submits one executable transfer at 12.5 gwei − 1 wei
   (12499999999).

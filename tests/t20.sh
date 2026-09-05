@@ -2,7 +2,7 @@
 # T20 — journal load converges on the replacement (pre-fork, #2541):
 # after a restart the pool holds only P2 at nonce 10.
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T20" "verify the journal load keeps the replacement (pre-fork)" 12.1
+begin_case "T20" "verify the journal load keeps the pre-fork replacement" 12.1
 
 S2=$(addr_of TXGEN_KEY_2)
 

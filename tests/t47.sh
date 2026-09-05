@@ -2,7 +2,7 @@
 # T47 — a legacy creation below the tier floor is rejected on the post-fork tier (625 gwei).
 # (The other half of this tx pair is T07.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T47" "reject a legacy creation below the tier floor (post-fork tier)" 0.0
+begin_case "T47" "reject a legacy creation below the post-fork floor" 0.0
 
 # no guard: the runner schedules this after the fork, past the t43 … t45 saga
 

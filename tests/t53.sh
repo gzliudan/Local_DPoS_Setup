@@ -5,7 +5,7 @@
 # of T29 is, and it seals at the floor: effectiveGasPrice =
 # min(feeCap, baseFee + tip) = 625 gwei.
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T53" "seal a 1559 tx at the new floor (fee cap = 625 gwei)" 2.1
+begin_case "T53" "seal a 1559 tx at the post-fork floor" 2.1
 
 require_post_fork
 

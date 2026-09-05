@@ -3,7 +3,7 @@
 # cap is 1 wei under 625 gwei hits the same admission floor as a legacy tx
 # (T27 is the legacy mirror) and is rejected with "under min gas price".
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T46" "reject a 1559 tx below the new floor (fee cap = 625 gwei - 1)" 0.0
+begin_case "T46" "reject a 1559 tx 1 wei below the post-fork floor" 0.0
 
 require_post_fork
 

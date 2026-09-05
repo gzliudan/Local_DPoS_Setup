@@ -5,7 +5,7 @@
 # t43's rewind so the seal block is re-imported by t44's sync. #2532
 # (The pre-fork half of this pair is T21.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T30" "seal the parked 700 gwei tx above the new floor (post-fork tier)" 2.1
+begin_case "T30" "seal the parked 700 gwei tx above the new floor" 2.1
 
 S4_ADDR=$(addr_of TXGEN_KEY_4)
 S4_TO=$(addr_of TXGEN_KEY_1)

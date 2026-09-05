@@ -2,7 +2,7 @@
 # T18 — an EIP-1559 creation at the tier floor seals on the pre-fork tier (12.5 gwei).
 # (The other half of this tx pair is T51.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T18" "seal a 1559 creation at the tier floor (pre-fork tier)" 2.1
+begin_case "T18" "seal a 1559 creation at the pre-fork floor" 2.1
 
 require_pre_fork "pre side missed the window"
 

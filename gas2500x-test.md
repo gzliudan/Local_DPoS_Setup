@@ -87,55 +87,55 @@ TrackAll races, Osaka gas-cap discard, `Gas2500xBlock == nil`, special txs.
 | Case | Name |
 | --- | --- |
 | [T01](tests/t01.sh) | fund the senders |
-| [T02](tests/t02.sh) | reject a tx below the pre-fork floor (12499999999 wei) |
-| [T03](tests/t03.sh) | verify eth_gasPrice reports the tier price (pre-fork tier) |
-| [T04](tests/t04.sh) | verify eth_maxPriorityFeePerGas suggests a tip below the tier price (pre-fork tier) |
-| [T05](tests/t05.sh) | verify the block baseFeePerGas carries the tier price (pre-fork tier) |
-| [T06](tests/t06.sh) | verify eth_estimateGas works (pre-fork tier) |
-| [T07](tests/t07.sh) | reject a legacy creation below the tier floor (pre-fork tier) |
-| [T08](tests/t08.sh) | reject a 1559 creation below the tier floor (pre-fork tier) |
-| [T09](tests/t09.sh) | seal a tx at the pre-fork floor (12.5 gwei) |
+| [T02](tests/t02.sh) | reject a tx 1 wei below the pre-fork floor |
+| [T03](tests/t03.sh) | verify eth_gasPrice on the pre-fork tier |
+| [T04](tests/t04.sh) | verify eth_maxPriorityFeePerGas on the pre-fork tier |
+| [T05](tests/t05.sh) | verify the block baseFeePerGas on the pre-fork tier |
+| [T06](tests/t06.sh) | verify eth_estimateGas on the pre-fork tier |
+| [T07](tests/t07.sh) | reject a legacy creation below the pre-fork floor |
+| [T08](tests/t08.sh) | reject a 1559 creation below the pre-fork floor |
+| [T09](tests/t09.sh) | seal a tx at the pre-fork floor of 12.5 gwei |
 | [T10](tests/t10.sh) | verify the below-floor reject is not tracked |
-| [T11](tests/t11.sh) | seed S1's queue (10 queued) |
-| [T12](tests/t12.sh) | seed S2's queue (8 queued) |
-| [T13](tests/t13.sh) | replace a queued tx at the same nonce (pre-fork) |
-| [T14](tests/t14.sh) | verify txpool_contentFrom mirrors the queue (pre-fork tier) |
-| [T15](tests/t15.sh) | seal a tx at the tier default gas price (pre-fork tier) |
-| [T16](tests/t16.sh) | seal a legacy creation at the tier floor (pre-fork tier) |
-| [T17](tests/t17.sh) | seal a legacy creation above the tier floor (pre-fork tier) |
-| [T18](tests/t18.sh) | seal a 1559 creation at the tier floor (pre-fork tier) |
-| [T19](tests/t19.sh) | seal a tip-0 creation at the base fee (pre-fork tier) |
-| [T20](tests/t20.sh) | verify the journal load keeps the replacement (pre-fork) |
-| [T21](tests/t21.sh) | park a 700 gwei tx from S4 for the sweep (pre-fork tier) |
+| [T11](tests/t11.sh) | seed 10 queued txs from S1 |
+| [T12](tests/t12.sh) | seed 8 queued txs from S2 |
+| [T13](tests/t13.sh) | replace a pre-fork queued tx at the same nonce |
+| [T14](tests/t14.sh) | verify txpool_contentFrom mirrors the pre-fork queue |
+| [T15](tests/t15.sh) | seal a tx at the pre-fork default gas price |
+| [T16](tests/t16.sh) | seal a legacy creation at the pre-fork floor |
+| [T17](tests/t17.sh) | seal a legacy creation above the pre-fork floor |
+| [T18](tests/t18.sh) | seal a 1559 creation at the pre-fork floor |
+| [T19](tests/t19.sh) | seal a tip-0 creation at the pre-fork base fee |
+| [T20](tests/t20.sh) | verify the journal load keeps the pre-fork replacement |
+| [T21](tests/t21.sh) | park a 700 gwei tx from S4 for the sweep |
 | [T22](tests/t22.sh) | verify the queued batch is not sealed |
 | [T23](tests/t23.sh) | verify sealing continuity across the fork |
 | [T24](tests/t24.sh) | verify the fork sweep empties the queue |
 | [T25](tests/t25.sh) | verify the sweep meter and drop log on pn3 |
 | [T26](tests/t26.sh) | verify the sweep leaves a hold-back gauge |
-| [T27](tests/t27.sh) | reject a tx below the new floor (624999999999 wei) |
+| [T27](tests/t27.sh) | reject a tx 1 wei below the post-fork floor |
 | [T28](tests/t28.sh) | reject a swept tx re-entering at the old price |
-| [T29](tests/t29.sh) | seal a tx at the new floor (625 gwei) |
-| [T30](tests/t30.sh) | seal the parked 700 gwei tx above the new floor (post-fork tier) |
+| [T29](tests/t29.sh) | seal a tx at the post-fork floor of 625 gwei |
+| [T30](tests/t30.sh) | seal the parked 700 gwei tx above the new floor |
 | [T31](tests/t31.sh) | verify the post-fork reject is not tracked |
-| [T32](tests/t32.sh) | replace a queued tx at the same nonce (new tier) |
+| [T32](tests/t32.sh) | replace a post-fork queued tx at the same nonce |
 | [T33](tests/t33.sh) | verify the journal load keeps the new-tier replacement |
 | [T34](tests/t34.sh) | verify no tracker revival within the recheck |
 | [T35](tests/t35.sh) | verify effectiveGasPrice matches the block base fee on both tiers |
 | [T36](tests/t36.sh) | verify the --gasprice 1 knob is inert |
-| [T37](tests/t37.sh) | verify eth_gasPrice reports the tier price (post-fork tier) |
-| [T38](tests/t38.sh) | verify eth_maxPriorityFeePerGas suggests a tip below the tier price (post-fork tier) |
-| [T39](tests/t39.sh) | verify the block baseFeePerGas carries the tier price (post-fork tier) |
-| [T40](tests/t40.sh) | verify txpool_contentFrom mirrors the queue (post-fork tier) |
-| [T41](tests/t41.sh) | verify eth_estimateGas works (post-fork tier) |
-| [T42](tests/t42.sh) | seal a tx at the tier default gas price (post-fork tier) |
+| [T37](tests/t37.sh) | verify eth_gasPrice on the post-fork tier |
+| [T38](tests/t38.sh) | verify eth_maxPriorityFeePerGas on the post-fork tier |
+| [T39](tests/t39.sh) | verify the block baseFeePerGas on the post-fork tier |
+| [T40](tests/t40.sh) | verify txpool_contentFrom mirrors the post-fork queue |
+| [T41](tests/t41.sh) | verify eth_estimateGas on the post-fork tier |
+| [T42](tests/t42.sh) | seal a tx at the post-fork default gas price |
 | [T43](tests/t43.sh) | revive the held-back txs when the floor drops |
 | [T44](tests/t44.sh) | verify the re-cross sweep fires again |
 | [T45](tests/t45.sh) | verify the hold-back survives a restart |
-| [T46](tests/t46.sh) | reject a 1559 tx below the new floor (fee cap = 625 gwei - 1) |
-| [T47](tests/t47.sh) | reject a legacy creation below the tier floor (post-fork tier) |
-| [T48](tests/t48.sh) | reject a 1559 creation below the tier floor (post-fork tier) |
-| [T49](tests/t49.sh) | seal a legacy creation at the tier floor (post-fork tier) |
-| [T50](tests/t50.sh) | seal a legacy creation above the tier floor (post-fork tier) |
-| [T51](tests/t51.sh) | seal a 1559 creation at the tier floor (post-fork tier) |
-| [T52](tests/t52.sh) | seal a tip-0 creation at the base fee (post-fork tier) |
-| [T53](tests/t53.sh) | seal a 1559 tx at the new floor (fee cap = 625 gwei) |
+| [T46](tests/t46.sh) | reject a 1559 tx 1 wei below the post-fork floor |
+| [T47](tests/t47.sh) | reject a legacy creation below the post-fork floor |
+| [T48](tests/t48.sh) | reject a 1559 creation below the post-fork floor |
+| [T49](tests/t49.sh) | seal a legacy creation at the post-fork floor |
+| [T50](tests/t50.sh) | seal a legacy creation above the post-fork floor |
+| [T51](tests/t51.sh) | seal a 1559 creation at the post-fork floor |
+| [T52](tests/t52.sh) | seal a tip-0 creation at the post-fork base fee |
+| [T53](tests/t53.sh) | seal a 1559 tx at the post-fork floor |

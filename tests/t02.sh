@@ -1,7 +1,7 @@
 #!/bin/bash
 # T02 — below-floor rejection on the pre-fork tier: 12499999999 wei.
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T02" "reject a tx below the pre-fork floor (12499999999 wei)" 0.0
+begin_case "T02" "reject a tx 1 wei below the pre-fork floor" 0.0
 
 require_pre_fork
 

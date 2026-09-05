@@ -4,7 +4,7 @@
 # above-625gwei tx in any pool at the fork — the sweep must keep it
 # (T24 asserts that; T30 seals it post-fork). #2532
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T21" "park a 700 gwei tx from S4 for the sweep (pre-fork tier)" 0.0
+begin_case "T21" "park a 700 gwei tx from S4 for the sweep" 0.0
 
 require_pre_fork "pre side missed the window"
 

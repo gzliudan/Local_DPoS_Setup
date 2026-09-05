@@ -2,7 +2,7 @@
 # T06 — eth_estimateGas returns the standard 21000 for a plain transfer
 # (read-only probe), #2516. (The post-fork half of this check is T41.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T06" "verify eth_estimateGas works (pre-fork tier)" 0.0
+begin_case "T06" "verify eth_estimateGas on the pre-fork tier" 0.0
 
 require_pre_fork "pre side missed the window"
 

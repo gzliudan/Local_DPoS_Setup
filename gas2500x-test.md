@@ -21,7 +21,7 @@ all three commits).
 ## Quick start
 
 All commands run from `~/Local_DPoS_Setup`. This branch (`gas2500x`) keeps
-`"gas2500xBlock": 90` in `genesis.json` permanently — no file restoration is
+`"gas2500xBlock": 120` in `genesis.json` permanently — no file restoration is
 needed before or after a test run. Everything runs with `bash`, `curl`, `jq`
 and foundry's `cast`; all signer keys (S1/S2/S3 and P3) live in `.env` as raw
 hex and every submission is signed locally with
@@ -71,8 +71,8 @@ pn2 8547/6062, **pn3 8548/6063**.
 
 - **Gas50x floor = `InitialBaseFee`:** 12,500,000,000 wei = 12.5 gwei
 - **Gas2500x floor:** 625,000,000,000 wei = 625 gwei
-- **Floor resolution height:** head+1 (with `gas2500xBlock: 90`, the sweep
-  fires when the head crosses 90)
+- **Floor resolution height:** head+1 (with `gas2500xBlock: 120`, the sweep
+  fires when the head crosses 120)
 - **Replacement bump:** 10% (pool policy; unit-test pinned) — a replacement
   must exceed the old price by strictly more than 10%, so the cases use
   112% / 110.4% bumps (see T08/T23)
@@ -108,9 +108,9 @@ result** — one action (or one passive observation) with its expected outcome.
 Observation-only cases (T04, T07, T17–T19, T22, T26–T28) share the trigger of
 the action case they observe and add no new submissions; the twice-cases
 (T10–T15, T34) run on both sides of the fork (pre before it, post after).
-Fork height: **90** (≈180 s after genesis at 2 s blocks). Hard timing rule:
+Fork height: **120** (≈240 s after genesis at 2 s blocks). Hard timing rule:
 all pre-fork submissions (T01–T09, plus the pre sides of T13 and T34) must
-complete before head ≈ 85 — if the window is missed, reset the chain
+complete before head ≈ 115 — if the window is missed, reset the chain
 (Quick start) and start over. Queued (gap) transactions survive until the
 fork regardless.
 
@@ -220,10 +220,11 @@ transactions (they cannot be crafted on a running network).
 ### T12 — `eth_getBlockByNumber` baseFeePerGas on both sides (#2516)
 
 - **Steps:** call `eth_getBlockByNumber("latest", false)` on each side and
-  check `baseFeePerGas`; post-fork also fetch blocks 89 and 90 directly.
+  check `baseFeePerGas`; post-fork also fetch the last pre-fork block and
+  the first post-fork block directly.
 - **Expected:** `baseFeePerGas` = 12.5 gwei pre-fork and = 625 gwei
-  post-fork; block 89 carries 12.5 gwei and block 90 carries 625 gwei — the
-  step is visible between the two blocks.
+  post-fork; the last pre-fork block carries 12.5 gwei and the first
+  post-fork block carries 625 gwei — the step is visible between the two.
 
 ### T13 — the tier-aware default gas price (#2516)
 
@@ -247,7 +248,7 @@ transactions (they cannot be crafted on a running network).
 
 ### T16 — sealing continuity across the fork
 
-- **Steps:** watch the heads of pn0–pn2 across block 90.
+- **Steps:** watch the heads of pn0–pn2 across the fork block.
 - **Expected:** sealing never stalls; the three masternode heads agree 5+
   blocks past the fork.
 
@@ -325,11 +326,12 @@ transactions (they cannot be crafted on a running network).
 
 ### T27 — effectiveGasPrice matches the block's base fee on both tiers (#2516)
 
-- **Steps:** read the `baseFeePerGas` of blocks 89 and 90 directly, and check
-  the run transcript for the T02/T20 pass verdicts (their txs paid the tier
-  prices of their own blocks).
-- **Expected:** block 89 carries 12.5 gwei and block 90 carries 625 gwei —
-  no cross-tier mixing; both at-floor cases passed.
+- **Steps:** read the `baseFeePerGas` of the last pre-fork block and the
+  first post-fork block directly (blocks 119 and 120 at the current fork
+  height), and check the run transcript for the T02/T20 pass verdicts (their
+  txs paid the tier prices of their own blocks).
+- **Expected:** the pre-fork block carries 12.5 gwei and the post-fork one
+  carries 625 gwei — no cross-tier mixing; both at-floor cases passed.
 
 ### T28 — the `--gasprice 1` knob is inert (#2516)
 
@@ -355,8 +357,8 @@ transactions (they cannot be crafted on a running network).
 ### T30 — the re-cross sweep fires again (#2532)
 
 - **Steps:** run `tests/t30.sh`, which reconnects the rewound pn3 to pn0 via
-  `admin_addPeer`, waits for it to sync across block 90, then re-reads the
-  gauge, meter and pools.
+  `admin_addPeer`, waits for it to sync across the fork block, then re-reads
+  the gauge, meter and pools.
 - **Expected:** the gauge rises back to k, the meter increases a second time
   (same process), pools empty again — the revived txs were swept again by the
   fork (the above-floor P2 may stay queued).

@@ -35,7 +35,7 @@ RPC0="http://127.0.0.1:8545"          # pn0 (masternode, prefunded signer)
 RPC3="http://127.0.0.1:8548"          # pn3 (observer, pool under test)
 
 CHAIN_ID="${CHAIN_ID:-5151}"
-FORK_BLOCK="${FORK_BLOCK:-90}"
+FORK_BLOCK="${FORK_BLOCK:-120}"
 # tier prices in wei — consumed by the case scripts that source this lib
 # shellcheck disable=SC2034
 GAS50_WEI=12500000000                 # 12.5 gwei

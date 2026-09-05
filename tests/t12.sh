@@ -17,4 +17,4 @@ if [ "$side" = "post" ]; then
     [ "$bf89" = "$GAS50_WEI" ] || fail_case "block $((FORK_BLOCK - 1)) baseFee=$bf89"
     [ "$bf90" = "$GAS2500_WEI" ] || fail_case "block $FORK_BLOCK baseFee=$bf90"
 fi
-pass_case "baseFeePerGas=$bf wei (step 89→90 visible)"
+pass_case "baseFeePerGas=$bf wei (step $((FORK_BLOCK - 1))→$FORK_BLOCK visible)"

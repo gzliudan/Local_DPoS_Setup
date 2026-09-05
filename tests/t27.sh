@@ -20,4 +20,4 @@ bf89=$(base_fee "$(printf '0x%x' $((FORK_BLOCK - 1)))")
 bf90=$(base_fee "$(printf '0x%x' "$FORK_BLOCK")")
 [ "$bf89" = "$GAS50_WEI" ] || fail_case "pre-fork baseFee=$bf89"
 [ "$bf90" = "$GAS2500_WEI" ] || fail_case "post-fork baseFee=$bf90"
-pass_case "tiers consistent: block 89=$bf89, block 90=$bf90"
+pass_case "tiers consistent: block $((FORK_BLOCK - 1))=$bf89, block $FORK_BLOCK=$bf90"

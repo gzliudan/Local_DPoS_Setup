@@ -7,18 +7,35 @@ begin_case "T01" "fund the senders"
 # above-floor survivor (1 XDC each); S5 (T17's creation-pricing probes) gets
 # 2 XDC (four ~53k-gas creates per side); P3 (pn3's own account, sender of
 # T14's default-price tx) needs 10 XDC.
-# Sent from pn0's prefunded signer (PRIVATE_KEY_0) at the current suggested
-# price; the sends stay synchronous (no --async) so the funds are confirmed
-# before the pool cases start.
+# All six transfers are submitted ASYNC with explicit sequential nonces, so
+# the whole batch rides ONE block (~2 s) instead of six serial receipt waits
+# (~2 s each — the old 10.8 s T01). The receipts are then confirmed
+# (status=1) before the pool cases start.
 gp=$(hex2dec "$(rpc0 eth_gasPrice | jq -r .)")
+from=$(addr_of PRIVATE_KEY_0)
+n0=$(hex2dec "$(rpc0 eth_getTransactionCount "[\"$from\", \"pending\"]" | jq -r .)")
+
+hashes=()
+i=0
 for spec in "TXGEN_KEY_1 1ether" "TXGEN_KEY_2 1ether" \
     "TXGEN_KEY_3 1ether" "TXGEN_KEY_4 1ether" "TXGEN_KEY_5 2ether" \
     "PRIVATE_KEY_3 10ether"; do
     read -r s value <<<"$spec"
-    cast send "$(addr_of "$s")" --value "$value" --gas-price "$gp"wei \
-        --gas-limit 21000 --private-key "$(printenv PRIVATE_KEY_0)" \
-        --rpc-url "$RPC0" --chain-id "$CHAIN_ID" --json --legacy \
-        >/dev/null 2>&1 || fail_case "fund $s failed"
+    out=$(cast send "$(addr_of "$s")" --value "$value" --gas-price "$gp"wei \
+        --gas-limit 21000 --nonce $((n0 + i)) \
+        --private-key "$(printenv PRIVATE_KEY_0)" \
+        --rpc-url "$RPC0" --chain-id "$CHAIN_ID" --json --legacy --async 2>&1)
+    case $out in
+    0x[0-9a-fA-F]*) hashes+=("$out") ;;
+    *) fail_case "fund $s failed: $out" ;;
+    esac
+    i=$((i + 1))
+done
+
+# every receipt must exist and report success (receipt_field polls pn3)
+for h in "${hashes[@]}"; do
+    st=$(receipt_field "$h" status 60) || fail_case "fund receipt $h never arrived"
+    [ "$(hex2dec "$st")" = "1" ] || fail_case "fund tx $h status=$(hex2dec "$st")"
 done
 
 # Every sender must hold a non-zero balance on pn3's view (P3 included).

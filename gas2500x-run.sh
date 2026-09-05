@@ -59,16 +59,31 @@ while :; do
     t=$((t + 1))
 done
 
-# Cases run strictly in file order T01..T53 — the schedule is the identity
-# sequence, so a transcript's block numbers can be read against the doc by
-# ID. Semantic windows (enforced by guards inside the cases, not by this
-# table): T03-T23 must run pre-fork (require_pre_fork); T27 waits for the
-# fork; T41-T46 (creation matrix, post tier) run after the T43-T45 rewind
-# saga so their txs are never in the journal at the rewind; T18 (the sweep
-# survivor's seal) runs right after T17 and before T43's rewind, so T44's
-# sync re-imports the seal block.
+# Five dependency ranges; inside each range the cases are ordered by the
+# verdict elapsed= values of results/gas2500x-20260905-122923.log (fast
+# first), subject to the state chains noted per range. The guards inside
+# the cases still enforce the semantic windows (pre-fork cases skip past
+# the fork), so a wrong window can never silently break a case.
+#   R1 pre-fork (22 cases, t01 first, t23 closes the range): T01 funds
+#      every sender first; T02+T03 precede T04 (its 65 s window needs a
+#      clean tracker/journal); T04 precedes T05/T06 (the seeds would move
+#      the gauge); T05 < T15, T06 < T08 < T09 < T10 (queue seed ->
+#      replacement -> journal convergence -> survivor park); every
+#      sealing case precedes T07's empty-block watch.
+#   R2 fork sweep (t23-t34): T24 before T25 (T25 seals the survivor T24
+#      expects still queued); T26 before T32 (pn3's restart resets the
+#      meter); T27 and T30 read gauge=k(19), so both precede T31's
+#      replacement; T30's 130 s journal window needs T29's reject and
+#      T25/T28's seals done; T32 < T34.
+#   R3 post-fork probes (t35-t42): T35 greps the T02+T28 pass verdicts
+#      from the transcript; the rest are read-only or self-contained
+#      (T40's 625 gwei seal stays before T43's rewind, matching run #26).
+#   R4 rewind saga (t43-t45): T43 -> T44 -> T45 is a fixed state chain
+#      (marker + isolated node hand-off), no reordering possible.
+#   R5 creation matrix (t46-t53): every case fetches its own pending
+#      nonce, so the eight cases are mutually independent.
 SCHEDULE=(
-    t01 t02 t03 t04 t05 t06 t07 t08 t09 t10 t11 t12 t13 t14 t15 t16 t17 t18 t19 t20 t21 t22 t23 t24 t25 t26 t27 t28 t29 t30 t31 t32 t33 t34 t35 t36 t37 t38 t39 t40 t41 t42 t43 t44 t45 t46 t47 t48 t49 t50 t51 t52 t53
+    t01 t03 t11 t12 t13 t16 t17 t20 t02 t04 t05 t06 t08 t15 t14 t18 t19 t21 t22 t09 t10 t07 t23 t24 t26 t27 t29 t33 t28 t25 t30 t31 t32 t34 t35 t36 t37 t38 t39 t41 t42 t40 t43 t44 t45 t47 t48 t51 t49 t50 t52 t53 t46
 )
 
 # per-case wall-time expectation (seconds) for the test line's expected=<n>s:
@@ -78,8 +93,9 @@ SCHEDULE=(
 declare -A EXPECTED=(
     # ceil of run #26's verdict elapsed values (0.0s and 0.1s map to 1).
     # Source run: results/gas2500x-20260905-122923.log (2026-09-05).
-    # Regenerate after timing-changing edits.
-    [t01]=11 [t02]=3 [t03]=1 [t04]=65 [t05]=1 [t06]=1 [t07]=21 [t08]=1 [t09]=13
+    # Regenerate after timing-changing edits. [t01] measured 1.4s after the
+    # async-batch funding rewrite (one block instead of six serial waits).
+    [t01]=2 [t02]=3 [t03]=1 [t04]=65 [t05]=1 [t06]=1 [t07]=21 [t08]=1 [t09]=13
     [t10]=1 [t11]=1 [t12]=1 [t13]=1 [t14]=2 [t15]=1 [t16]=1 [t17]=1 [t18]=2
     [t19]=2 [t20]=1 [t21]=2 [t22]=2 [t23]=85 [t24]=1 [t25]=3 [t26]=1 [t27]=1
     [t28]=2 [t29]=1 [t30]=130 [t31]=1 [t32]=13 [t33]=1 [t34]=130 [t35]=1 [t36]=1

@@ -1,7 +1,7 @@
 #!/bin/bash
 # T32 — same-nonce replacement accepted on the new tier (#2541).
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T32" "same-nonce replacement accepted on the new tier" 0.1
+begin_case "T32" "replace a queued tx at the same nonce (new tier)" 0.1
 
 S2=$(addr_of TXGEN_KEY_2)
 S2_TO=$(addr_of TXGEN_KEY_1)

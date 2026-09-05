@@ -2,7 +2,7 @@
 # T48 — an EIP-1559 creation below the tier floor is rejected on the post-fork tier (625 gwei).
 # (The other half of this tx pair is T08.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T48" "creation below the tier floor is rejected (1559, post-fork tier)" 0.0
+begin_case "T48" "reject a 1559 creation below the tier floor (post-fork tier)" 0.0
 
 # no guard: the runner schedules this after the fork, past the t43 … t45 saga
 

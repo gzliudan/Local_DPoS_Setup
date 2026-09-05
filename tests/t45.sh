@@ -2,7 +2,7 @@
 # T45 — the hold-back survives a restart (#2541): the journal persists the
 # held-back transactions and no resubmit storm happens.
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T45" "the hold-back survives a restart" 67.1
+begin_case "T45" "verify the hold-back survives a restart" 67.1
 
 k0=0
 for _ in $(seq 1 8); do

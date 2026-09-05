@@ -1,7 +1,7 @@
 #!/bin/bash
 # T26 — the sweep leaves a hold-back gauge (#2541): pn3=k, masternodes 0.
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T26" "the sweep leaves a hold-back gauge" 0.0
+begin_case "T26" "verify the sweep leaves a hold-back gauge" 0.0
 
 # the hold-back materializes at the tracker's next recheck (10 s/60 s cadence)
 k=0

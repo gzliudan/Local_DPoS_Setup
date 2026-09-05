@@ -1,7 +1,7 @@
 #!/bin/bash
 # T25 — sweep observables on pn3 (#2532): meter and trace log.
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T25" "sweep observables on pn3" 0.0
+begin_case "T25" "verify the sweep meter and drop log on pn3" 0.0
 
 m=$(meter3 txpool_belowfloor)
 [ -n "$m" ] || fail_case "meter txpool/belowfloor missing"

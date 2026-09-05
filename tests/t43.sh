@@ -14,7 +14,7 @@
 # gauge txpool_local_belowfloor must drop to 0 and the pools must re-fill.
 # The node is left ISOLATED and RUNNING for T44 (same process = same meter).
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T43" "revival when the floor drops" 11.1
+begin_case "T43" "revive the held-back txs when the floor drops" 11.1
 
 XDC_BIN="${XDC:-$HOME/XDPoSChain/build/bin/XDC}"
 [ -x "$XDC_BIN" ] || fail_case "XDC binary not found"

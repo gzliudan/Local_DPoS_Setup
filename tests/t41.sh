@@ -2,7 +2,7 @@
 # T41 — eth_estimateGas returns the standard 21000 post-fork (read-only
 # probe), #2516. (The pre-fork half of this check is T06.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T41" "eth_estimateGas works (post-fork tier)" 0.0
+begin_case "T41" "verify eth_estimateGas works (post-fork tier)" 0.0
 
 # no guard: the runner schedules this well after the fork
 

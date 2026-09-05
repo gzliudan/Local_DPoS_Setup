@@ -1,7 +1,7 @@
 #!/bin/bash
 # T09 — at-floor execution on the pre-fork tier: S3 sends at exactly 12.5 gwei.
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T09" "at-floor execution on the pre-fork tier (12.5 gwei)" 2.1
+begin_case "T09" "seal a tx at the pre-fork floor (12.5 gwei)" 2.1
 
 # the pre-send head is needed below for the seal-latency window, so the
 # pre-fork guard is spelled out instead of require_pre_fork

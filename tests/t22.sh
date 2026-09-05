@@ -1,7 +1,7 @@
 #!/bin/bash
 # T22 — the queued batch is not sealed: blocks stay empty while txs sit queued.
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T22" "the queued batch is not sealed" 20.3
+begin_case "T22" "verify the queued batch is not sealed" 20.3
 
 head0=$(head3)
 # XDPoS masternodes seal system txs (signingTX/randomize) FROM THEIR OWN

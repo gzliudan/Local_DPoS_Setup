@@ -2,7 +2,7 @@
 # T40 — txpool_contentFrom shows S1's queue empty after the fork sweep
 # (queued=0), #2532. (The pre-fork half of this check is T14.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T40" "txpool_contentFrom mirrors the queue (post-fork tier)" 0.0
+begin_case "T40" "verify txpool_contentFrom mirrors the queue (post-fork tier)" 0.0
 
 # no guard: the runner schedules this well after the fork
 

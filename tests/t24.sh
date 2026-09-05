@@ -1,7 +1,7 @@
 #!/bin/bash
 # T24 — the fork sweep empties the queue (#2532, core case).
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T24" "the fork sweep empties the queue" 0.0
+begin_case "T24" "verify the fork sweep empties the queue" 0.0
 
 wait_head $((FORK_BLOCK + 1)) 120 || fail_case "fork did not fire"
 

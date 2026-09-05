@@ -2,7 +2,7 @@
 # T38 — eth_maxPriorityFeePerGas suggests a tip below the post-fork tier
 # price (625 gwei), #2516. (The pre-fork half of this check is T04.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T38" "eth_maxPriorityFeePerGas suggests a tip below the tier price (post-fork tier)" 0.0
+begin_case "T38" "verify eth_maxPriorityFeePerGas suggests a tip below the tier price (post-fork tier)" 0.0
 
 # no guard: the runner schedules this well after the fork
 

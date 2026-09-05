@@ -2,7 +2,7 @@
 # T13 — same-nonce replacement accepted (pre-fork, #2541):
 # P2 (>= 1.1 x P1) replaces P1 in the queue and in the tracker.
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T13" "same-nonce replacement accepted (pre-fork)" 0.1
+begin_case "T13" "replace a queued tx at the same nonce (pre-fork)" 0.1
 
 require_pre_fork
 

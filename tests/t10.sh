@@ -1,7 +1,7 @@
 #!/bin/bash
 # T10 — the below-floor reject is not tracked (#2541).
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T10" "the below-floor reject is not tracked" 65.0
+begin_case "T10" "verify the below-floor reject is not tracked" 65.0
 
 before=$(journal_size)
 gauge=$(gauge3 txpool_local_belowfloor)

@@ -1,24 +1,16 @@
 #!/bin/bash
-# gas2500x-run.sh — run all gas2500x test cases in order and summarize.
+# gas2500x-run.sh — run the full gas2500x test schedule.
 #
-# Usage: gas2500x-run.sh   (runs the complete schedule; per-case arguments were removed)
-# Lifecycle: a run is the complete test job — it unconditionally stops all
-# nodes (masternodes, the observer, and any standalone RPC node), wipes the
-# datadirs, starts the whole network fresh, runs the cases, and stops the
-# network at the end (data and logs are kept for inspection).
-# Results: printed to stdout, every line prefixed with the current date-time —
-# the log opens with "start: cases=N", every case streams its
-# "Tnn: pass/fail/skip number=<head> result=<evidence>" verdict line, and the log closes
-# with "end: pass=X fail=Y skip=Z". The stamped console output is
-# also recorded in results/gas2500x-<timestamp>.log; no results .md file
-# is created.
-# When the run finishes the network is stopped (all nodes) — data and logs
-# are kept for inspection; restart with ./start-network.sh && ./run-node.sh 3.
+# One run is the complete test job: stop every node, wipe the datadirs,
+# start a fresh network, run all cases in order, then stop the network
+# (data and logs are kept; restart with ./start-network.sh && ./run-node.sh 3).
+# Transcript: "start: cases=N", per-case verdict lines
+# "Tnn: pass/fail/skip number=<head> elapsed=<n>s result=<evidence>",
+# and "end: pass=X fail=Y skip=Z" — recorded in results/gas2500x-<ts>.log.
 set -uo pipefail
 cd "$(dirname "$0")" || exit
 
-# record the whole run in results/gas2500x-<timestamp>.log while keeping the
-# live console view (tee): stdout+stderr of everything below lands in the file
+# the run is tee'd into the log file while staying live on the console
 mkdir -p results
 LOG="results/gas2500x-$(date +%Y%m%d-%H%M%S).log"
 export RUN_LOG="$LOG"   # case scripts (t27) read sibling verdicts from it
@@ -29,22 +21,15 @@ echo "log: $LOG"
 echo
 
 # ---------------------------------------------------------------- lifecycle
-# The suite owns the whole lifecycle so a single run of this script is the
-# complete test job, unconditionally: stop ALL nodes (masternodes, the
-# observer, and any standalone RPC node), wipe the datadirs for a fresh
-# chain, start everything back up, and only then begin the cases. This runs
-# BEFORE the log redirection below on purpose — the nodes' bootstrap chatter
-# (genesis init, backfilled fields, peer dialing) stays on the console and
-# out of the transcript.
+# stop everything, wipe, restart a fresh network — before the log
+# redirection so bootstrap chatter stays out of the transcript.
 ./stop-network.sh >/dev/null 2>&1 || true
 ./stop-rpc.sh >/dev/null 2>&1 || true
 ./reset.sh >/dev/null
 ./start-network.sh >/dev/null
 ./run-node.sh 3 >/dev/null
 
-# from here on everything (stdout+stderr) is duplicated into the log file and
-# every line is prefixed with the current date-time; the banner and the
-# lifecycle bootstrap above stay console-only
+# everything from here on is date-time stamped into the log
 stamp_lines() {
     while IFS= read -r line; do
         printf '%(%F %T)T %s\n' -1 "$line"
@@ -52,19 +37,14 @@ stamp_lines() {
 }
 exec > >(stamp_lines | tee "$LOG") 2>&1
 
-# the tee inside the process substitution above creates the log file
-# asynchronously — bash does not wait for it, so the first case could race
-# past a still-missing file (seen as a "No such file or directory" on the
-# mark snapshot). Wait for it, bounded.
+# the tee creates $LOG asynchronously — wait briefly for it
 for _ in $(seq 1 50); do
     [ -f "$LOG" ] && break
     sleep 0.1
 done
 
-# every case must start on a real, MOVING chain. The RPC answering is not
-# enough: a freshly initialized chain sits at head 0 until the first seal,
-# and T01 opening on number=0 would break the strict-ordering invariant.
-# So: RPC up within 30 s, then head > 0 within another 30 s (1 s polls).
+# gates: pn3 RPC up within 30 s, then head past genesis within 30 s —
+# T01 must not open on number=0.
 if ! wait_rpc3 30; then
     echo "error: pn3 RPC did not come up within 30 s"
     exit 1
@@ -78,13 +58,11 @@ while :; do
     t=$((t + 1))
 done
 
-# full ordered schedule: the twice-cases (t10-t15, t34) run their pre side
-# before the fork and their post side after — a "<script>-<side>" entry runs
-# tests/<script>.sh with the side as its argument. Ordering constraints:
-# t34-pre parks the sweep survivor before the fork (t17 asserts it),
-# t34-post seals it right after t17 so t30's sync re-imports the seal blocks
-# before its poll, and t32/t33 submit only after the t29-t31 saga so their
-# txs are never in the journal when the rewind resubmits it.
+# "<script>-<side>" entries run tests/<script>.sh with the side as its
+# argument. Ordering constraints: t34-pre parks the sweep survivor (t17
+# asserts it), t34-post seals it right after t17 so t30 re-imports the
+# seal blocks before its poll, and t32/t33 run after the t29-t31 saga so
+# their txs are never in the journal at the rewind.
 SCHEDULE=(
     t1 t2 t3 t4 t5 t6 t7 t8 t9 t34-pre
     t10-pre t11-pre t12-pre t13-pre t14-pre t15-pre
@@ -100,18 +78,15 @@ if [ $# -gt 0 ]; then
     exit 2
 fi
 
-# first line of the log (the console banner above is not part of it)
+# first line of the log
 echo "start: cases=${#SCHEDULE[@]}"
 
 passed=0
 failed=0
 skipped=0
-# block-advance gate between cases: each verdict line carries the chain head
-# at verdict time ("number="), and the next case may start as soon as pn3's
-# head moves strictly past it — no fixed sleep. A case ending right after a
-# seal waits ~2 s, one ending right before waits ~4 s, and every
-# "test number=" still lands on a strictly higher block than the previous
-# case's.
+# inter-case gate: each verdict carries its verdict-time head ("number=");
+# the next case waits for pn3's head to move strictly past it, keeping
+# test numbers strictly increasing.
 prev_num=""
 for item in "${SCHEDULE[@]}"; do
     script=$item
@@ -128,42 +103,29 @@ for item in "${SCHEDULE[@]}"; do
         skipped=$((skipped + 1))
         continue
     fi
-    # block-advance gate between cases: each verdict line carries the chain
-    # head at verdict time ("number="), and the next case may start as soon
-    # as pn3's head moves strictly past it — no fixed sleep. T29 disarms it
-    # once (see below). Missing scripts above skip instantly without
-    # consuming the gate.
+    # T29 disarms the gate once (see below); missing scripts skip above
+    # without consuming it.
     if [[ "$prev_num" =~ ^[0-9]+$ ]]; then
         t=0
         while :; do
             head=$(head3)
-            # -1 = pn3's RPC is down: the gate cannot be satisfied and the
-            # case about to run will fail on its own guards — stop waiting
+            # -1 = RPC down; the case will fail on its own guards
             [ "$head" = "-1" ] && break
             [ "$head" -gt "$prev_num" ] && break
-            [ "$t" -ge 30 ] && break   # the chain stalled — proceed anyway
+            [ "$t" -ge 30 ] && break   # stalled — proceed anyway
             sleep 1
             t=$((t + 1))
         done
     fi
-    # stream the case output live through the stamp filter — capturing it in
-    # a variable would print every line at case end and stamp identical
-    # times on the start and verdict lines. Each case prints its own
-    # "Tnn: pass/fail/skip number=<head> result=..." verdict line; the last one matching
-    # this case's id decides the tally (a case that crashes before printing
-    # a verdict counts as failed — skip exits 0, so the rc alone cannot
-    # separate pass from skip).
+    # each case prints its own verdict line; the last one matching this
+    # case's id decides the tally (a crash without a verdict counts as
+    # failed — skip exits 0, so rc alone cannot separate pass from skip)
     id_num=${item%%-*}; id_num=${id_num#t}
     case_id=$(printf 'T%02d' "$id_num")
-    # snapshot the log length before the case runs, so the verdict search
-    # below only sees lines this case produced (a twice-case must not pick
-    # up its other side's verdict)
+    # the verdict search only sees lines this case produced (twice-cases)
     mark=$(wc -l <"$LOG" 2>/dev/null || echo 0)
     bash "$f" "$args"
-    # the verdict travels through the stamp|tee process substitution, which
-    # bash does NOT wait for — a single immediate grep can read the log
-    # before the verdict line lands (seen as a phantom fail in run 16). Poll
-    # briefly for it; a crash without a verdict still times out into a fail.
+    # poll briefly: the verdict lands in $LOG asynchronously
     verdict=""
     for _ in $(seq 1 15); do
         verdict=$(tail -n +"$((mark + 1))" "$LOG" 2>/dev/null |
@@ -171,12 +133,8 @@ for item in "${SCHEDULE[@]}"; do
         [ -n "$verdict" ] && break
         sleep 0.2
     done
-    # remember this case's verdict-time head for the next case's gate; a
-    # crashed case (no verdict, or no number= in it) leaves the previous
-    # number in place instead of disabling the gate. T29 is the exception:
-    # it rewinds the chain (--set-head 30), so its number= is BELOW the fork
-    # and head > that number can never come true while the node is isolated —
-    # disarm the gate once so T30 (which re-syncs) starts immediately.
+    # T29 rewinds the chain (--set-head 30), so its number= can never be
+    # advanced past — disarm the gate once for T30.
     new_num=$(printf '%s' "$verdict" | grep -o ' number=[0-9]*' | head -n 1 | cut -d= -f2)
     if [ "$item" = "t29" ]; then
         prev_num=""
@@ -190,8 +148,7 @@ for item in "${SCHEDULE[@]}"; do
     esac
 done
 
-# the suite owns the network lifecycle: stop all nodes once the run is done
-# (quietly - no stop chatter in the transcript)
+# stop the network when the run is done
 ./stop-network.sh >/dev/null 2>&1 || true
 ./stop-rpc.sh >/dev/null 2>&1 || true
 

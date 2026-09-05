@@ -281,7 +281,7 @@ transactions (they cannot be crafted on a running network).
 - **Expected:** sealed within ~2 blocks; receipt `effectiveGasPrice` = 625
   gwei; S1's nonce advances to 1 — mirror of T02 on the new tier.
 
-### T21 — below-floor rejection on the new tier (625 gwei − 1)
+### T21 — below-floor rejection on the new tier (624999999999 wei)
 
 - **Steps:** S1 submits one executable transfer at 624999999999.
 - **Expected:** rejected with `under min gas price`. With T20: the post-fork

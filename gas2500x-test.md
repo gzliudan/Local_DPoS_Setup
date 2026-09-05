@@ -82,9 +82,9 @@ Shell layer, `bash` + `curl` + `jq` + `cast` (foundry) only, all under
   readers) plus the case frame: every case opens with a
   `Tnn: test number=<head> expected=<n>s name=<case>` line and ends in one
   verdict line `Tnn: pass|fail|skip number=<head> elapsed=<n>s result=<evidence>`
-  on stdout. The expected time is injected by the runner from
-  `tests/gas2500x-expected.txt` (ceil of the last full run's elapsed, min 1);
-  standalone case runs default to 1s.
+  on stdout. The expected time is injected by the runner from its per-item
+  `EXPECTED` table (ceil of the last full run's elapsed, min 1); standalone
+  case runs default to 1s.
 - **`tests/t1.sh` … `tests/t34.sh`** — one script per test case. The runner
   drives everything; the twice-cases (T10–T15, T34) are invoked internally as
   pre/post sides.

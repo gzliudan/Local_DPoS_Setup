@@ -74,6 +74,21 @@ SCHEDULE=(
     t32 t33
 )
 
+# per-case wall-time expectation (seconds) for the test line's expected=<n>s:
+# the ceil of the last full run's verdict elapsed= value, minimum 1 (0.0s and
+# 0.1s both map to 1). Source run: results/gas2500x-20260905-101010.log.
+# Regenerate after timing-changing edits.
+declare -A EXPECTED=(
+    [t1]=9 [t2]=3 [t3]=1 [t4]=65 [t5]=1 [t6]=1 [t7]=21 [t8]=1 [t9]=13
+    [t34-pre]=1
+    [t10-pre]=1 [t11-pre]=1 [t12-pre]=1 [t13-pre]=2 [t14-pre]=1 [t15-pre]=1
+    [t16]=107 [t17]=1 [t34-post]=3 [t18]=1 [t19]=1
+    [t20]=2 [t21]=1 [t22]=130 [t23]=1 [t24]=13 [t25]=1 [t26]=130 [t27]=1 [t28]=1
+    [t10-post]=1 [t11-post]=1 [t12-post]=1 [t13-post]=2 [t14-post]=1 [t15-post]=1
+    [t29]=12 [t30]=62 [t31]=68
+    [t32]=3 [t33]=1
+)
+
 if [ $# -gt 0 ]; then
     echo "error: this runner executes the full schedule only; per-case arguments were removed"
     exit 2
@@ -123,11 +138,9 @@ for item in "${SCHEDULE[@]}"; do
     # failed — skip exits 0, so rc alone cannot separate pass from skip)
     id_num=${item%%-*}; id_num=${id_num#t}
     case_id=$(printf 'T%02d' "$id_num")
-    # per-case wall-time expectation printed on the test line: ceil of the
-    # last full run's elapsed= value (minimum 1), from tests/gas2500x-expected.txt
-    expected=$(awk -v i="$item" '$1 == i { print $2 }' tests/gas2500x-expected.txt)
-    [ -n "$expected" ] || expected=1
-    export EXPECTED_S="$expected"
+    # per-case wall-time expectation printed on the test line (ceil of the
+    # last full run's elapsed, minimum 1 — see the EXPECTED table)
+    export EXPECTED_S="${EXPECTED[$item]:-1}"
     # the verdict search only sees lines this case produced (twice-cases)
     mark=$(wc -l <"$LOG" 2>/dev/null || echo 0)
     bash "$f" "$args"

@@ -2,8 +2,9 @@
 # gas2500x-run.sh — run all gas2500x test cases in order and summarize.
 #
 # Usage: gas2500x-run.sh   (runs the complete schedule; per-case arguments were removed)
-# Lifecycle: a run is the complete test job — it stops any leftover nodes,
-# wipes the datadirs, starts the whole network, runs the cases, and stops the
+# Lifecycle: a run is the complete test job — it unconditionally stops all
+# nodes (masternodes, the observer, and any standalone RPC node), wipes the
+# datadirs, starts the whole network fresh, runs the cases, and stops the
 # network at the end (data and logs are kept for inspection).
 # Results: printed to stdout, every line prefixed with the current date-time —
 # the log opens with "start: cases=N", every case streams its
@@ -29,19 +30,18 @@ echo
 
 # ---------------------------------------------------------------- lifecycle
 # The suite owns the whole lifecycle so a single run of this script is the
-# complete test job: stop any leftover nodes, wipe the datadirs for a fresh
+# complete test job, unconditionally: stop ALL nodes (masternodes, the
+# observer, and any standalone RPC node), wipe the datadirs for a fresh
 # chain, start everything back up, and only then begin the cases. This runs
 # BEFORE the log redirection below on purpose — the nodes' bootstrap chatter
 # (genesis init, backfilled fields, peer dialing) stays on the console and
-# out of the transcript. A live pn3 short-circuits this (pre-provisioned
-# network; results then start from a used chain).
-if [ "$(head3)" = "-1" ]; then
-    ./stop-network.sh >/dev/null 2>&1 || true
-    pkill -f 'XDC --config nodes/pn3' 2>/dev/null || true   # observer has no .pid file
-    ./reset.sh >/dev/null
-    ./start-network.sh >/dev/null
-    ./run-node.sh 3 >/dev/null
-fi
+# out of the transcript.
+./stop-network.sh >/dev/null 2>&1 || true
+./stop-rpc.sh >/dev/null 2>&1 || true
+pkill -f 'XDC --config nodes/pn3' 2>/dev/null || true   # observer has no .pid file
+./reset.sh >/dev/null
+./start-network.sh >/dev/null
+./run-node.sh 3 >/dev/null
 
 # from here on everything (stdout+stderr) is duplicated into the log file and
 # every line is prefixed with the current date-time; the banner and the

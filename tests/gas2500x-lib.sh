@@ -216,6 +216,60 @@ expect_reject() {
     return 1
 }
 
+# ------------------------------------------------- contract-creation sends
+# _cast_create <key-env> <mode> <gp> <code> [nonce] — creation twin of
+# _cast_send for T35. <mode> picks the tx shape:
+#   legacy — --legacy --gas-price <gp>        (gasPrice = gp)
+#   maxfee — --gas-price <gp>, no --legacy    (gasPrice doubles as GasFeeCap,
+#            tip = cast's default 1 wei)
+#   tip    — --priority-gas-price 0           (tip = 0, fee cap = cast's
+#            estimate; seals at the base fee)
+# Prints cast's --json output with stderr merged: a bare hash when accepted,
+# an error JSON when rejected. The 60000 gas allowance covers the minimal
+# runtime (~53k estimate).
+_cast_create() {
+    local keyvar=$1 mode=$2 gp=$3 code=$4 nonce=${5:-}
+    local cast_args=(
+        send --create "$code" --value 0wei --gas-limit 60000
+        --private-key "$(printenv "$keyvar")" --rpc-url "$RPC3"
+        --chain-id "$CHAIN_ID" --json --async
+    )
+    case $mode in
+    legacy) cast_args+=(--legacy --gas-price "$gp"wei) ;;
+    maxfee) cast_args+=(--gas-price "$gp"wei) ;;
+    tip)    cast_args+=(--priority-gas-price 0) ;;
+    *)      echo "cast_create: bad mode $mode" >&2; return 2 ;;
+    esac
+    [ -n "$nonce" ] && cast_args+=(--nonce "$nonce")
+    cast "${cast_args[@]}" 2>&1
+}
+
+# create_from <key-env> <mode> <gp> <code> [nonce] — accepted path of
+# _cast_create: prints the bare tx hash, rc 1 (error text on stderr) when
+# rejected.
+create_from() {
+    local out
+    out=$(_cast_create "$@") || { printf '%s' "$out" >&2; return 1; }
+    if printf '%s' "$out" | grep -qE '^0x[0-9a-fA-F]{64}$'; then
+        printf '%s\n' "$out"
+        return 0
+    fi
+    printf '%s' "$out" | jq -r '.errors[0].message? // empty' 2>/dev/null >&2
+    printf '%s' "$out" >&2
+    return 1
+}
+
+# expect_create_reject <key-env> <mode> <gp> <code> <needle> [nonce]
+# Assert the creation tx is rejected with an error containing <needle>.
+expect_create_reject() {
+    local keyvar=$1 mode=$2 gp=$3 code=$4 needle=$5 nonce=${6:-}
+    local out
+    out=$(_cast_create "$keyvar" "$mode" "$gp" "$code" "$nonce") || true
+    printf '%s' "$out" | grep -qi "$needle" && return 0
+    printf '%s' "$out" >&2
+    return 1
+}
+
 # receipt_field <hash> <field> [timeout-s]
 receipt_field() {
     local hash=$1 field=$2 timeout=${3:-30} t=0 r v

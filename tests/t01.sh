@@ -1,7 +1,7 @@
 #!/bin/bash
 # T01 — fund the senders S1-S5 (and confirm P3) from pn0's prefunded signer.
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T01" "fund the senders" 1.3
+begin_case "T01" "fund the senders" 1.4
 
 # Funding list: S1..S3 need gas money for T09/T11/T12/T13/T29+ and S4 for T21's
 # above-floor survivor (1 XDC each); S5 (T07's creation-pricing probes) gets

@@ -1,7 +1,7 @@
 #!/bin/bash
 # T29 — at-floor execution on the new tier: S1 sends at exactly 625 gwei.
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T29" "at-floor execution on the new tier (625 gwei)" 2.0
+begin_case "T29" "at-floor execution on the new tier (625 gwei)" 2.1
 
 require_post_fork
 

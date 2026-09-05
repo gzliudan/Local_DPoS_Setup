@@ -1,7 +1,7 @@
 #!/bin/bash
 # T23 — sealing continuity across the fork: heads advance in lockstep.
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T23" "sealing continuity across the fork" 92.5
+begin_case "T23" "sealing continuity across the fork" 94.5
 
 wait_head $((FORK_BLOCK + 5)) 240 || fail_case "pn3 head never passed $((FORK_BLOCK + 5))"
 

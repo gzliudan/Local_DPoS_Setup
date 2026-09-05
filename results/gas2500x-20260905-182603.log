@@ -1,0 +1,108 @@
+2026-09-05 18:26:12 start: cases=53
+2026-09-05 18:26:12 T01: test number=1 expected=1.4s name=fund the senders
+2026-09-05 18:26:13 T01: pass number=2 elapsed=1.3s result=S1/S2/S3/S4/S5 funded
+2026-09-05 18:26:15 T02: test number=3 expected=0.0s name=reject a tx 1 wei below the pre-fork floor
+2026-09-05 18:26:15 T02: pass number=3 elapsed=0.0s result=rejected: under min gas price
+2026-09-05 18:26:17 T03: test number=4 expected=0.0s name=verify eth_gasPrice on the pre-fork tier
+2026-09-05 18:26:17 T03: pass number=4 elapsed=0.0s result=gasPrice=12500000000 wei
+2026-09-05 18:26:19 T04: test number=5 expected=0.0s name=verify eth_maxPriorityFeePerGas on the pre-fork tier
+2026-09-05 18:26:19 T04: pass number=5 elapsed=0.0s result=tip suggestion=0 wei (< 12500000000)
+2026-09-05 18:26:22 T05: test number=6 expected=0.0s name=verify the block baseFeePerGas on the pre-fork tier
+2026-09-05 18:26:22 T05: pass number=6 elapsed=0.0s result=baseFeePerGas=12500000000 wei
+2026-09-05 18:26:23 T06: test number=7 expected=0.0s name=verify eth_estimateGas on the pre-fork tier
+2026-09-05 18:26:23 T06: pass number=7 elapsed=0.0s result=estimateGas=21000
+2026-09-05 18:26:25 T07: test number=8 expected=0.0s name=reject a legacy creation below the pre-fork floor
+2026-09-05 18:26:25 T07: pass number=8 elapsed=0.0s result=rejected: under min gas price (legacy 12499999999 wei)
+2026-09-05 18:26:27 T08: test number=9 expected=0.0s name=reject a 1559 creation below the pre-fork floor
+2026-09-05 18:26:27 T08: pass number=9 elapsed=0.0s result=rejected: under min gas price (fee cap 12499999999 wei)
+2026-09-05 18:26:29 T09: test number=10 expected=2.1s name=seal a tx at the pre-fork floor of 12.5 gwei
+2026-09-05 18:26:31 T09: pass number=11 elapsed=2.1s result=sealed in block 11 at 12500000000 wei
+2026-09-05 18:26:33 T10: test number=12 expected=65.0s name=verify the below-floor reject is not tracked
+2026-09-05 18:27:38 T10: pass number=44 elapsed=65.0s result=journal 109 bytes unchanged, gauge 0
+2026-09-05 18:27:39 T11: test number=45 expected=0.3s name=seed 10 queued txs from S1
+2026-09-05 18:27:39 T11: pass number=45 elapsed=0.2s result=pending=0 (signers excluded) queued=10
+2026-09-05 18:27:41 T12: test number=46 expected=0.3s name=seed 8 queued txs from S2
+2026-09-05 18:27:42 T12: pass number=46 elapsed=0.2s result=pending=0 (signers excluded) queued=18
+2026-09-05 18:27:43 T13: test number=47 expected=0.1s name=replace a pre-fork queued tx at the same nonce
+2026-09-05 18:27:43 T13: pass number=47 elapsed=0.0s result=P2 replaced P1 at nonce 10
+2026-09-05 18:27:45 T14: test number=48 expected=0.0s name=verify txpool_contentFrom mirrors the pre-fork queue
+2026-09-05 18:27:45 T14: pass number=48 elapsed=0.0s result=contentFrom: pending=0 queued=10
+2026-09-05 18:27:47 T15: test number=49 expected=2.1s name=seal a tx at the pre-fork default gas price
+2026-09-05 18:27:49 T15: pass number=50 elapsed=2.1s result=default-price tx sealed at 12500000000 wei
+2026-09-05 18:27:51 T16: test number=51 expected=2.1s name=seal a legacy creation at the pre-fork floor
+2026-09-05 18:27:53 T16: pass number=52 elapsed=2.0s result=sealed at 12500000000 wei
+2026-09-05 18:27:55 T17: test number=53 expected=2.1s name=seal a legacy creation above the pre-fork floor
+2026-09-05 18:27:57 T17: pass number=54 elapsed=2.0s result=sealed at 12500000001 wei
+2026-09-05 18:27:59 T18: test number=55 expected=2.1s name=seal a 1559 creation at the pre-fork floor
+2026-09-05 18:28:01 T18: pass number=56 elapsed=2.0s result=sealed at 12500000000 wei (type 2)
+2026-09-05 18:28:03 T19: test number=57 expected=2.1s name=seal a tip-0 creation at the pre-fork base fee
+2026-09-05 18:28:05 T19: pass number=58 elapsed=1.0s result=sealed at 12500000000 wei (tip 0, type 2)
+2026-09-05 18:28:07 T20: test number=59 expected=12.1s name=verify the journal load keeps the pre-fork replacement
+2026-09-05 18:28:19 T20: pass number=65 elapsed=12.1s result=journal load keeps only P2 at nonce 10 (9 S2 txs total)
+2026-09-05 18:28:21 T21: test number=66 expected=0.0s name=park a 700 gwei tx from S4 for the sweep
+2026-09-05 18:28:21 T21: pass number=66 elapsed=0.0s result=S4 nonce 1 parked queued at 700000000000 wei
+2026-09-05 18:28:23 T22: test number=67 expected=20.3s name=verify the queued batch is not sealed
+2026-09-05 18:28:43 T22: pass number=77 elapsed=20.3s result=10 consecutive blocks with no regular user txs
+2026-09-05 18:28:45 T23: test number=78 expected=94.5s name=verify sealing continuity across the fork
+2026-09-05 18:30:20 T23: pass number=125 elapsed=94.4s result=all heads past 125, pn0=125 pn3=125
+2026-09-05 18:30:21 T24: test number=126 expected=0.0s name=verify the fork sweep empties the queue
+2026-09-05 18:30:21 T24: pass number=126 elapsed=0.0s result=queued=0 on pn0-pn2; pn3 keeps the T21 survivor (700 gwei)
+2026-09-05 18:30:23 T25: test number=127 expected=0.0s name=verify the sweep meter and drop log on pn3
+2026-09-05 18:30:23 T25: pass number=127 elapsed=0.0s result=meter=19, drop log found
+2026-09-05 18:30:25 T26: test number=128 expected=0.0s name=verify the sweep leaves a hold-back gauge
+2026-09-05 18:30:25 T26: pass number=128 elapsed=0.0s result=pn3 gauge=k(19), masternodes 0
+2026-09-05 18:30:27 T27: test number=129 expected=0.0s name=reject a tx 1 wei below the post-fork floor
+2026-09-05 18:30:27 T27: pass number=129 elapsed=0.0s result=rejected: under min gas price
+2026-09-05 18:30:29 T28: test number=130 expected=0.0s name=reject a swept tx re-entering at the old price
+2026-09-05 18:30:29 T28: pass number=130 elapsed=0.0s result=12.5g tx rejected post-fork
+2026-09-05 18:30:31 T29: test number=131 expected=2.1s name=seal a tx at the post-fork floor of 625 gwei
+2026-09-05 18:30:33 T29: pass number=132 elapsed=2.0s result=sealed at 625000000000 wei
+2026-09-05 18:30:35 T30: test number=133 expected=2.1s name=seal the parked 700 gwei tx above the new floor
+2026-09-05 18:30:38 T30: pass number=134 elapsed=2.1s result=survivor sealed in block 134 at 700000000000 wei
+2026-09-05 18:30:39 T31: test number=135 expected=130.0s name=verify the post-fork reject is not tracked
+2026-09-05 18:32:49 T31: pass number=200 elapsed=130.0s result=journal 2973 bytes unchanged, gauge stable at k(19)
+2026-09-05 18:32:51 T32: test number=201 expected=0.1s name=replace a post-fork queued tx at the same nonce
+2026-09-05 18:32:51 T32: pass number=201 elapsed=0.0s result=P2 replaced P1 at nonce 3 (625g tier)
+2026-09-05 18:32:53 T33: test number=202 expected=12.1s name=verify the journal load keeps the new-tier replacement
+2026-09-05 18:33:05 T33: pass number=208 elapsed=12.1s result=only P2 (110.4%) survived the load
+2026-09-05 18:33:07 T34: test number=209 expected=130.0s name=verify no tracker revival within the recheck
+2026-09-05 18:35:17 T34: pass number=274 elapsed=130.0s result=gauge=k(18), pool stable at 0/1, journal stable after rechecks
+2026-09-05 18:35:19 T35: test number=275 expected=0.0s name=verify effectiveGasPrice matches the block base fee on both tiers
+2026-09-05 18:35:19 T35: pass number=275 elapsed=0.0s result=tiers consistent: block 119=12500000000, block 120=625000000000
+2026-09-05 18:35:21 T36: test number=276 expected=0.0s name=verify the --gasprice 1 knob is inert
+2026-09-05 18:35:21 T36: pass number=276 elapsed=0.0s result=4 nodes run --gasprice 1 while the floor moved 12.5g→625g (T02/T27)
+2026-09-05 18:35:23 T37: test number=277 expected=0.0s name=verify eth_gasPrice on the post-fork tier
+2026-09-05 18:35:23 T37: pass number=277 elapsed=0.0s result=gasPrice=625000000000 wei
+2026-09-05 18:35:25 T38: test number=278 expected=0.0s name=verify eth_maxPriorityFeePerGas on the post-fork tier
+2026-09-05 18:35:25 T38: pass number=278 elapsed=0.0s result=tip suggestion=0 wei (< 625000000000)
+2026-09-05 18:35:27 T39: test number=279 expected=0.0s name=verify the block baseFeePerGas on the post-fork tier
+2026-09-05 18:35:27 T39: pass number=279 elapsed=0.0s result=baseFeePerGas=625000000000 wei (step 119→120 visible)
+2026-09-05 18:35:29 T40: test number=280 expected=0.0s name=verify txpool_contentFrom mirrors the post-fork queue
+2026-09-05 18:35:30 T40: pass number=280 elapsed=0.0s result=contentFrom: pending=0 queued=0
+2026-09-05 18:35:31 T41: test number=281 expected=0.0s name=verify eth_estimateGas on the post-fork tier
+2026-09-05 18:35:31 T41: pass number=281 elapsed=0.0s result=estimateGas=21000
+2026-09-05 18:35:33 T42: test number=282 expected=2.0s name=seal a tx at the post-fork default gas price
+2026-09-05 18:35:35 T42: pass number=283 elapsed=2.0s result=default-price tx sealed at 625000000000 wei
+2026-09-05 18:35:37 T43: test number=284 expected=11.1s name=revive the held-back txs when the floor drops
+2026-09-05 18:35:48 T43: pass number=30 elapsed=11.1s result=revived: gauge 18->0, pools 19/9 (floor back at 12.5g, node left isolated for T44)
+2026-09-05 18:35:48 T44: test number=30 expected=61.6s name=verify the re-cross sweep fires again
+2026-09-05 18:36:50 T44: pass number=320 elapsed=61.5s result=second sweep fired: meter 0->23, gauge=k(18), pools empty
+2026-09-05 18:36:51 T45: test number=321 expected=67.1s name=verify the hold-back survives a restart
+2026-09-05 18:37:58 T45: pass number=354 elapsed=67.1s result=gauge=k(18) after restart, pool stable at 0/1 (no below-floor revival)
+2026-09-05 18:37:59 T46: test number=355 expected=0.0s name=reject a 1559 tx 1 wei below the post-fork floor
+2026-09-05 18:37:59 T46: pass number=355 elapsed=0.0s result=rejected: under min gas price (fee cap 624999999999 wei)
+2026-09-05 18:38:01 T47: test number=356 expected=0.0s name=reject a legacy creation below the post-fork floor
+2026-09-05 18:38:01 T47: pass number=356 elapsed=0.0s result=rejected: under min gas price (legacy 624999999999 wei)
+2026-09-05 18:38:03 T48: test number=357 expected=0.0s name=reject a 1559 creation below the post-fork floor
+2026-09-05 18:38:03 T48: pass number=357 elapsed=0.0s result=rejected: under min gas price (fee cap 624999999999 wei)
+2026-09-05 18:38:05 T49: test number=358 expected=2.0s name=seal a legacy creation at the post-fork floor
+2026-09-05 18:38:07 T49: pass number=359 elapsed=2.0s result=sealed at 625000000000 wei
+2026-09-05 18:38:09 T50: test number=360 expected=2.0s name=seal a legacy creation above the post-fork floor
+2026-09-05 18:38:11 T50: pass number=361 elapsed=2.0s result=sealed at 625000000001 wei
+2026-09-05 18:38:13 T51: test number=362 expected=2.0s name=seal a 1559 creation at the post-fork floor
+2026-09-05 18:38:15 T51: pass number=363 elapsed=2.0s result=sealed at 625000000000 wei (type 2)
+2026-09-05 18:38:17 T52: test number=364 expected=2.0s name=seal a tip-0 creation at the post-fork base fee
+2026-09-05 18:38:19 T52: pass number=365 elapsed=1.0s result=sealed at 625000000000 wei (tip 0, type 2)
+2026-09-05 18:38:21 T53: test number=366 expected=2.1s name=seal a 1559 tx at the post-fork floor
+2026-09-05 18:38:23 T53: pass number=367 elapsed=2.1s result=type-2 tx sealed at 625000000000 wei
+2026-09-05 18:38:29 end: pass=53 fail=0 skip=0

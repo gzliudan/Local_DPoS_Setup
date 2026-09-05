@@ -1,7 +1,7 @@
 #!/bin/bash
 # gas2500x-run.sh — run all gas2500x test cases in order and summarize.
 #
-# Usage: gas2500x-run.sh [t1 t2 ...]   (default: all cases in execution order)
+# Usage: gas2500x-run.sh   (runs the complete schedule; per-case arguments were removed)
 # Lifecycle: a run is the complete test job — it stops any leftover nodes,
 # wipes the datadirs, starts the whole network, runs the cases, and stops the
 # network at the end (data and logs are kept for inspection).
@@ -27,9 +27,28 @@ echo "gas2500x test run $(date '+%F %T') — fork at block $FORK_BLOCK"
 echo "log: $LOG"
 echo
 
+# ---------------------------------------------------------------- lifecycle
+# The suite owns the whole lifecycle so a single run of this script is the
+# complete test job: stop any leftover nodes, wipe the datadirs for a fresh
+# chain, start everything back up, and only then begin the cases. This runs
+# BEFORE the log redirection below on purpose — the nodes' bootstrap chatter
+# (genesis init, backfilled fields, peer dialing) stays on the console and
+# out of the transcript. A live pn3 short-circuits this (pre-provisioned
+# network; results then start from a used chain).
+if [ "$(head3)" != "-1" ]; then
+    LIFECYCLE="pn3 already running — kept the existing chain"
+else
+    ./stop-network.sh >/dev/null 2>&1 || true
+    pkill -f 'XDC --config nodes/pn3' 2>/dev/null || true   # observer has no .pid file
+    ./reset.sh >/dev/null
+    ./start-network.sh >/dev/null
+    ./run-node.sh 3 >/dev/null
+    LIFECYCLE="fresh chain: reset + full network start"
+fi
+
 # from here on everything (stdout+stderr) is duplicated into the log file and
-# every line is prefixed with the current date-time; the banner above stays
-# console-only, so the log opens with the start line
+# every line is prefixed with the current date-time; the banner and the
+# lifecycle bootstrap above stay console-only
 stamp_lines() {
     while IFS= read -r line; do
         printf '%(%F %T)T %s\n' -1 "$line"
@@ -45,32 +64,24 @@ for _ in $(seq 1 50); do
     [ -f "$LOG" ] && break
     sleep 0.1
 done
+echo "lifecycle: $LIFECYCLE"
 
-# ---------------------------------------------------------------- lifecycle
-# The suite owns the whole lifecycle so a single run of this script is the
-# complete test job: stop any leftover nodes, wipe the datadirs for a fresh
-# chain, start everything back up, and only then begin the cases. If pn3 is
-# already alive the environment is considered pre-provisioned and kept as-is
-# (that is how the suite was used before; results then start from a used
-# chain and the fork-window pre cases may skip).
-if head3 >/dev/null 2>&1 && [ "$(head3)" != "-1" ]; then
-    echo "lifecycle: pn3 is already running — keeping the existing chain"
-else
-    echo "lifecycle: resetting the network for a fresh chain"
-    ./stop-network.sh >/dev/null 2>&1 || true
-    pkill -f 'XDC --config nodes/pn3' 2>/dev/null || true   # observer has no .pid file
-    ./reset.sh >/dev/null
-    ./start-network.sh >/dev/null
-    ./run-node.sh 3 >/dev/null
-fi
-
-# every case must start on a REAL chain head: wait for pn3's RPC to answer
-# eth_blockNumber (1 s polls — run-node.sh returns before the node binds its
-# RPC port). Without this the first cases would log "test number=-1".
+# every case must start on a real, MOVING chain. The RPC answering is not
+# enough: a freshly initialized chain sits at head 0 until the first seal,
+# and T01 opening on number=0 would break the strict-ordering invariant.
+# So: RPC up within 30 s, then head > 0 within another 30 s (1 s polls).
 if ! wait_rpc3 30; then
     echo "error: pn3 RPC did not come up within 30 s"
     exit 1
 fi
+t=0
+while :; do
+    h=$(head3)
+    [ "$h" -gt 0 ] 2>/dev/null && break
+    [ "$t" -ge 30 ] && { echo "error: chain head never advanced past 0"; exit 1; }
+    sleep 1
+    t=$((t + 1))
+done
 
 # full ordered schedule: the twice-cases (t10-t15, t34) run their pre side
 # before the fork and their post side after — a "<script>-<side>" entry runs
@@ -90,7 +101,8 @@ SCHEDULE=(
 )
 
 if [ $# -gt 0 ]; then
-    SCHEDULE=("$@")
+    echo "error: this runner executes the full schedule only; per-case arguments were removed"
+    exit 2
 fi
 
 # first line of the log (the console banner above is not part of it)
@@ -147,7 +159,11 @@ for item in "${SCHEDULE[@]}"; do
     # below only sees lines this case produced (a twice-case must not pick
     # up its other side's verdict)
     mark=$(wc -l <"$LOG" 2>/dev/null || echo 0)
+    # wall time for the case's elapsed= field (ms resolution, rounded to 0.1 s)
+    t0=$(date +%s%3N)
     bash "$f" "$args"
+    elapsed_ms=$(( $(date +%s%3N) - t0 ))
+    elapsed="$((elapsed_ms / 1000)).$(( (elapsed_ms % 1000) / 100 ))s"
     # the verdict travels through the stamp|tee process substitution, which
     # bash does NOT wait for — a single immediate grep can read the log
     # before the verdict line lands (seen as a phantom fail in run 16). Poll
@@ -156,14 +172,25 @@ for item in "${SCHEDULE[@]}"; do
     for _ in $(seq 1 15); do
         verdict=$(tail -n +"$((mark + 1))" "$LOG" 2>/dev/null |
             grep -E " $case_id: (pass|fail|skip)" | tail -n 1)
-        [ -n "$verdict" ] && break
+        # inject the elapsed field into the verdict line (after number=)
+        if [ -n "$verdict" ]; then
+            verdict=${verdict/ result=/ elapsed=$elapsed result=}
+            break
+        fi
         sleep 0.2
     done
     # remember this case's verdict-time head for the next case's gate; a
     # crashed case (no verdict, or no number= in it) leaves the previous
-    # number in place instead of disabling the gate
+    # number in place instead of disabling the gate. T29 is the exception:
+    # it rewinds the chain (--set-head 30), so its number= is BELOW the fork
+    # and head > that number can never come true while the node is isolated —
+    # disarm the gate once so T30 (which re-syncs) starts immediately.
     new_num=$(printf '%s' "$verdict" | grep -o ' number=[0-9]*' | head -n 1 | cut -d= -f2)
-    [ -n "$new_num" ] && prev_num=$new_num
+    if [ "$item" = "t29" ]; then
+        prev_num=""
+    elif [ -n "$new_num" ]; then
+        prev_num=$new_num
+    fi
     case $verdict in
     *" pass "*) passed=$((passed + 1)) ;;
     *" skip "*) skipped=$((skipped + 1)) ;;

@@ -38,13 +38,8 @@ cd ~/XDPoSChain && make all         # fresh XDC + bootnode binaries; cd back
 # transcript lands in results/gas2500x-<timestamp>.log)
 ./gas2500x-run.sh
 
-# extras (rarely needed — the runner manages the lifecycle itself)
-./gas2500x-run.sh t2                # run selected cases on the ALREADY-RUNNING
-                                    # network (no reset, no start, no stop)
-tests/t2.sh                         # one case directly, network must be up
-./stop-network.sh                   # stop everything manually
-./stop-network.sh && ./reset.sh && ./start-network.sh && ./run-node.sh 3
-                                    # manual fresh state
+# stop everything manually (e.g. after an interrupted run)
+./stop-network.sh
 ```
 
 ## Topology
@@ -87,14 +82,17 @@ Shell layer, `bash` + `curl` + `jq` + `cast` (foundry) only, all under
   readers) plus the case frame: every case opens with a
   `Tnn: test number=<head> name=<case>` line and ends in one verdict line
   `Tnn: pass|fail|skip number=<head> result=<evidence>` on stdout.
-- **`tests/t1.sh` … `tests/t33.sh`** — one script per test case; the
-  twice-cases (t10–t15 and t34) take `pre`/`post` when run alone:
-  `tests/t10.sh post`.
-- **`gas2500x-run.sh`** (repo root, next to `start-network.sh`) — runs all
-  cases in schedule order (pre sides before the fork, post sides after),
-  starting each case only once pn3's head has moved strictly past the
-  previous case's verdict-time block (the verdict line's `number=`; the
-  chain seals a block every 2 s, so the wait is usually ~2 s); the whole
+- **`tests/t1.sh` … `tests/t34.sh`** — one script per test case. The runner
+  drives everything; the twice-cases (T10–T15, T34) are invoked internally as
+  pre/post sides.
+- **`gas2500x-run.sh`** (repo root, next to `start-network.sh`) — the only
+  entry point and the owner of the full lifecycle: stop leftovers → wipe
+  datadirs → start the network → run cases → stop (bootstrap chatter stays
+  on the console, out of the transcript; no per-case arguments). Cases run
+  in schedule order (pre sides before the fork, post sides after), starting
+  each case only once pn3's head has moved strictly past the previous
+  case's verdict-time block (the verdict line's `number=`; the chain seals
+  a block every 2 s, so the wait is usually ~2 s); the whole
   stamped run is recorded in
   `results/gas2500x-<timestamp>.log` — the log opens with
   `start: cases=N` and closes with `end: pass=X fail=Y skip=Z`
@@ -110,8 +108,8 @@ the action case they observe and add no new submissions; the twice-cases
 (T10–T15, T34) run on both sides of the fork (pre before it, post after).
 Fork height: **120** (≈240 s after genesis at 2 s blocks). Hard timing rule:
 all pre-fork submissions (T01–T09, plus the pre sides of T13 and T34) must
-complete before head ≈ 115 — if the window is missed, reset the chain
-(Quick start) and start over. Queued (gap) transactions survive until the
+complete before head ≈ 115 — if the window is missed, simply re-run the
+runner (it resets the chain). Queued (gap) transactions survive until the
 fork regardless.
 
 One benign interference source: every ~30 s each masternode broadcasts an
@@ -353,6 +351,9 @@ transactions (they cannot be crafted on a running network).
 - **Expected:** within one recheck the held-back txs are resubmitted — the
   gauge drops to 0 and the pools refill. **Veto criterion: a below-floor tx
   must never be sealed nor appear in another node's pool at any point.**
+  (The verdict line's `number=30` is the rewound head — the transcript's
+  block numbers intentionally dip across T29/T30 and recover once T30
+  re-syncs past the fork.)
 
 ### T30 — the re-cross sweep fires again (#2532)
 

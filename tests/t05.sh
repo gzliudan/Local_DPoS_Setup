@@ -5,7 +5,7 @@
 source "$(dirname "$0")/gas2500x-lib.sh"
 begin_case "T05" "verify the block baseFeePerGas on the pre-fork tier" 0.0
 
-require_pre_fork "pre side missed the window"
+require_pre_fork "pre-fork window missed"
 
 bf=$(base_fee latest)
 [ "$bf" = "$GAS50_WEI" ] || fail_case "latest baseFee=$bf, expected $GAS50_WEI"

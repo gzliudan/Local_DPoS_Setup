@@ -4,7 +4,7 @@
 source "$(dirname "$0")/gas2500x-lib.sh"
 begin_case "T04" "verify eth_maxPriorityFeePerGas on the pre-fork tier" 0.0
 
-require_pre_fork "pre side missed the window"
+require_pre_fork "pre-fork window missed"
 
 tip=$(hex2dec "$(rpc0 eth_maxPriorityFeePerGas | jq -r .)") || fail_case "RPC error"
 [ "$tip" -lt "$GAS50_WEI" ] || fail_case "tip=$tip not below tier price $GAS50_WEI"

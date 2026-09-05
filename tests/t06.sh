@@ -4,7 +4,7 @@
 source "$(dirname "$0")/gas2500x-lib.sh"
 begin_case "T06" "verify eth_estimateGas on the pre-fork tier" 0.0
 
-require_pre_fork "pre side missed the window"
+require_pre_fork "pre-fork window missed"
 
 S1=$(addr_of TXGEN_KEY_1)
 est=$(rpc3 eth_estimateGas "[{\"from\":\"$(addr_of TXGEN_KEY_2)\",\"to\":\"$S1\",\"value\":\"0x1\"}]")

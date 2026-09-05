@@ -61,28 +61,28 @@ while :; do
     t=$((t + 1))
 done
 
-# Five dependency ranges; inside each range the cases are ordered by the
-# verdict elapsed= values of results/gas2500x-20260905-122923.log (fast
-# first), subject to the state chains noted per range. The guards inside
-# the cases still enforce the semantic windows (pre-fork cases skip past
-# the fork), so a wrong window can never silently break a case.
-#   R1 pre-fork (22 cases, t01 first, t23 closes the range): T01 funds
-#      every sender first; T09+T02 precede T10 (its 65 s window needs a
-#      clean tracker/journal); T10 precedes T11/T12 (the seeds would move
-#      the gauge); T11 < T14, T12 < T13 < T20 < T21 (queue seed ->
-#      replacement -> journal convergence -> survivor park); every
-#      sealing case precedes T22's empty-block watch.
-#   R2 fork sweep (t23 … t34): T24 before T30 (T30 seals the survivor T24
-#      expects still queued); T25 before T33 (pn3's restart resets the
-#      meter); T26 and T31 read gauge=k(19), so both precede T32's
-#      replacement; T31's 130 s journal window needs T27's reject and
-#      T30/T29's seals done; T33 < T34.
-#   R3 post-fork probes (t35 … t41): T35 greps the T09+T29 pass verdicts
-#      from the transcript; the rest are read-only or self-contained
-#      (T42's 625 gwei seal stays before T43's rewind, matching run #26).
-#   R4 rewind saga (t43 … t45): T43 -> T44 -> T45 is a fixed state chain
-#      (marker + isolated node hand-off), no reordering possible.
-#   R5 creation matrix (t53 … t52): every case fetches its own pending
+# SCHEDULE runs t01 -> t53 in ID order; the ID IS the execution position.
+# The five ranges below note the semantic chains each case relies on; the
+# in-case guards still enforce the fork windows, so a missed window can
+# never silently break a case (it skips or fails on its own).
+#   R1 pre-fork (t01 ... t23): T01 funds every sender first; the rejects
+#      (T02, T07, T08) land inside T10's 65 s tracker window, which needs
+#      a clean journal/gauge; T10 precedes the seeds T11/T12 (they would
+#      move both); T12 < T13 < T20 < T21 (seed -> replacement -> journal
+#      convergence -> survivor park); every seal precedes T22's
+#      empty-block watch; T23 closes the range across the fork.
+#   R2 fork sweep (t24 ... t34): T21's parked survivor stays queued
+#      through T24's sweep and is sealed by T30; T25/T26 read the sweep
+#      meter/gauge before the T33 restart resets the meter; T27's reject
+#      and the T29/T30 seals precede T31's 130 s journal window; T32's
+#      replacement feeds T33's journal load; T34 closes the range.
+#   R3 post-fork probes (t35 ... t42): read-only checks over the new
+#      tier; T35 greps earlier pass verdicts from the transcript
+#      (order-free by construction).
+#   R4 rewind saga (t43 ... t45): T43 -> T44 -> T45 is a fixed state
+#      chain (marker + isolated node hand-off); the head gate is
+#      disarmed once after T43's --set-head rewind.
+#   R5 creation matrix (t46 ... t53): every case fetches its own pending
 #      nonce, so the eight cases are mutually independent.
 SCHEDULE=(
     t01 t02 t03 t04 t05 t06 t07 t08 t09 t10 t11 t12 t13 t14 t15 t16 t17 t18 t19 t20 t21 t22 t23 t24 t25 t26 t27 t28 t29 t30 t31 t32 t33 t34 t35 t36 t37 t38 t39 t40 t41 t42 t43 t44 t45 t46 t47 t48 t49 t50 t51 t52 t53

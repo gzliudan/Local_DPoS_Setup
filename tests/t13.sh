@@ -1,6 +1,6 @@
 #!/bin/bash
 # T13 — same-nonce replacement accepted (pre-fork, #2541):
-# P2 (>= 1.1 x P1) replaces P1 in the queue and in the tracker.
+# P2 (112% of P1) replaces P1 in the queue and in the tracker.
 source "$(dirname "$0")/gas2500x-lib.sh"
 begin_case "T13" "replace a pre-fork queued tx at the same nonce" 0.1
 
@@ -14,7 +14,8 @@ S2_TO=$(addr_of TXGEN_KEY_1)
 h1=$(send_from TXGEN_KEY_2 "$S2_TO" 1 "$GAS50_WEI" 10)
 [ -n "$h1" ] || fail_case "P1 rejected"
 
-# P2 at the same nonce 10 with a 12% bump (14 gwei; threshold is 110%)
+# P2 at the same nonce 10 with a 112% bump (replacement
+# needs strictly more than 10%)
 h2=$(send_from TXGEN_KEY_2 "$S2_TO" 1 $((GAS50_WEI * 112 / 100)) 10)
 [ -n "$h2" ] || fail_case "P2 rejected"
 printf '%s\n%s\n' "$h1" "$h2" >/tmp/g2500-t8-hashes   # consumed by T20

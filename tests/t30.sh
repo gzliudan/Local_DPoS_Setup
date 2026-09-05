@@ -12,8 +12,8 @@ S4_TO=$(addr_of TXGEN_KEY_1)
 MARKER=/tmp/g2500-t21-hashes
 SURVIVOR_WEI=700000000000    # 700 gwei — strictly above the 625 gwei floor
 
-# the pre side (T21) must have seeded the survivor on this chain
-[ -f "$MARKER" ] || skip_case "no T21 pre side on this chain (no $MARKER)"
+# T21 must have parked the survivor on this chain (pre-fork)
+[ -f "$MARKER" ] || skip_case "no T21 survivor on this chain (no $MARKER)"
 hash=$(tail -n 1 "$MARKER")
 gap=$(send_from TXGEN_KEY_4 "$S4_TO" 1 "$GAS2500_WEI" "$(pending_nonce "$S4_ADDR")")
 [ -n "$gap" ] || fail_case "gap fill rejected"

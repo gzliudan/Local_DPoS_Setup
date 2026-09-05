@@ -4,7 +4,7 @@
 source "$(dirname "$0")/gas2500x-lib.sh"
 begin_case "T03" "verify eth_gasPrice on the pre-fork tier" 0.0
 
-require_pre_fork "pre side missed the window"
+require_pre_fork "pre-fork window missed"
 
 gp=$(hex2dec "$(rpc0 eth_gasPrice | jq -r .)")
 [ "$gp" = "$GAS50_WEI" ] || fail_case "gasPrice=$gp, expected $GAS50_WEI"

@@ -4,7 +4,7 @@
 source "$(dirname "$0")/gas2500x-lib.sh"
 begin_case "T19" "seal a tip-0 creation at the pre-fork base fee" 2.1
 
-require_pre_fork "pre side missed the window"
+require_pre_fork "pre-fork window missed"
 
 floor=$GAS50_WEI
 n=$(pending_nonce "$(addr_of TXGEN_KEY_5)")

@@ -6,7 +6,7 @@
 source "$(dirname "$0")/gas2500x-lib.sh"
 begin_case "T21" "park a 700 gwei tx from S4 for the sweep" 0.0
 
-require_pre_fork "pre side missed the window"
+require_pre_fork "pre-fork window missed"
 
 S4_ADDR=$(addr_of TXGEN_KEY_4)
 S4_TO=$(addr_of TXGEN_KEY_1)

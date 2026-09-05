@@ -7,7 +7,7 @@
 source "$(dirname "$0")/gas2500x-lib.sh"
 begin_case "T15" "seal a tx at the pre-fork default gas price" 2.1
 
-require_pre_fork "pre side missed the window"
+require_pre_fork "pre-fork window missed"
 
 P3_TO=$(addr_of TXGEN_KEY_1)
 # signed locally with P3's own key; NO --gas-price: cast omits the price

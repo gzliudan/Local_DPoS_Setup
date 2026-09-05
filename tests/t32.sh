@@ -9,7 +9,7 @@ S2_TO=$(addr_of TXGEN_KEY_1)
 # after the sweep S2's pending nonce is 0; nonce 3 parks P1 in the queue.
 h1=$(send_from TXGEN_KEY_2 "$S2_TO" 1 "$GAS2500_WEI" 3)
 [ -n "$h1" ] || fail_case "P1 rejected"
-# 110.4% bump: the 110% threshold must be EXCEEDED (old gate: strictly higher)
+# 110.4% bump (552/500) — replacement needs strictly more than 10%
 h2=$(send_from TXGEN_KEY_2 "$S2_TO" 1 $((GAS2500_WEI * 552 / 500)) 3)
 [ -n "$h2" ] || fail_case "P2 rejected"
 

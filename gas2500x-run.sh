@@ -16,10 +16,6 @@ LOG="results/gas2500x-$(date +%Y%m%d-%H%M%S).log"
 export RUN_LOG="$LOG"   # case scripts (t27) read sibling verdicts from it
 source tests/gas2500x-lib.sh
 
-echo "gas2500x test run $(date '+%F %T') — fork at block $FORK_BLOCK"
-echo "log: $LOG"
-echo
-
 # ---------------------------------------------------------------- lifecycle
 # stop everything, wipe, restart a fresh network — before the log
 # redirection so bootstrap chatter stays out of the transcript.
@@ -28,6 +24,10 @@ echo
 ./reset.sh >/dev/null
 ./start-network.sh >/dev/null
 ./run-node.sh 3 >/dev/null
+
+echo "gas2500x test run $(date '+%F %T') — fork at block $FORK_BLOCK"
+echo "log: $LOG"
+echo
 
 # everything from here on is date-time stamped into the log
 stamp_lines() {

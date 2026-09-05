@@ -1,10 +1,10 @@
 #!/bin/bash
-# T15 — eth_estimateGas returns the standard 21000 for a plain transfer
-# (read-only probe), #2516. (The post-fork half of this check is T52.)
+# T52 — eth_estimateGas returns the standard 21000 post-fork (read-only
+# probe), #2516. (The pre-fork half of this check is T15.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T15" "eth_estimateGas works (pre-fork tier)"
+begin_case "T52" "eth_estimateGas works (post-fork tier)"
 
-require_pre_fork "pre side missed the window"
+# no guard: the runner schedules this well after the fork
 
 S1=$(addr_of TXGEN_KEY_1)
 est=$(rpc3 eth_estimateGas "[{\"from\":\"$(addr_of TXGEN_KEY_2)\",\"to\":\"$S1\",\"value\":\"0x1\"}]")

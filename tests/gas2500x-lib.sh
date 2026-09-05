@@ -394,22 +394,6 @@ require_post_fork() {
     [ "$h" -ge "$FORK_BLOCK" ] || fail_case "head $h < fork $FORK_BLOCK"
 }
 
-# fork_side <pre|post> — guard for the two-sided cases (t10-t15): a pre run
-# past the fork skips, anything but pre|post is a usage failure
-fork_side() {
-    case "$1" in
-    pre)  require_pre_fork "pre side missed the window" ;;
-    post) ;;
-    *)    fail_case "usage: ${0##*/} pre|post" ;;
-    esac
-}
-
-# tier_for <pre|post> — the enforced floor price (wei) on that side of the
-# fork; callers have already run fork_side, so the side is valid here
-tier_for() {
-    if [ "$1" = "pre" ]; then echo "$GAS50_WEI"; else echo "$GAS2500_WEI"; fi
-}
-
 # ----------------------------------------------------------------- case frame
 CASE_ID="" CASE_NAME="" CASE_T0=0
 

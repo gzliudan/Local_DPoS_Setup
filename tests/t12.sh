@@ -1,20 +1,12 @@
 #!/bin/bash
-# T12 — eth_getBlockByNumber baseFeePerGas on both sides of the fork (#2516).
-# Usage: t12.sh pre|post
+# T12 — the latest block's baseFeePerGas equals the pre-fork tier price
+# (12.5 gwei), #2516. (The post-fork half with the boundary-block step is
+# T49.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T12" "eth_getBlockByNumber baseFeePerGas (${1:-?} side)"
+begin_case "T12" "block baseFeePerGas carries the tier price (pre-fork tier)"
 
-side=${1:-pre}
-fork_side "$side"
-want=$(tier_for "$side")
+require_pre_fork "pre side missed the window"
 
 bf=$(base_fee latest)
-[ "$bf" = "$want" ] || fail_case "latest baseFee=$bf, expected $want"
-if [ "$side" = "post" ]; then
-    # the tier step is visible across the fork boundary blocks
-    bf89=$(base_fee "$(printf '0x%x' $((FORK_BLOCK - 1)))")
-    bf90=$(base_fee "$(printf '0x%x' "$FORK_BLOCK")")
-    [ "$bf89" = "$GAS50_WEI" ] || fail_case "block $((FORK_BLOCK - 1)) baseFee=$bf89"
-    [ "$bf90" = "$GAS2500_WEI" ] || fail_case "block $FORK_BLOCK baseFee=$bf90"
-fi
-pass_case "baseFeePerGas=$bf wei (step $((FORK_BLOCK - 1))→$FORK_BLOCK visible)"
+[ "$bf" = "$GAS50_WEI" ] || fail_case "latest baseFee=$bf, expected $GAS50_WEI"
+pass_case "baseFeePerGas=$bf wei"

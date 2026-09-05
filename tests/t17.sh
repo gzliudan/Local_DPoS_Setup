@@ -11,7 +11,7 @@ for port in 8545 8546 8547; do
 done
 
 # pn3: the sweep drops only below-floor txs, so T34's above-floor pre-fork
-# survivor (700 gwei, parked queued by t34-pre) is still there — exactly one
+# survivor (700 gwei, parked queued by T34) is still there — exactly one
 # queued tx when the seed ran, zero otherwise
 que=$(hex2dec "$(rpc "$RPC3" txpool_status | jq -r .result.queued)")
 if [ -f /tmp/g2500-t34-hashes ]; then

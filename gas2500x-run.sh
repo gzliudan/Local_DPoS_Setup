@@ -59,18 +59,19 @@ while :; do
     t=$((t + 1))
 done
 
-# "<script>-<side>" entries run tests/<script>.sh with the side as its
-# argument (T10-T15 + T34 only). T35-T40 run pre-fork, their post-fork
-# twins T41-T46 run as their own cases after the t29-t31 saga, so none of
-# the creation txs are in the journal at the rewind (the pre-side seals
-# are inert — mined before the fork, stale-removed on re-sync).
+# Every schedule item is a unique case ID — no pre/post sides. T10-T15 and
+# T35-T40 run pre-fork (require_pre_fork guards), their post-fork twins
+# T47-T52 and T41-T46 run after the fork: T47-T52 after T28 (the pure RPC
+# reads), T41-T46 after T33 (they must not be in the journal at the rewind),
+# and T53 right after T17 (before t29's rewind, so t30's sync re-imports
+# the survivor's seal block).
 SCHEDULE=(
-    t01 t02 t03 t04 t05 t06 t07 t08 t09 t34-pre
-    t10-pre t11-pre t12-pre t13-pre t14-pre t15-pre
+    t01 t02 t03 t04 t05 t06 t07 t08 t09 t34
+    t10 t11 t12 t13 t14 t15
     t35 t36 t37 t38 t39 t40
-    t16 t17 t34-post t18 t19
+    t16 t17 t53 t18 t19
     t20 t21 t22 t23 t24 t25 t26 t27 t28
-    t10-post t11-post t12-post t13-post t14-post t15-post
+    t47 t48 t49 t50 t51 t52
     t29 t30 t31
     t32 t33
     t41 t42 t43 t44 t45 t46
@@ -82,12 +83,12 @@ SCHEDULE=(
 # Regenerate after timing-changing edits.
 declare -A EXPECTED=(
     [t01]=11 [t02]=3 [t03]=1 [t04]=65 [t05]=1 [t06]=1 [t07]=21 [t08]=1 [t09]=13
-    [t34-pre]=1
-    [t10-pre]=1 [t11-pre]=1 [t12-pre]=1 [t13-pre]=2 [t14-pre]=1 [t15-pre]=1
+    [t34]=1
+    [t10]=1 [t11]=1 [t12]=1 [t13]=2 [t14]=1 [t15]=1
     [t35]=1 [t36]=1 [t37]=1 [t38]=1 [t39]=1 [t40]=1
-    [t16]=107 [t17]=1 [t34-post]=3 [t18]=1 [t19]=1
+    [t16]=107 [t17]=1 [t53]=3 [t18]=1 [t19]=1
     [t20]=2 [t21]=1 [t22]=130 [t23]=1 [t24]=13 [t25]=1 [t26]=130 [t27]=1 [t28]=1
-    [t10-post]=1 [t11-post]=1 [t12-post]=1 [t13-post]=2 [t14-post]=1 [t15-post]=1
+    [t47]=1 [t48]=1 [t49]=1 [t50]=2 [t51]=1 [t52]=1
     [t29]=12 [t30]=62 [t31]=68
     [t32]=3 [t33]=1
     [t41]=1 [t42]=1 [t43]=1 [t44]=1 [t45]=1 [t46]=1
@@ -109,15 +110,7 @@ skipped=0
 # test numbers strictly increasing.
 prev_num=""
 for item in "${SCHEDULE[@]}"; do
-    script=$item
-    args=""
-    case $item in
-    t1[0-5]-* | t34-*)
-        script=${item%-*}
-        args=${item#*-}
-        ;;
-    esac
-    f="tests/$script.sh"
+    f="tests/$item.sh"
     if [ ! -x "$f" ]; then
         echo "skip $item (no $f)"
         skipped=$((skipped + 1))
@@ -147,7 +140,7 @@ for item in "${SCHEDULE[@]}"; do
     export EXPECTED_S="${EXPECTED[$item]:-1}"
     # the verdict search only sees lines this case produced (twice-cases)
     mark=$(wc -l <"$LOG" 2>/dev/null || echo 0)
-    bash "$f" "$args"
+    bash "$f"
     # poll briefly: the verdict lands in $LOG asynchronously
     verdict=""
     for _ in $(seq 1 15); do

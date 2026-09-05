@@ -85,9 +85,8 @@ Shell layer, `bash` + `curl` + `jq` + `cast` (foundry) only, all under
   on stdout. The expected time is injected by the runner from its per-item
   `EXPECTED` table (ceil of the last full run's elapsed, min 1); standalone
   case runs default to 1s.
-- **`tests/t01.sh` … `tests/t46.sh`** — one script per test case, one case ID
-  per script. The runner drives everything; the only remaining twice-cases
-  (T10–T15, T34) are invoked internally as pre/post sides.
+- **`tests/t01.sh` … `tests/t53.sh`** — one script per test case, one case ID
+  per script; the runner drives everything (no pre/post arguments anywhere).
 - **`gas2500x-run.sh`** (repo root, next to `start-network.sh`) — the only
   entry point and the owner of the full lifecycle: stop leftovers → wipe
   datadirs → start the network → run cases → stop (bootstrap chatter stays
@@ -110,8 +109,8 @@ Observation-only cases (T04, T07, T17–T19, T22, T26–T28) share the trigger o
 the action case they observe and add no new submissions; the twice-cases
 (T10–T15, T34) run on both sides of the fork (pre before it, post after).
 Fork height: **120** (≈240 s after genesis at 2 s blocks). Hard timing rule:
-all pre-fork submissions (T01–T09, plus the pre sides of T13 and T34 and
-the creation cases T35–T40) must complete before head ≈ 115 — if the window
+all pre-fork submissions (T01–T15, T34, T35–T40) must complete before
+head ≈ 115 — if the window
 is missed, simply re-run the runner (it resets the chain). Queued (gap)
 transactions survive until the fork regardless.
 
@@ -206,46 +205,44 @@ transactions (they cannot be crafted on a running network).
   bump, special-transaction priority — cannot be held for observation on a
   live chain and stay unit-test territory.)
 
-### T10 — `eth_gasPrice` on both sides of the fork (#2516)
+### T10 — `eth_gasPrice` reports the pre-fork tier price (#2516)
 
-- **Steps:** call `eth_gasPrice` on each side; check `result`.
-- **Expected:** `result` = 12,500,000,000 wei pre-fork and 625,000,000,000 wei
-  post-fork — one clean step; the quote never drops below the enforced floor.
+- **Steps:** call `eth_gasPrice` on pn0.
+- **Expected:** `result` = 12,500,000,000 wei (the pre-fork tier; the
+  post-fork half of this check is T47).
 
-### T11 — `eth_maxPriorityFeePerGas` on both sides of the fork (#2516)
+### T11 — `eth_maxPriorityFeePerGas` suggests a tip below the pre-fork price (#2516)
 
-- **Steps:** call `eth_maxPriorityFeePerGas` on each side; check `result`.
-- **Expected:** a sane tip suggestion on both sides, bounded well below the
-  tier price, no fork-induced error.
+- **Steps:** call `eth_maxPriorityFeePerGas` on pn0.
+- **Expected:** the suggested tip is below 12,500,000,000 wei (0 on this
+  network; the post-fork half of this check is T48).
 
-### T12 — `eth_getBlockByNumber` baseFeePerGas on both sides (#2516)
+### T12 — the latest block's baseFeePerGas is the pre-fork tier price (#2516)
 
-- **Steps:** call `eth_getBlockByNumber("latest", false)` on each side and
-  check `baseFeePerGas`; post-fork also fetch the last pre-fork block and
-  the first post-fork block directly.
-- **Expected:** `baseFeePerGas` = 12.5 gwei pre-fork and = 625 gwei
-  post-fork; the last pre-fork block carries 12.5 gwei and the first
-  post-fork block carries 625 gwei — the step is visible between the two.
+- **Steps:** call `eth_getBlockByNumber latest` on pn0 and read
+  `baseFeePerGas`.
+- **Expected:** 12,500,000,000 wei (the post-fork half T49 additionally
+  asserts the fork-1/fork boundary step).
 
-### T13 — the tier-aware default gas price (#2516)
+### T13 — the tier-aware default gas price, pre-fork tier (#2516)
 
-- **Steps:** P3 (pn3's own account, funded in T01) submits one transfer with
-  no gas price at all; cast signs locally and omits the price, so the tx
-  carries the node's tier-aware suggested gas price. Follow the receipt.
-- **Expected:** sealed at `effectiveGasPrice` 12.5 gwei pre-fork and 625 gwei
-  post-fork — the default price follows the tier.
+- **Steps:** P3 (pn3's own account) submits one transfer with NO gas price —
+  the node fills in the tier-aware suggested price.
+- **Expected:** sealed; `effectiveGasPrice` = 12,500,000,000 wei (the
+  post-fork half of this check is T50).
 
-### T14 — `txpool_contentFrom` mirrors the queue (#2532)
+### T14 — `txpool_contentFrom` mirrors the pre-fork queue (#2532)
 
-- **Steps:** call `txpool_contentFrom(S1)` on pn3 on each side.
-- **Expected:** pre-fork 10 entries under `queued` (pending empty); post-fork
-  empty — the sweep removed them (T17).
+- **Steps:** call `txpool_contentFrom(S1)` on pn3 after T05 seeded the gap
+  queue.
+- **Expected:** `queued` = 10, `pending` = 0 (the post-fork half of this
+  check is T51).
 
-### T15 — `eth_estimateGas` on both sides (#2516)
+### T15 — `eth_estimateGas` returns the standard transfer cost (#2516)
 
-- **Steps:** call `eth_estimateGas` for a plain transfer on each side.
-- **Expected:** 21000 (or the node's own estimate for a bare transfer) on both
-  tiers, no error.
+- **Steps:** call `eth_estimateGas` for a plain S2→S1 transfer.
+- **Expected:** 21000 (read-only probe; the post-fork half of this check is
+  T52).
 
 ### T16 — sealing continuity across the fork
 
@@ -395,23 +392,14 @@ transactions (they cannot be crafted on a running network).
 - **Expected:** rejected with `under min gas price` — for a dynamic-fee tx
   the floor compares the fee cap, not the tip. T21 is the legacy mirror.
 
-### T34 — an above-floor pre-fork tx survives the sweep and seals at its own price (#2532)
+### T34 — S4 parks an above-floor transfer for the sweep to spare (#2532)
 
-- **Steps:**
-  1. (pre) S4 (funded in T01) submits one transfer at nonce 1 priced 700 gwei
-     while nonce 0 is still missing, so it parks in the queue — the only
-     place a tx survives to the fork — admitted under the 12.5 gwei pre-fork
-     floor.
-  2. (post) S4 fills the gap with one transfer at nonce 0 at 625 gwei, and
-     the survivor's receipt is fetched.
-- **Expected:** (pre) the tx sits in pn3's queue, and T17 finds exactly it
-  still queued after the sweep — 700 gwei is above the new floor and the
-  sweep only drops. (post) once the gap is filled the survivor seals at
-  `effectiveGasPrice` 700 gwei — its own price, not the 625 gwei base fee:
-  the sweep never reprices what it keeps. (The runner places t34-post right
-  after T17 so the seal blocks land well before T29's rewind, and T30 syncs
-  to fork+20 so the revival of these two txs is dropped again by re-importing
-  their seal blocks.)
+- **Steps:** S4 submits one transfer at nonce 1 priced 700 gwei while nonce
+  0 is still missing, so it parks in the queue — the only place a tx
+  survives to the fork — admitted under the 12.5 gwei pre-fork floor.
+- **Expected:** the tx sits in pn3's queue, and T17 finds exactly it still
+  queued after the sweep — 700 gwei is above the new floor and the sweep
+  only drops. (T53 seals it post-fork.)
 
 ### T35 — a legacy creation below the tier floor is rejected (#2516)
 
@@ -494,3 +482,52 @@ transactions (they cannot be crafted on a running network).
   setting only `--priority-gas-price 0`.
 - **Expected:** sealed; receipt `type` = 0x2 and `effectiveGasPrice` =
   625000000000 wei (the base fee, pinned by the floor).
+
+### T47 — `eth_gasPrice` reports the post-fork tier price (#2516)
+
+- **Steps:** call `eth_gasPrice` on pn0 after the fork (scheduled after
+  T28, past the T29–T31 saga).
+- **Expected:** `result` = 625,000,000,000 wei (the pre-fork half of this
+  check is T10).
+
+### T48 — `eth_maxPriorityFeePerGas` suggests a tip below the post-fork price (#2516)
+
+- **Steps:** call `eth_maxPriorityFeePerGas` on pn0 post-fork.
+- **Expected:** the suggested tip is below 625,000,000,000 wei (0 on this
+  network; the pre-fork half of this check is T11).
+
+### T49 — the fork-1/fork base fee step is visible (#2516)
+
+- **Steps:** call `eth_getBlockByNumber` for blocks 119 and 120 and for
+  `latest`, reading `baseFeePerGas` from each.
+- **Expected:** block 119 = 12,500,000,000 wei, block 120 = 625,000,000,000
+  wei, `latest` = 625,000,000,000 wei — the tier step across the fork
+  boundary (the pre-fork half of this check is T12).
+
+### T50 — the tier-aware default gas price, post-fork tier (#2516)
+
+- **Steps:** P3 submits one transfer with NO gas price post-fork (the
+  pre-fork half of this check is T13).
+- **Expected:** sealed; `effectiveGasPrice` = 625,000,000,000 wei.
+
+### T51 — `txpool_contentFrom` shows the queue swept (#2532)
+
+- **Steps:** call `txpool_contentFrom(S1)` on pn3 after the fork sweep.
+- **Expected:** `queued` = 0 (the pre-fork half of this check is T14).
+
+### T52 — `eth_estimateGas` post-fork (#2516)
+
+- **Steps:** call `eth_estimateGas` for a plain S2→S1 transfer post-fork
+  (the pre-fork half of this check is T15).
+- **Expected:** 21000 (read-only probe).
+
+### T53 — the parked above-floor tx seals at its own price (#2532)
+
+- **Steps:** S4 fills the nonce gap left by T34 with one transfer at nonce 0
+  at 625 gwei; the survivor's receipt is fetched. The runner places this
+  case right after T17, well before T29's rewind, so t30's sync re-imports
+  the seal block.
+- **Expected:** the survivor seals with `status` = 1 and
+  `effectiveGasPrice` = 700,000,000,000 wei — its own price, not the 625
+  gwei base fee: the sweep never reprices what it keeps. SKIPs when the
+  T34 marker is absent (no pre side on this chain).

@@ -1,13 +1,11 @@
 #!/bin/bash
-# T10 — eth_gasPrice on both sides of the fork (#2516).
-# Usage: t10.sh pre|post
+# T10 — eth_gasPrice reports the pre-fork tier price (12.5 gwei), #2516.
+# (The post-fork half of this check is T47.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T10" "eth_gasPrice across the fork (${1:-?} side)"
+begin_case "T10" "eth_gasPrice reports the tier price (pre-fork tier)"
 
-side=${1:-pre}
-fork_side "$side"
+require_pre_fork "pre side missed the window"
 
 gp=$(hex2dec "$(rpc0 eth_gasPrice | jq -r .)")
-[ "$gp" = "$(tier_for "$side")" ] || \
-    fail_case "$side-fork gasPrice=$gp, expected $(tier_for "$side")"
+[ "$gp" = "$GAS50_WEI" ] || fail_case "gasPrice=$gp, expected $GAS50_WEI"
 pass_case "gasPrice=$gp wei"

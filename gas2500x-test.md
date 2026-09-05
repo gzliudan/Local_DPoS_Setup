@@ -32,21 +32,19 @@ hex and every submission is signed locally with
 cp .env.sample .env                 # sender/node keys
 cd ~/XDPoSChain && make all         # fresh XDC + bootnode binaries; cd back
 
-# start the network (3 masternodes) + the observer
-./start-network.sh && ./run-node.sh 3
-
-# run the whole suite (auto-stops the network when done;
+# the one command that does everything: stops any leftover nodes, wipes the
+# datadirs, starts the whole network (3 masternodes + the observer), runs the
+# cases, then stops the network (data and logs are kept for inspection;
 # transcript lands in results/gas2500x-<timestamp>.log)
 ./gas2500x-run.sh
 
-# run one case (network must be up)
-tests/t2.sh
-
-# stop everything manually
-./stop-network.sh
-
-# fresh state for the next run (stop → wipe datadirs → start)
+# extras (rarely needed — the runner manages the lifecycle itself)
+./gas2500x-run.sh t2                # run selected cases on the ALREADY-RUNNING
+                                    # network (no reset, no start, no stop)
+tests/t2.sh                         # one case directly, network must be up
+./stop-network.sh                   # stop everything manually
 ./stop-network.sh && ./reset.sh && ./start-network.sh && ./run-node.sh 3
+                                    # manual fresh state
 ```
 
 ## Topology

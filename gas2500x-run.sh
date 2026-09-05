@@ -2,14 +2,17 @@
 # gas2500x-run.sh — run all gas2500x test cases in order and summarize.
 #
 # Usage: gas2500x-run.sh [t1 t2 ...]   (default: all cases in execution order)
+# Lifecycle: a run is the complete test job — it stops any leftover nodes,
+# wipes the datadirs, starts the whole network, runs the cases, and stops the
+# network at the end (data and logs are kept for inspection).
 # Results: printed to stdout, every line prefixed with the current date-time —
 # the log opens with "start: cases=N", every case streams its
 # "Tnn: pass/fail/skip number=<head> result=<evidence>" verdict line, and the log closes
 # with "end: pass=X fail=Y skip=Z". The stamped console output is
 # also recorded in results/gas2500x-<timestamp>.log; no results .md file
 # is created.
-# When the run finishes the network is stopped (all nodes) — the suite owns
-# the whole lifecycle; start it again with ./start-network.sh && ./run-node.sh 3.
+# When the run finishes the network is stopped (all nodes) — data and logs
+# are kept for inspection; restart with ./start-network.sh && ./run-node.sh 3.
 set -uo pipefail
 cd "$(dirname "$0")" || exit
 
@@ -42,6 +45,24 @@ for _ in $(seq 1 50); do
     [ -f "$LOG" ] && break
     sleep 0.1
 done
+
+# ---------------------------------------------------------------- lifecycle
+# The suite owns the whole lifecycle so a single run of this script is the
+# complete test job: stop any leftover nodes, wipe the datadirs for a fresh
+# chain, start everything back up, and only then begin the cases. If pn3 is
+# already alive the environment is considered pre-provisioned and kept as-is
+# (that is how the suite was used before; results then start from a used
+# chain and the fork-window pre cases may skip).
+if head3 >/dev/null 2>&1 && [ "$(head3)" != "-1" ]; then
+    echo "lifecycle: pn3 is already running — keeping the existing chain"
+else
+    echo "lifecycle: resetting the network for a fresh chain"
+    ./stop-network.sh >/dev/null 2>&1 || true
+    pkill -f 'XDC --config nodes/pn3' 2>/dev/null || true   # observer has no .pid file
+    ./reset.sh >/dev/null
+    ./start-network.sh >/dev/null
+    ./run-node.sh 3 >/dev/null
+fi
 
 # every case must start on a REAL chain head: wait for pn3's RPC to answer
 # eth_blockNumber (1 s polls — run-node.sh returns before the node binds its

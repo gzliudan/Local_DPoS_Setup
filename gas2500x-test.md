@@ -24,11 +24,26 @@ commits on `dev-upgrade` (baseline `5501a1f1e5`, all three included):
 ## Quick start
 
 ```bash
+cd ~/XDPoSChain
+git use dev-upgrade
+make all                            # once: XDC binaries
+
+cd ~
+git clone https://github.com/gzliudan/Local_DPoS_Setup/
+cd Local_DPoS_Setup/
+git use gas2500x
 cp .env.sample .env                 # once: sender/node keys (S1–S5, P3)
-cd ~/XDPoSChain && make all         # once: XDC binaries
+# Fill the real keys in `.env`
 ./gas2500x-run.sh                   # reset → start network → 53 cases → stop
 ./stop-network.sh                   # only after an interrupted run
 ```
+
+**Fill the real keys in `.env`** — the three masternode keys
+(`PRIVATE_KEY_0/1/2`) are bound to `genesis.json`: their addresses are the
+masternodes baked into the genesis `extraData` (and funded in `alloc`),
+so they must stay exactly as shipped; generating fresh keys here yields
+a node that can never sign. `PRIVATE_KEY_3` (observer pn3) and
+`TXGEN_KEY_1..5` (senders S1–S5) may be any funded-able raw hex keys.
 
 The runner does the whole lifecycle itself — wipes the datadirs, starts the
 network, runs every case, stops the network.

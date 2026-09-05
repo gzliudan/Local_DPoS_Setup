@@ -95,12 +95,13 @@ declare -A EXPECTED=(
     # Source run: results/gas2500x-20260905-122923.log (2026-09-05).
     # Regenerate after timing-changing edits. [t01] measured 1.4s after the
     # async-batch funding rewrite (one block instead of six serial waits).
+    # [t23]/[t50] recalibrated from run 27 (20260905-151141, 53/0/0 green).
     [t01]=2 [t02]=3 [t03]=1 [t04]=65 [t05]=1 [t06]=1 [t07]=21 [t08]=1 [t09]=13
     [t10]=1 [t11]=1 [t12]=1 [t13]=1 [t14]=2 [t15]=1 [t16]=1 [t17]=1 [t18]=2
-    [t19]=2 [t20]=1 [t21]=2 [t22]=2 [t23]=85 [t24]=1 [t25]=3 [t26]=1 [t27]=1
+    [t19]=2 [t20]=1 [t21]=2 [t22]=2 [t23]=93 [t24]=1 [t25]=3 [t26]=1 [t27]=1
     [t28]=2 [t29]=1 [t30]=130 [t31]=1 [t32]=13 [t33]=1 [t34]=130 [t35]=1 [t36]=1
     [t37]=1 [t38]=1 [t39]=1 [t40]=2 [t41]=1 [t42]=1 [t43]=12 [t44]=62 [t45]=68
-    [t46]=3 [t47]=1 [t48]=1 [t49]=2 [t50]=2 [t51]=1 [t52]=2 [t53]=2
+    [t46]=3 [t47]=1 [t48]=1 [t49]=2 [t50]=1 [t51]=1 [t52]=2 [t53]=2
 )
 
 if [ $# -gt 0 ]; then

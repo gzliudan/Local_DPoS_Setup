@@ -359,10 +359,15 @@ transactions (they cannot be crafted on a running network).
 
 - **Steps:** run `tests/t30.sh`, which reconnects the rewound pn3 to pn0 via
   `admin_addPeer`, waits for it to sync across the fork block, then re-reads
-  the gauge, meter and pools.
+  the gauge, meter and pools. Its test line reads `number=30` — the rewound
+  head left by T29, not an ordering violation: an isolated non-sealing
+  observer with no peers cannot advance its head, so reconnecting IS the
+  case's first step and the runner deliberately disarms the head gate once
+  between T29 and T30.
 - **Expected:** the gauge rises back to k, the meter increases a second time
   (same process), pools empty again — the revived txs were swept again by the
-  fork (the above-floor P2 may stay queued).
+  fork (the above-floor P2 may stay queued). The pass line's `number=` is the
+  re-synced head (well past the fork), which is the actual assertion point.
 
 ### T31 — the hold-back survives a restart (#2541)
 

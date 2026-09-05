@@ -1,531 +1,141 @@
 # gas2500x test plan (Local_DPoS_Setup)
 
-Field test for the gas price floor change to the Gas2500x tier (625 gwei), as
-shipped by three XDPoSChain commits on `dev-upgrade`:
+Field test for the Gas2500x tier (625 gwei) shipped by three XDPoSChain
+commits on `dev-upgrade` (baseline `5501a1f1e5`, all three included):
 
-- **`7823fc7f`** (#2516) — `Gas2500xBlock` fork: pool floor, chain default gas
-  price and EIP-1559 base fee move from the Gas50x tier (12.5 gwei) to 625 gwei.
-  The floor becomes a pure function of the chain config — `--gasprice` can no
-  longer move it.
-- **`68695806`** (#2532) — On a floor rise, sweep every non-special
-  transaction priced below the new floor from both pending and queue. Swept
-  transactions do not come back. Meter `txpool/belowfloor`.
-- **`06582401`** (#2541) — Local tracker: same-nonce supersede fix; hold back
-  tracked local txs below the floor (gauge `txpool/local/belowfloor`), revive
-  them when the floor drops (reorg / `debug.setHead`); `ErrUnderMinGasPrice` is
-  not a temporary reject and must not enter the tracker.
+- **`7823fc7f`** (#2516) — `Gas2500xBlock` fork: the pool floor, the chain
+  default gas price and the EIP-1559 base fee move 12.5 gwei → 625 gwei, and
+  `--gasprice` can no longer move the floor.
+- **`68695806`** (#2532) — on a floor rise the pool sweeps every non-special
+  tx below the new floor from pending and queue; swept txs never come back.
+- **`06582401`** (#2541) — the local tracker holds back below-floor local
+  txs and revives them when the floor drops; below-floor rejects never
+  enter the tracker.
 
-Node under test baseline: `XDPoSChain` `dev-upgrade` @ `5501a1f1e5` (contains
-all three commits).
+## Test environment
+
+- OS: Ubuntu 24.04.4 LTS (Linux 7.0.0, x86_64)
+- bash: GNU bash 5.2.21
+- jq: jq 1.7
+- cast: foundry `cast` 1.8.1
+- curl: curl 8.5.0
+- Go: go 1.25.14 (builds the XDC binaries)
 
 ## Quick start
 
-All commands run from `~/Local_DPoS_Setup`. This branch (`gas2500x`) keeps
-`"gas2500xBlock": 120` in `genesis.json` permanently — no file restoration is
-needed before or after a test run. Everything runs with `bash`, `curl`, `jq`
-and foundry's `cast`; all signer keys (S1/S2/S3 and P3) live in `.env` as raw
-hex and every submission is signed locally with
-`cast send --private-key ... --legacy`.
-
 ```bash
-# one-time setup (if not done yet)
-cp .env.sample .env                 # sender/node keys
-cd ~/XDPoSChain && make all         # fresh XDC + bootnode binaries; cd back
-
-# the one command that does everything: stops any leftover nodes, wipes the
-# datadirs, starts the whole network (3 masternodes + the observer), runs the
-# cases, then stops the network (data and logs are kept for inspection;
-# transcript lands in results/gas2500x-<timestamp>.log)
-./gas2500x-run.sh
-
-# stop everything manually (e.g. after an interrupted run)
-./stop-network.sh
+cp .env.sample .env                 # once: sender/node keys (S1–S5, P3)
+cd ~/XDPoSChain && make all         # once: XDC binaries
+./gas2500x-run.sh                   # reset → start network → 53 cases → stop
+./stop-network.sh                   # only after an interrupted run
 ```
+
+The runner does the whole lifecycle itself — wipes the datadirs, starts the
+network, runs every case, stops the network — and writes the stamped
+transcript to `results/gas2500x-<timestamp>.log`. The `gas2500x` branch keeps
+`"gas2500xBlock": 120` in `genesis.json` permanently — nothing to restore.
 
 ## Topology
 
-Three masternodes (pn0–pn2, genesis signers, 2/3 ≥ 0.666 quorum) plus a fourth
-**observer node pn3** that is *not* in the genesis signer list:
-
-- pn0–pn2 keep sealing throughout the whole plan — no quorum risk, no timeout
-  wobble, masternode data untouched by the set-head experiment.
-- Every pool case submits its transactions via **pn3** (RPC 8548), so all
-  tracker/journal/hold-back state lands on pn3, and the floor-drop experiment
-  (T27) rewinds pn3 only. A non-signer cannot finalize anything on
-  its own (1 vote < 1.998), so it just stalls at the rewound head without
-  producing fork garbage.
-- pn0's prefunded signer funds S1/S2/S3 (1 XDC each) and pn3's own account P3
-  (10 XDC) in T01.
-
-Port map (stock `run-node.sh`): pn0 RPC 8545 / metrics 6060, pn1 8546/6061,
-pn2 8547/6062, **pn3 8548/6063**.
+3 masternodes (pn0–pn2, genesis signers, 2/3 quorum) + **observer pn3**
+(non-signer; ports RPC/metrics: pn0 8545/6060, pn1 8546/6061, pn2 8547/6062,
+**pn3 8548/6063**). Masternodes keep sealing the whole run — no quorum risk.
+All pool cases submit via pn3, so tracker/journal state lands there and the
+rewind experiment (T43) touches pn3 only. T01 funds S1–S4 (1 XDC each),
+S5 (2 XDC, creation probes) and P3 (10 XDC).
 
 ## Key numbers
 
-- **Gas50x floor = `InitialBaseFee`:** 12,500,000,000 wei = 12.5 gwei
-- **Gas2500x floor:** 625,000,000,000 wei = 625 gwei
-- **Floor resolution height:** head+1 (with `gas2500xBlock: 120`, the sweep
-  fires when the head crosses 120)
-- **Replacement bump:** 10% (pool policy; unit-test pinned) — a replacement
-  must exceed the old price by strictly more than 10%, so the cases use
-  112% / 110.4% bumps (see T13/T23)
-- **Tracker recheck:** 10 s after start, then every 60 s
-  (`locals.recheckInterval`)
+- Gas50x floor: 12.5 gwei
+- Gas2500x floor: 625 gwei
+- gas2500xBlock: 120
+- Tracker recheck: 10s after start, then every 60 s (`locals.recheckInterval`)
 
 ## Test scripts
 
-Shell layer, `bash` + `curl` + `jq` + `cast` (foundry) only, all under
-`tests/`:
-
-- **`tests/gas2500x-lib.sh`** — shared helpers (RPC via curl+jq, local `cast`
-  signing from the `.env` raw keys, fork-window guards, pool/meter/journal
-  readers) plus the case frame: every case opens with a
-  `Tnn: test number=<head> expected=<n.n>s name=<case>` line and ends in one
-  verdict line `Tnn: pass|fail|skip number=<head> elapsed=<n.n>s result=<evidence>`
-  on stdout. The expected time is embedded in each case script (its last
-  measured wall time, one decimal, from run 27); standalone case runs
-  default to 1.0s.
-- **`tests/t01.sh` … `tests/t52.sh`** — one script per test case, one case ID
-  per script; the runner drives everything (no pre/post arguments anywhere).
-- **`gas2500x-run.sh`** (repo root, next to `start-network.sh`) — the only
-  entry point and the owner of the full lifecycle: stop leftovers → wipe
-  datadirs → start the network → run cases → stop (bootstrap chatter stays
-  on the console, out of the transcript; no per-case arguments). Cases run
-  in schedule order (pre sides before the fork, post sides after), starting
-  each case only once pn3's head has moved strictly past the previous
-  case's verdict-time block (the verdict line's `number=`; the chain seals
-  a block every 2 s, so the wait is usually ~2 s); the whole
-  stamped run is recorded in
-  `results/gas2500x-<timestamp>.log` — the log opens with
-  `start: cases=N` and closes with `end: pass=X fail=Y skip=Z`
-  (no results `.md` is created) — and the network is stopped when the run
-  ends.
+```text
+Local_DPoS_Setup/
+├── gas2500x-run.sh          # the only entry point
+└── tests/
+    ├── gas2500x-lib.sh      # shared helpers
+    ├── t01.sh … t23.sh      # pre-fork
+    ├── t24.sh … t34.sh      # fork sweep
+    ├── t35.sh … t42.sh      # post-fork probes
+    ├── t43.sh … t45.sh      # rewind saga
+    └── t46.sh … t53.sh      # creation matrix
+```
 
 ## Test cases
 
-Cases are ordered by execution time, and **each case verifies exactly one
-result** — one action (or one passive observation) with its expected outcome.
-Observation-only cases (T10, T22, T07 … T17, T19, T25 … T29) share the trigger of
-the action case they observe and add no new submissions; the twice-cases
-(T21 … T14, T34) run on both sides of the fork (pre before it, post after).
-Fork height: **120** (≈240 s after genesis at 2 s blocks). Hard timing rule:
-all pre-fork submissions (T02 … T23) must complete before head ≈ 115 — if the window
-is missed, simply re-run the runner (it resets the chain). Queued (gap)
-transactions survive until the fork regardless.
-
-One benign interference source: every ~30 s each masternode broadcasts an
-XDPoS consensus signing tx (`to` = the `0x…0089` system contract,
-`gasPrice` = 0). As txs from a genesis signer they enter every node's pool
-as executable-special entries for ~2 s until the block carrying them
-imports — a raw pending read can transiently show up to 3. The
-pending-side assertions (T11, T12, T25, T32) therefore count only
-non-signing txs (shape-based filter, immune to the `xdc`/`0x` key prefix
-difference in `txpool_content`).
-
-Out of scope here (covered by unit tests): TRC21/XDCx tier pricing
-(`GetGasPriceForTRC21`, XDCx disabled locally), concurrent TrackAll races,
-Osaka gas-cap discard, `MainnetChainConfig.Gas2500xBlock == nil`, and special
-transactions (they cannot be crafted on a running network).
-### T01 — fund the senders
-
-- **Steps:**
-  1. Fund S1–S4 with 1 XDC each via pn0's signer at the suggested 12.5 gwei
-     (S4 sends T21's above-floor survivor).
-  2. Fund P3 — pn3's own account (address via
-     `XDC account list --datadir nodes/pn3`) — with 10 XDC; P3's key signs
-     T15's default-price transfer.
-- **Expected:** `eth_getBalance` on pn3's RPC (8548) reflects all five new
-  balances; the funding txs are sealed within ~2 blocks.
-
-### T09 — at-floor execution on the pre-fork tier (12.5 gwei)
-
-- **Steps:** S3 submits one executable transfer at **exactly 12.5 gwei** and
-  the receipt is fetched.
-- **Expected:** sealed within ~2 blocks; receipt `effectiveGasPrice` = 12.5
-  gwei, status 1; S3's nonce advances 0 → 1. The pre-fork floor admits a tx at
-  exactly the floor.
-
-### T02 — below-floor rejection on the pre-fork tier (12499999999 wei)
-
-- **Steps:** S3 submits one executable transfer at 12.5 gwei − 1 wei
-  (12499999999).
-- **Expected:** rejected with `under min gas price`; nothing sealed. With T09:
-  the pre-fork floor is exactly 12.5 gwei, inclusive.
-
-### T10 — the below-floor reject is not tracked (#2541)
-
-- **Steps:** compare the journal size (`nodes/pn3/XDC/transactions.rlp`)
-  across T02 and one tracker rotation; read the gauge `txpool/local/belowfloor`.
-- **Expected:** journal size unchanged, gauge stays 0 — a non-temporary reject
-  never enters the tracker or the journal.
-
-### T11 — queue seeding, sender S1 (10 queued)
-
-- **Steps:** S1 submits transfers at nonces 1–10 while S1's pending nonce is
-  0: the missing nonce 0 parks them all in the pool's **queue**, which
-  masternodes cannot seal. The pool rejects nonces beyond pending+10
-  (`LimitThresholdNonceInQueue`), so 10 is the maximum one account can park.
-  (A plain pending burst would not survive: 4.7M block gas fits ~223 txs and
-  pn0–pn2 seal a block every 2 s.)
-- **Expected:** pn3 holds 10 queued (S1's batch) and no pending user txs
-  (signer txs excluded); pn0–pn2 pools stay empty (queued transactions are
-  not announced).
-
-### T12 — queue seeding, sender S2 (8 queued)
-
-- **Steps:** S2 submits transfers at nonces 2–9 the same way — a second
-  queued sender (gap at 0–1; nonce 10 stays free for T13's replacement pair).
-- **Expected:** pn3 queued 10 → 18, no pending user txs; pn0–pn2 pools
-  empty.
-
-### T22 — the queued batch is not sealed
-
-- **Steps:** sample `eth_getBlockTransactionCountByNumber` over ~10
-  consecutive blocks after the seeding.
-- **Expected:** count 0 on every sampled block — the only pooled txs are
-  queued and cannot be sealed; the head advances on empty blocks.
-
-### T13 — same-nonce replacement accepted (pre-fork, #2541)
-
-- **Steps:**
-  1. S2 submits P1 at nonce 10 (12.5 gwei) — queued behind the gap, tracked.
-  2. S2 submits P2 at the same nonce 10 with a 12% bump (14 gwei; the 110%
-     threshold must be exceeded, hence not exactly 10%).
-- **Expected:** P2 accepted; the tracker holds only P2 and the pool's
-  nonce-10 slot holds only P2 (P1 is gone).
-
-### T20 — journal load converges on the replacement (pre-fork, #2541)
-
-- **Steps:** restart pn3 (`./stop-network.sh 3 && ./run-node.sh 3`) and wait
-  for the tracker's first recheck (~10 s timer) to reload the journal.
-- **Expected:** the pool holds S2's nonces 2–9 plus P2 at nonce 10 (9 txs);
-  P1 never wins the nonce back. (Pending-side replacement rules — the 10%
-  bump, special-transaction priority — cannot be held for observation on a
-  live chain and stay unit-test territory.)
-
-### T21 — S4 parks an above-floor transfer for the sweep to spare (#2532)
-
-- **Steps:** S4 submits one transfer at nonce 1 priced 700 gwei while nonce
-  0 is still missing, so it parks in the queue — the only place a tx
-  survives to the fork — admitted under the 12.5 gwei pre-fork floor.
-- **Expected:** the tx sits in pn3's queue, and T24 finds exactly it still
-  queued after the sweep — 700 gwei is above the new floor and the sweep
-  only drops. (T30 seals it post-fork.)
-
-### T03 — `eth_gasPrice` reports the pre-fork tier price (#2516)
-
-- **Steps:** call `eth_gasPrice` on pn0.
-- **Expected:** `result` = 12,500,000,000 wei (the pre-fork tier; the
-  post-fork half of this check is T37).
-
-### T04 — `eth_maxPriorityFeePerGas` suggests a tip below the pre-fork price (#2516)
-
-- **Steps:** call `eth_maxPriorityFeePerGas` on pn0.
-- **Expected:** the suggested tip is below 12,500,000,000 wei (0 on this
-  network; the post-fork half of this check is T38).
-
-### T05 — the latest block's baseFeePerGas is the pre-fork tier price (#2516)
-
-- **Steps:** call `eth_getBlockByNumber latest` on pn0 and read
-  `baseFeePerGas`.
-- **Expected:** 12,500,000,000 wei (the post-fork half T39 additionally
-  asserts the fork-1/fork boundary step).
-
-### T15 — the tier-aware default gas price, pre-fork tier (#2516)
-
-- **Steps:** P3 (pn3's own account) submits one transfer with NO gas price —
-  the node fills in the tier-aware suggested price.
-- **Expected:** sealed; `effectiveGasPrice` = 12,500,000,000 wei (the
-  post-fork half of this check is T42).
-
-### T14 — `txpool_contentFrom` mirrors the pre-fork queue (#2532)
-
-- **Steps:** call `txpool_contentFrom(S1)` on pn3 after T11 seeded the gap
-  queue.
-- **Expected:** `queued` = 10, `pending` = 0 (the post-fork half of this
-  check is T40).
-
-### T06 — `eth_estimateGas` returns the standard transfer cost (#2516)
-
-- **Steps:** call `eth_estimateGas` for a plain S2→S1 transfer.
-- **Expected:** 21000 (read-only probe; the post-fork half of this check is
-  T41).
-
-### T07 — a legacy creation below the tier floor is rejected (#2516)
-
-- **Steps:** S5 (funded in T01) submits one `cast send --create` of a
-  minimal runtime (legacy) at 12499999999 wei — one below the pre-fork
-  floor — via pn3's RPC.
-- **Expected:** rejected at once with `under min gas price`; consumes no
-  nonce and is never tracked.
-
-### T16 — a legacy creation at the tier floor seals (#2516)
-
-- **Steps:** S5 submits one legacy creation at exactly the pre-fork floor
-  (12500000000 wei) at its pending nonce.
-- **Expected:** sealed; `effectiveGasPrice` = 12500000000 wei.
-
-### T17 — a legacy creation above the tier floor seals (#2516)
-
-- **Steps:** S5 submits one legacy creation at floor+1 (12500000001 wei).
-- **Expected:** sealed; `effectiveGasPrice` = 12500000001 wei — above-floor
-  admission passes through at its own price.
-
-### T08 — an EIP-1559 creation below the tier floor is rejected (#2516)
-
-- **Steps:** S5 submits one type-2 creation with only a fee cap at
-  12499999999 wei.
-- **Expected:** rejected at once with `under min gas price` — for a
-  dynamic-fee tx the floor compares the fee cap (T46's rule, creation
-  variant).
-
-### T18 — an EIP-1559 creation at the tier floor seals (#2516)
-
-- **Steps:** S5 submits one type-2 creation with only a fee cap at exactly
-  the pre-fork floor.
-- **Expected:** sealed; receipt `type` = 0x2 and `effectiveGasPrice` =
-  12500000000 wei — the mirror of T53 for creation txs.
-
-### T19 — an EIP-1559 creation with tip 0 seals at the base fee (#2516)
-
-- **Steps:** S5 submits one type-2 creation setting only
-  `--priority-gas-price 0` (fee cap = cast's estimate).
-- **Expected:** sealed; receipt `type` = 0x2 and `effectiveGasPrice` = the
-  base fee (which the floor pins to the pre-fork tier value).
-
-### T23 — sealing continuity across the fork
-
-- **Steps:** watch the heads of pn0–pn2 across the fork block.
-- **Expected:** sealing never stalls; the three masternode heads agree 5+
-  blocks past the fork.
-
-### T24 — the fork sweep empties the queue (#2532, core case)
-
-- **Steps:** `txpool_status` on all four nodes.
-- **Expected:** queued drops 18 → 0 on pn0–pn2 (queued txs were never
-  announced to them). On pn3 exactly one tx survives when T21 seeded its
-  above-floor pre-fork tx — 700 gwei is above the new floor and the sweep
-  only drops; without the T21 seed pn3 is empty too. (The pending-section
-  half of the sweep is pinned by unit tests,
-  `TestSweepUnderpricedOnGasScheduleFork`: a live chain mines every
-  executable transaction within seconds, so no pending tx can be held for
-  observation across the fork.)
-
-### T30 — the parked above-floor tx seals at its own price (#2532)
-
-- **Steps:** S4 fills the nonce gap left by T21 with one transfer at nonce 0
-  at 625 gwei; the survivor's receipt is fetched. The runner places this
-  case right after T24, well before T43's rewind, so t44's sync re-imports
-  the seal block.
-- **Expected:** the survivor seals with `status` = 1 and
-  `effectiveGasPrice` = 700,000,000,000 wei — its own price, not the 625
-  gwei base fee: the sweep never reprices what it keeps. SKIPs when the
-  T21 marker is absent (no pre side on this chain).
-
-### T25 — sweep observables on pn3 (#2532)
-
-- **Steps:** read pn3's `txpool/belowfloor` meter; grep its log.
-- **Expected:** the meter increased to ~19 (the seeded 18 plus T13's P2); the
-  log contains `Dropped pooled transaction ... reason=below-gas-price-floor`.
-
-### T26 — the sweep leaves a hold-back gauge (#2541)
-
-- **Steps:** read the gauge `txpool/local/belowfloor` on all nodes.
-- **Expected:** pn3 = k (the queued batch was local to pn3); pn0–pn2 = 0 —
-  those transactions never reached them.
-
-### T29 — at-floor execution on the new tier (625 gwei)
-
-- **Steps:** S1 submits one executable transfer at **exactly 625 gwei** (the
-  sweep freed S1's executable nonce 0) and the receipt is fetched.
-- **Expected:** sealed within ~2 blocks; receipt `effectiveGasPrice` = 625
-  gwei; S1's nonce advances to 1 — mirror of T09 on the new tier.
-
-### T27 — below-floor rejection on the new tier (624999999999 wei)
-
-- **Steps:** S1 submits one executable transfer at 624999999999.
-- **Expected:** rejected with `under min gas price`. With T29: the post-fork
-  floor is exactly 625 gwei, inclusive — the same boundary T02 probed, now at
-  the new tier.
-
-### T31 — the post-fork reject is not tracked (#2541)
-
-- **Steps:** journal size before/after; gauge read.
-- **Expected:** journal unchanged; gauge still k — the reject did not touch
-  the tracker.
-
-### T32 — same-nonce replacement accepted on the new tier (#2541)
-
-- **Steps:**
-  1. S2 submits P1 at nonce 3 (625 gwei) — S2's pending nonce is 0 after the
-     sweep, so the tx parks in the queue behind missing nonces 0–2, tracked.
-  2. S2 submits P2 at the same nonce 3 with a 110.4% bump (690 gwei).
-- **Expected:** P2 accepted; the nonce-3 slot holds only P2. Same mechanics
-  as T13 at the new price.
-
-### T33 — journal load converges on the new-tier replacement (#2541)
-
-- **Steps:** restart pn3 and let the tracker's first recheck (~10 s) reload
-  the journal into the pool.
-- **Expected:** only P2 at nonce 3 after the load; P1 never returns.
-
-### T28 — a swept transaction cannot re-enter at the old price (#2532/#2541)
-
-- **Steps:** resubmit one swept 12.5 gwei tx unchanged.
-- **Expected:** rejected with `under min gas price` — the old tier price is
-  now below the floor.
-
-### T34 — no tracker revival within the recheck (#2541)
-
-- **Steps:** wait one recheck; re-read pools, gauge and journal size.
-- **Expected:** the gauge stays k and the pools stay stable across the
-  rechecks (no refill, no growth, journal unchanged) — the tracker holds the
-  txs back instead of retrying them into a rejection loop.
-
-### T35 — effectiveGasPrice matches the block's base fee on both tiers (#2516)
-
-- **Steps:** read the `baseFeePerGas` of the last pre-fork block and the
-  first post-fork block directly (blocks 119 and 120 at the current fork
-  height), and check the run transcript for the T09/T29 pass verdicts (their
-  txs paid the tier prices of their own blocks).
-- **Expected:** the pre-fork block carries 12.5 gwei and the post-fork one
-  carries 625 gwei — no cross-tier mixing; both at-floor cases passed.
-
-### T36 — the `--gasprice 1` knob is inert (#2516)
-
-- **Steps:** confirm every node still runs with `--gasprice 1` (stock
-  `run-node.sh`; check the process command line); cross-reference the T02 and
-  T27 rejections.
-- **Expected:** with `--gasprice 1` present the enforced floor was still 12.5
-  gwei, then 625 gwei — the floor is a pure function of the chain config; the
-  removed `miner.gasprice` knob cannot move it.
-
-### T37 — `eth_gasPrice` reports the post-fork tier price (#2516)
-
-- **Steps:** call `eth_gasPrice` on pn0 after the fork (scheduled after
-  T36, past the T43 … T45 saga).
-- **Expected:** `result` = 625,000,000,000 wei (the pre-fork half of this
-  check is T03).
-
-### T38 — `eth_maxPriorityFeePerGas` suggests a tip below the post-fork price (#2516)
-
-- **Steps:** call `eth_maxPriorityFeePerGas` on pn0 post-fork.
-- **Expected:** the suggested tip is below 625,000,000,000 wei (0 on this
-  network; the pre-fork half of this check is T04).
-
-### T39 — the fork-1/fork base fee step is visible (#2516)
-
-- **Steps:** call `eth_getBlockByNumber` for blocks 119 and 120 and for
-  `latest`, reading `baseFeePerGas` from each.
-- **Expected:** block 119 = 12,500,000,000 wei, block 120 = 625,000,000,000
-  wei, `latest` = 625,000,000,000 wei — the tier step across the fork
-  boundary (the pre-fork half of this check is T05).
-
-### T42 — the tier-aware default gas price, post-fork tier (#2516)
-
-- **Steps:** P3 submits one transfer with NO gas price post-fork (the
-  pre-fork half of this check is T15).
-- **Expected:** sealed; `effectiveGasPrice` = 625,000,000,000 wei.
-
-### T40 — `txpool_contentFrom` shows the queue swept (#2532)
-
-- **Steps:** call `txpool_contentFrom(S1)` on pn3 after the fork sweep.
-- **Expected:** `queued` = 0 (the pre-fork half of this check is T14).
-
-### T41 — `eth_estimateGas` post-fork (#2516)
-
-- **Steps:** call `eth_estimateGas` for a plain S2→S1 transfer post-fork
-  (the pre-fork half of this check is T06).
-- **Expected:** 21000 (read-only probe).
-
-### T43 — revival when the floor drops (#2541)
-
-- **Steps:** run `tests/t43.sh`, which stops pn3 and restarts it isolated
-  (`--nodiscover`, `--port 0`, empty static peers; aborts if `admin.peers`
-  ≠ 0) with the `--set-head 30` startup flag, so the chain — and with it the
-  floor — rewinds before the pool is created (`debug.setHead` is a
-  Local-only API and is rejected over HTTP). It then waits for the tracker's
-  first recheck and leaves pn3 isolated for T44.
-- **Expected:** within one recheck the held-back txs are resubmitted — the
-  gauge drops to 0 and the pools refill. **Veto criterion: a below-floor tx
-  must never be sealed nor appear in another node's pool at any point.**
-  (The verdict line's `number=30` is the rewound head — the transcript's
-  block numbers intentionally dip across T43/T44 and recover once T44
-  re-syncs past the fork.)
-
-### T44 — the re-cross sweep fires again (#2532)
-
-- **Steps:** run `tests/t44.sh`, which reconnects the rewound pn3 to pn0 via
-  `admin_addPeer`, waits for it to sync across the fork block, then re-reads
-  the gauge, meter and pools. Its test line reads `number=30` — the rewound
-  head left by T43, not an ordering violation: an isolated non-sealing
-  observer with no peers cannot advance its head, so reconnecting IS the
-  case's first step and the runner deliberately disarms the head gate once
-  between T43 and T44.
-- **Expected:** the gauge rises back to k, the meter increases a second time
-  (same process), pools empty again — the revived txs were swept again by the
-  fork (the above-floor P2 may stay queued). The pass line's `number=` is the
-  re-synced head (well past the fork), which is the actual assertion point.
-
-### T45 — the hold-back survives a restart (#2541)
-
-- **Steps:** plain `./stop-network.sh 3 && ./run-node.sh 3`.
-- **Expected:** the txs stay held back (gauge = k, pool empty) — the journal
-  persists the hold-back state and no resubmit storm happens.
-
-### T53 — EIP-1559 admission at the new floor (fee cap = 625 gwei, #2516)
-
-- **Steps:** S1 submits one type-2 transfer at its executable nonce with
-  `--max-fee-per-gas` 625 gwei and a 1 gwei tip (no `--legacy`); the receipt
-  is fetched.
-- **Expected:** sealed; receipt `type` = 0x2 and `effectiveGasPrice` = 625
-  gwei — the pool floor compares a dynamic-fee tx's fee cap, and the floor
-  price caps what the tx effectively pays. T29 is the legacy mirror of the
-  same boundary.
-
-### T46 — EIP-1559 rejection below the new floor (625 gwei − 1, #2516)
-
-- **Steps:** S1 submits one type-2 transfer with `--max-fee-per-gas`
-  624999999999 at its executable nonce.
-- **Expected:** rejected with `under min gas price` — for a dynamic-fee tx
-  the floor compares the fee cap, not the tip. T27 is the legacy mirror.
-
-### T47 — a legacy creation below the post-fork floor is rejected (#2516)
-
-- **Steps:** T07's tx re-probed on the post-fork tier: S5 submits one
-  legacy creation at 624999999999 wei (post-fork floor 625 gwei − 1),
-  scheduled after T46 and the T43 … T45 saga.
-- **Expected:** rejected at once with `under min gas price`; consumes no
-  nonce and is never tracked.
-
-### T49 — a legacy creation at the post-fork floor seals (#2516)
-
-- **Steps:** T16's tx re-probed post-fork: S5 submits one legacy creation
-  at exactly 625 gwei.
-- **Expected:** sealed; `effectiveGasPrice` = 625000000000 wei.
-
-### T50 — a legacy creation above the post-fork floor seals (#2516)
-
-- **Steps:** T17's tx re-probed post-fork: S5 submits one legacy creation
-  at 625000000001 wei.
-- **Expected:** sealed; `effectiveGasPrice` = 625000000001 wei.
-
-### T48 — an EIP-1559 creation below the post-fork floor is rejected (#2516)
-
-- **Steps:** T08's tx re-probed post-fork: S5 submits one type-2 creation
-  with only a fee cap at 624999999999 wei.
-- **Expected:** rejected at once with `under min gas price`.
-
-### T51 — an EIP-1559 creation at the post-fork floor seals (#2516)
-
-- **Steps:** T18's tx re-probed post-fork: S5 submits one type-2 creation
-  with only a fee cap at exactly 625 gwei.
-- **Expected:** sealed; receipt `type` = 0x2 and `effectiveGasPrice` =
-  625000000000 wei.
-
-### T52 — an EIP-1559 creation with tip 0 seals at the base fee (#2516)
-
-- **Steps:** T19's tx re-probed post-fork: S5 submits one type-2 creation
-  setting only `--priority-gas-price 0`.
-- **Expected:** sealed; receipt `type` = 0x2 and `effectiveGasPrice` =
-  625000000000 wei (the base fee, pinned by the floor).
+53 cases, one verifiable result each. The fork (block 120) splits them into
+mirrored pairs, one case per side (T02/T27 reject, T09/T29 at-floor seal,
+T13/T32 replace, T21 parks / T30 seals the survivor, T15/T42 default price);
+observation-only cases add no submissions (T10, T22, T24–T26, T34, T44,
+T45); the survivor chain T21→T24→T30 and the rewind saga T43→T44→T45 are
+fixed state chains (via `/tmp` markers); the creation matrix t46–t53 cases
+are mutually independent. Missed the pre-fork window? Just re-run the runner
+— it resets the chain.
+
+One benign interference: every ~30 s each masternode broadcasts a consensus
+signing tx (`gasPrice` 0) that transiently enters every pool as
+executable-special for ~2 s. The pending-side assertions (T11, T12, T34,
+T45) therefore count only non-signing txs (shape-based filter).
+
+Out of scope (unit-test covered): TRC21/XDCx tier pricing, concurrent
+TrackAll races, Osaka gas-cap discard, `Gas2500xBlock == nil`, special txs.
+
+| Case | Name |
+| --- | --- |
+| [T01](tests/t01.sh) | fund the senders |
+| [T02](tests/t02.sh) | reject a tx below the pre-fork floor (12499999999 wei) |
+| [T03](tests/t03.sh) | verify eth_gasPrice reports the tier price (pre-fork tier) |
+| [T04](tests/t04.sh) | verify eth_maxPriorityFeePerGas suggests a tip below the tier price (pre-fork tier) |
+| [T05](tests/t05.sh) | verify the block baseFeePerGas carries the tier price (pre-fork tier) |
+| [T06](tests/t06.sh) | verify eth_estimateGas works (pre-fork tier) |
+| [T07](tests/t07.sh) | reject a legacy creation below the tier floor (pre-fork tier) |
+| [T08](tests/t08.sh) | reject a 1559 creation below the tier floor (pre-fork tier) |
+| [T09](tests/t09.sh) | seal a tx at the pre-fork floor (12.5 gwei) |
+| [T10](tests/t10.sh) | verify the below-floor reject is not tracked |
+| [T11](tests/t11.sh) | seed S1's queue (10 queued) |
+| [T12](tests/t12.sh) | seed S2's queue (8 queued) |
+| [T13](tests/t13.sh) | replace a queued tx at the same nonce (pre-fork) |
+| [T14](tests/t14.sh) | verify txpool_contentFrom mirrors the queue (pre-fork tier) |
+| [T15](tests/t15.sh) | seal a tx at the tier default gas price (pre-fork tier) |
+| [T16](tests/t16.sh) | seal a legacy creation at the tier floor (pre-fork tier) |
+| [T17](tests/t17.sh) | seal a legacy creation above the tier floor (pre-fork tier) |
+| [T18](tests/t18.sh) | seal a 1559 creation at the tier floor (pre-fork tier) |
+| [T19](tests/t19.sh) | seal a tip-0 creation at the base fee (pre-fork tier) |
+| [T20](tests/t20.sh) | verify the journal load keeps the replacement (pre-fork) |
+| [T21](tests/t21.sh) | park a 700 gwei tx from S4 for the sweep (pre-fork tier) |
+| [T22](tests/t22.sh) | verify the queued batch is not sealed |
+| [T23](tests/t23.sh) | verify sealing continuity across the fork |
+| [T24](tests/t24.sh) | verify the fork sweep empties the queue |
+| [T25](tests/t25.sh) | verify the sweep meter and drop log on pn3 |
+| [T26](tests/t26.sh) | verify the sweep leaves a hold-back gauge |
+| [T27](tests/t27.sh) | reject a tx below the new floor (624999999999 wei) |
+| [T28](tests/t28.sh) | reject a swept tx re-entering at the old price |
+| [T29](tests/t29.sh) | seal a tx at the new floor (625 gwei) |
+| [T30](tests/t30.sh) | seal the parked 700 gwei tx above the new floor (post-fork tier) |
+| [T31](tests/t31.sh) | verify the post-fork reject is not tracked |
+| [T32](tests/t32.sh) | replace a queued tx at the same nonce (new tier) |
+| [T33](tests/t33.sh) | verify the journal load keeps the new-tier replacement |
+| [T34](tests/t34.sh) | verify no tracker revival within the recheck |
+| [T35](tests/t35.sh) | verify effectiveGasPrice matches the block base fee on both tiers |
+| [T36](tests/t36.sh) | verify the --gasprice 1 knob is inert |
+| [T37](tests/t37.sh) | verify eth_gasPrice reports the tier price (post-fork tier) |
+| [T38](tests/t38.sh) | verify eth_maxPriorityFeePerGas suggests a tip below the tier price (post-fork tier) |
+| [T39](tests/t39.sh) | verify the block baseFeePerGas carries the tier price (post-fork tier) |
+| [T40](tests/t40.sh) | verify txpool_contentFrom mirrors the queue (post-fork tier) |
+| [T41](tests/t41.sh) | verify eth_estimateGas works (post-fork tier) |
+| [T42](tests/t42.sh) | seal a tx at the tier default gas price (post-fork tier) |
+| [T43](tests/t43.sh) | revive the held-back txs when the floor drops |
+| [T44](tests/t44.sh) | verify the re-cross sweep fires again |
+| [T45](tests/t45.sh) | verify the hold-back survives a restart |
+| [T46](tests/t46.sh) | reject a 1559 tx below the new floor (fee cap = 625 gwei - 1) |
+| [T47](tests/t47.sh) | reject a legacy creation below the tier floor (post-fork tier) |
+| [T48](tests/t48.sh) | reject a 1559 creation below the tier floor (post-fork tier) |
+| [T49](tests/t49.sh) | seal a legacy creation at the tier floor (post-fork tier) |
+| [T50](tests/t50.sh) | seal a legacy creation above the tier floor (post-fork tier) |
+| [T51](tests/t51.sh) | seal a 1559 creation at the tier floor (post-fork tier) |
+| [T52](tests/t52.sh) | seal a tip-0 creation at the base fee (post-fork tier) |
+| [T53](tests/t53.sh) | seal a 1559 tx at the new floor (fee cap = 625 gwei) |

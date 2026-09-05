@@ -1,18 +1,17 @@
 #!/bin/bash
-# T19 — the sweep leaves a hold-back gauge (#2541): pn3=k, masternodes 0.
+# T19 — a legacy creation above the tier floor seals on the pre-fork tier (12.5 gwei).
+# (The other half of this tx pair is T50.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T19" "the sweep leaves a hold-back gauge"
+begin_case "T19" "creation above the tier floor seals (legacy, pre-fork tier)"
 
-# the hold-back materializes at the tracker's next recheck (10 s/60 s cadence)
-k=0
-for _ in $(seq 1 15); do
-    k=$(gauge3 txpool_local_belowfloor)
-    [ "$k" -gt 0 ] && break
-    sleep 5
-done
-[ "$k" -gt 0 ] || fail_case "gauge=0 after 75 s, expected the held-back count"
-for port in 6060 6061 6062; do
-    v=$(meter_port "$port" txpool_local_belowfloor)
-    [ "${v:-0}" = "0" ] || fail_case "masternode :$port gauge=$v, expected 0"
-done
-pass_case "pn3 gauge=k($k), masternodes 0"
+require_pre_fork "pre side missed the window"
+
+floor=$GAS50_WEI
+n=$(pending_nonce "$(addr_of TXGEN_KEY_5)")
+
+h=$(create_from TXGEN_KEY_5 legacy "$((floor + 1))" "$CREATION_CODE" "$n" 2>&1) ||
+    fail_case "legacy $((floor + 1)) creation rejected: $h"
+e=$(receipt_field "$h" effectiveGasPrice 60) || fail_case "never sealed"
+[ "$(hex2dec "$e")" = "$((floor + 1))" ] ||
+    fail_case "effective=$(hex2dec "$e")"
+pass_case "sealed at $((floor + 1)) wei"

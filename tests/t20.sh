@@ -1,16 +1,15 @@
 #!/bin/bash
-# T20 — at-floor execution on the new tier: S1 sends at exactly 625 gwei.
+# T20 — an EIP-1559 creation below the tier floor is rejected on the pre-fork tier (12.5 gwei).
+# (The other half of this tx pair is T51.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T20" "at-floor execution on the new tier (625 gwei)"
+begin_case "T20" "creation below the tier floor is rejected (1559, pre-fork tier)"
 
-require_post_fork
+require_pre_fork "pre side missed the window"
 
-S1_TO=$(addr_of TXGEN_KEY_2)
-hash=$(send_from TXGEN_KEY_1 "$S1_TO" 1 "$GAS2500_WEI")
-[ -n "$hash" ] || fail_case "send rejected"
+floor=$GAS50_WEI
+n=$(pending_nonce "$(addr_of TXGEN_KEY_5)")
 
-status=$(hex2dec "$(receipt_field "$hash" status)")
-eff=$(hex2dec "$(receipt_field "$hash" effectiveGasPrice)")
-[ "$status" = "1" ] || fail_case "status=$status"
-[ "$eff" = "$GAS2500_WEI" ] || fail_case "effectiveGasPrice=$eff != $GAS2500_WEI"
-pass_case "sealed at $eff wei"
+expect_create_reject TXGEN_KEY_5 maxfee "$((floor - 1))" "$CREATION_CODE" \
+    "under min gas price" "$n" \
+    || fail_case "1559 fee-cap $((floor - 1)) creation was not rejected"
+pass_case "rejected: under min gas price (fee cap $((floor - 1)) wei)"

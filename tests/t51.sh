@@ -1,14 +1,15 @@
 #!/bin/bash
-# T51 — txpool_contentFrom shows S1's queue empty after the fork sweep
-# (queued=0), #2532. (The pre-fork half of this check is T14.)
+# T51 — an EIP-1559 creation below the tier floor is rejected on the post-fork tier (625 gwei).
+# (The other half of this tx pair is T20.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T51" "txpool_contentFrom mirrors the queue (post-fork tier)"
+begin_case "T51" "creation below the tier floor is rejected (1559, post-fork tier)"
 
-# no guard: the runner schedules this well after the fork
+# no guard: the runner schedules this after the fork, past the t43-t45 saga
 
-S1=$(addr_of TXGEN_KEY_1)
-content=$(content_from "$S1")
-pend=$(printf '%s' "$content" | jq '[.pending[]] | length')
-que=$(printf '%s' "$content" | jq '[.queued[]] | length')
-[ "$que" = "0" ] || fail_case "queued=$que, expected 0 after the sweep"
-pass_case "contentFrom: pending=$pend queued=$que"
+floor=$GAS2500_WEI
+n=$(pending_nonce "$(addr_of TXGEN_KEY_5)")
+
+expect_create_reject TXGEN_KEY_5 maxfee "$((floor - 1))" "$CREATION_CODE" \
+    "under min gas price" "$n" \
+    || fail_case "1559 fee-cap $((floor - 1)) creation was not rejected"
+pass_case "rejected: under min gas price (fee cap $((floor - 1)) wei)"

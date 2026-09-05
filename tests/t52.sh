@@ -1,14 +1,18 @@
 #!/bin/bash
-# T52 — eth_estimateGas returns the standard 21000 post-fork (read-only
-# probe), #2516. (The pre-fork half of this check is T15.)
+# T52 — an EIP-1559 creation at the tier floor seals on the post-fork tier (625 gwei).
+# (The other half of this tx pair is T21.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T52" "eth_estimateGas works (post-fork tier)"
+begin_case "T52" "creation at the tier floor seals (1559, post-fork tier)"
 
-# no guard: the runner schedules this well after the fork
+# no guard: the runner schedules this after the fork, past the t43-t45 saga
 
-S1=$(addr_of TXGEN_KEY_1)
-est=$(rpc3 eth_estimateGas "[{\"from\":\"$(addr_of TXGEN_KEY_2)\",\"to\":\"$S1\",\"value\":\"0x1\"}]")
-[ "$est" = "null" ] && fail_case "estimateGas returned null"
-gas=$(hex2dec "$(printf '%s' "$est" | jq -r .)")
-[ "$gas" = "21000" ] || fail_case "estimate=$gas, expected 21000"
-pass_case "estimateGas=$gas"
+floor=$GAS2500_WEI
+n=$(pending_nonce "$(addr_of TXGEN_KEY_5)")
+
+h=$(create_from TXGEN_KEY_5 maxfee "$floor" "$CREATION_CODE" "$n" 2>&1) ||
+    fail_case "1559 fee-cap $floor creation rejected: $h"
+e=$(receipt_field "$h" effectiveGasPrice 60) || fail_case "never sealed"
+t=$(receipt_field "$h" type 5)
+[ "$(hex2dec "$t")" = "2" ] || fail_case "type=$(hex2dec "${t:-?}"), expected 2"
+[ "$(hex2dec "$e")" = "$floor" ] || fail_case "effective=$(hex2dec "$e")"
+pass_case "sealed at $floor wei (type 2)"

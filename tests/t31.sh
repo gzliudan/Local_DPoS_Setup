@@ -1,28 +1,21 @@
 #!/bin/bash
-# T31 — the hold-back survives a restart (#2541): the journal persists the
-# held-back transactions and no resubmit storm happens.
+# T31 — same-nonce replacement accepted on the new tier (#2541).
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T31" "the hold-back survives a restart"
+begin_case "T31" "same-nonce replacement accepted on the new tier"
 
-k0=0
-for _ in $(seq 1 8); do
-    k0=$(gauge3 txpool_local_belowfloor)
-    [ "$k0" -gt 0 ] && break
-    sleep 5
-done
-[ "$k0" -gt 0 ] || fail_case "gauge=0 before restart, nothing to persist"
+S2=$(addr_of TXGEN_KEY_2)
+S2_TO=$(addr_of TXGEN_KEY_1)
 
-restart_pn3 || fail_case "pn3 restart failed"
-sleep 65   # one recheck: a broken implementation would resubmit here
+# after the sweep S2's pending nonce is 0; nonce 3 parks P1 in the queue.
+h1=$(send_from TXGEN_KEY_2 "$S2_TO" 1 "$GAS2500_WEI" 3)
+[ -n "$h1" ] || fail_case "P1 rejected"
+# 110.4% bump: the 110% threshold must be EXCEEDED (old gate: strictly higher)
+h2=$(send_from TXGEN_KEY_2 "$S2_TO" 1 $((GAS2500_WEI * 552 / 500)) 3)
+[ -n "$h2" ] || fail_case "P2 rejected"
 
-k1=$(gauge3 txpool_local_belowfloor)
-read -r _ que <<<"$(pool3)"
-pend=$(pending_regular)   # signer-exempt — consensus signing txs transit here
-# the journal legitimately reloads ABOVE-floor txs (T24's P2) into the pool
-# at the first recheck; a resubmit STORM would keep growing the queue across
-# rechecks, so compare against the baseline sampled right after the restart
-if [ "$pend" != "0" ] || [ "$que" -gt 1 ]; then
-    fail_case "resubmit storm: $pend/$que"
-fi
-[ "$k1" = "$k0" ] || fail_case "gauge changed across restart: $k0 -> $k1"
-pass_case "gauge=k($k0) after restart, pool stable at $pend/$que (no below-floor revival)"
+hashes=$(pool_hashes_from "$S2")
+p1in=$(printf '%s' "$hashes" | grep -ci "$h1")
+[ "$p1in" = "0" ] || fail_case "P1 still in pool"
+p2in=$(printf '%s' "$hashes" | grep -ci "$h2")
+[ "$p2in" = "1" ] || fail_case "P2 not in pool"
+pass_case "P2 replaced P1 at nonce 3 (625g tier)"

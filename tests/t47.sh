@@ -1,11 +1,17 @@
 #!/bin/bash
-# T47 — eth_gasPrice reports the post-fork tier price (625 gwei), #2516.
-# (The pre-fork half of this check is T10.)
+# T47 — EIP-1559 rejection below the new floor (#2516): a type-2 tx whose fee
+# cap is 1 wei under 625 gwei hits the same admission floor as a legacy tx
+# (T29 is the legacy mirror) and is rejected with "under min gas price".
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T47" "eth_gasPrice reports the tier price (post-fork tier)"
+begin_case "T47" "EIP-1559 below-floor rejection (fee cap = 625 gwei - 1)"
 
-# no guard: the runner schedules this well after the fork
+require_post_fork
 
-gp=$(hex2dec "$(rpc0 eth_gasPrice | jq -r .)")
-[ "$gp" = "$GAS2500_WEI" ] || fail_case "gasPrice=$gp, expected $GAS2500_WEI"
-pass_case "gasPrice=$gp wei"
+S1_ADDR=$(addr_of TXGEN_KEY_1)
+S1_TO=$(addr_of TXGEN_KEY_2)
+nonce=$(pending_nonce "$S1_ADDR")
+# cast 1.8: on a non-legacy send --gas-price IS the max fee per gas
+expect_reject TXGEN_KEY_1 "$S1_TO" 1 "$((GAS2500_WEI - 1))" \
+    "under min gas price" "$nonce" --priority-gas-price 1000000000wei \
+    || fail_case "type-2 tx with fee cap $((GAS2500_WEI - 1)) was admitted"
+pass_case "rejected: under min gas price (fee cap $((GAS2500_WEI - 1)) wei)"

@@ -1,11 +1,15 @@
 #!/bin/bash
-# T48 — eth_maxPriorityFeePerGas suggests a tip below the post-fork tier
-# price (625 gwei), #2516. (The pre-fork half of this check is T11.)
+# T48 — a legacy creation below the tier floor is rejected on the post-fork tier (625 gwei).
+# (The other half of this tx pair is T17.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T48" "eth_maxPriorityFeePerGas suggests a tip below the tier price (post-fork tier)"
+begin_case "T48" "creation below the tier floor is rejected (legacy, post-fork tier)"
 
-# no guard: the runner schedules this well after the fork
+# no guard: the runner schedules this after the fork, past the t43-t45 saga
 
-tip=$(hex2dec "$(rpc0 eth_maxPriorityFeePerGas | jq -r .)") || fail_case "RPC error"
-[ "$tip" -lt "$GAS2500_WEI" ] || fail_case "tip=$tip not below tier price $GAS2500_WEI"
-pass_case "tip suggestion=$tip wei (< $GAS2500_WEI)"
+floor=$GAS2500_WEI
+n=$(pending_nonce "$(addr_of TXGEN_KEY_5)")
+
+expect_create_reject TXGEN_KEY_5 legacy "$((floor - 1))" "$CREATION_CODE" \
+    "under min gas price" "$n" \
+    || fail_case "legacy $((floor - 1)) creation was not rejected"
+pass_case "rejected: under min gas price (legacy $((floor - 1)) wei)"

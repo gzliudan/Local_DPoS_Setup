@@ -1,15 +1,11 @@
 #!/bin/bash
-# T38 — an EIP-1559 creation below the tier floor is rejected on the pre-fork tier (12.5 gwei).
-# (The other half of this tx pair is T44.)
+# T38 — eth_maxPriorityFeePerGas suggests a tip below the post-fork tier
+# price (625 gwei), #2516. (The pre-fork half of this check is T12.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T38" "creation below the tier floor is rejected (1559, pre-fork tier)"
+begin_case "T38" "eth_maxPriorityFeePerGas suggests a tip below the tier price (post-fork tier)"
 
-require_pre_fork "pre side missed the window"
+# no guard: the runner schedules this well after the fork
 
-floor=$GAS50_WEI
-n=$(pending_nonce "$(addr_of TXGEN_KEY_5)")
-
-expect_create_reject TXGEN_KEY_5 maxfee "$((floor - 1))" "$CREATION_CODE" \
-    "under min gas price" "$n" \
-    || fail_case "1559 fee-cap $((floor - 1)) creation was not rejected"
-pass_case "rejected: under min gas price (fee cap $((floor - 1)) wei)"
+tip=$(hex2dec "$(rpc0 eth_maxPriorityFeePerGas | jq -r .)") || fail_case "RPC error"
+[ "$tip" -lt "$GAS2500_WEI" ] || fail_case "tip=$tip not below tier price $GAS2500_WEI"
+pass_case "tip suggestion=$tip wei (< $GAS2500_WEI)"

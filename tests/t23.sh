@@ -1,21 +1,14 @@
 #!/bin/bash
-# T23 — same-nonce replacement accepted on the new tier (#2541).
+# T23 — sealing continuity across the fork: heads advance in lockstep.
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T23" "same-nonce replacement accepted on the new tier"
+begin_case "T23" "sealing continuity across the fork"
 
-S2=$(addr_of TXGEN_KEY_2)
-S2_TO=$(addr_of TXGEN_KEY_1)
+wait_head $((FORK_BLOCK + 5)) 240 || fail_case "pn3 head never passed $((FORK_BLOCK + 5))"
 
-# after the sweep S2's pending nonce is 0; nonce 3 parks P1 in the queue.
-h1=$(send_from TXGEN_KEY_2 "$S2_TO" 1 "$GAS2500_WEI" 3)
-[ -n "$h1" ] || fail_case "P1 rejected"
-# 110.4% bump: the 110% threshold must be EXCEEDED (old gate: strictly higher)
-h2=$(send_from TXGEN_KEY_2 "$S2_TO" 1 $((GAS2500_WEI * 552 / 500)) 3)
-[ -n "$h2" ] || fail_case "P2 rejected"
-
-hashes=$(pool_hashes_from "$S2")
-p1in=$(printf '%s' "$hashes" | grep -ci "$h1")
-[ "$p1in" = "0" ] || fail_case "P1 still in pool"
-p2in=$(printf '%s' "$hashes" | grep -ci "$h2")
-[ "$p2in" = "1" ] || fail_case "P2 not in pool"
-pass_case "P2 replaced P1 at nonce 3 (625g tier)"
+h0b=$(head0)
+# masternode head sampled now must agree with pn3 within 1 block
+h3b=$(head3)
+diff=$((h0b > h3b ? h0b - h3b : h3b - h0b))
+[ "$diff" -le 1 ] || fail_case "heads diverge: pn0=$h0b pn3=$h3b"
+[ "$h0b" -ge $((FORK_BLOCK + 5)) ] || fail_case "masternodes stalled at $h0b"
+pass_case "all heads past $((FORK_BLOCK + 5)), pn0=$h0b pn3=$h3b"

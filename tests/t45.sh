@@ -1,18 +1,28 @@
 #!/bin/bash
-# T45 — an EIP-1559 creation at the tier floor seals on the post-fork tier (625 gwei).
-# (The other half of this tx pair is T39.)
+# T45 — the hold-back survives a restart (#2541): the journal persists the
+# held-back transactions and no resubmit storm happens.
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T45" "creation at the tier floor seals (1559, post-fork tier)"
+begin_case "T45" "the hold-back survives a restart"
 
-# no guard: the runner schedules this after the fork, past the t29-t31 saga
+k0=0
+for _ in $(seq 1 8); do
+    k0=$(gauge3 txpool_local_belowfloor)
+    [ "$k0" -gt 0 ] && break
+    sleep 5
+done
+[ "$k0" -gt 0 ] || fail_case "gauge=0 before restart, nothing to persist"
 
-floor=$GAS2500_WEI
-n=$(pending_nonce "$(addr_of TXGEN_KEY_5)")
+restart_pn3 || fail_case "pn3 restart failed"
+sleep 65   # one recheck: a broken implementation would resubmit here
 
-h=$(create_from TXGEN_KEY_5 maxfee "$floor" "$CREATION_CODE" "$n" 2>&1) ||
-    fail_case "1559 fee-cap $floor creation rejected: $h"
-e=$(receipt_field "$h" effectiveGasPrice 60) || fail_case "never sealed"
-t=$(receipt_field "$h" type 5)
-[ "$(hex2dec "$t")" = "2" ] || fail_case "type=$(hex2dec "${t:-?}"), expected 2"
-[ "$(hex2dec "$e")" = "$floor" ] || fail_case "effective=$(hex2dec "$e")"
-pass_case "sealed at $floor wei (type 2)"
+k1=$(gauge3 txpool_local_belowfloor)
+read -r _ que <<<"$(pool3)"
+pend=$(pending_regular)   # signer-exempt — consensus signing txs transit here
+# the journal legitimately reloads ABOVE-floor txs (T32's P2) into the pool
+# at the first recheck; a resubmit STORM would keep growing the queue across
+# rechecks, so compare against the baseline sampled right after the restart
+if [ "$pend" != "0" ] || [ "$que" -gt 1 ]; then
+    fail_case "resubmit storm: $pend/$que"
+fi
+[ "$k1" = "$k0" ] || fail_case "gauge changed across restart: $k0 -> $k1"
+pass_case "gauge=k($k0) after restart, pool stable at $pend/$que (no below-floor revival)"

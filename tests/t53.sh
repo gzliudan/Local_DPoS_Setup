@@ -1,26 +1,19 @@
 #!/bin/bash
-# T53 — filling S4's nonce gap at the new floor promotes the parked 700 gwei
-# survivor and it seals at its OWN price — the sweep only drops, it never
-# reprices. The runner places this case right after T17 and well before
-# t29's rewind so the seal block is re-imported by t30's sync. #2532
-# (The pre-fork half of this pair is T34.)
+# T53 — an EIP-1559 creation with tip 0 seals at the base fee on the post-fork tier (625 gwei).
+# (The other half of this tx pair is T22.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T53" "an above-floor pre-fork tx survives the sweep (post-fork tier)"
+begin_case "T53" "creation with tip 0 seals at the base fee (post-fork tier)"
 
-S4_ADDR=$(addr_of TXGEN_KEY_4)
-S4_TO=$(addr_of TXGEN_KEY_1)
-MARKER=/tmp/g2500-t34-hashes
-SURVIVOR_WEI=700000000000    # 700 gwei — strictly above the 625 gwei floor
+# no guard: the runner schedules this after the fork, past the t43-t45 saga
 
-# the pre side (T34) must have seeded the survivor on this chain
-[ -f "$MARKER" ] || skip_case "no T34 pre side on this chain (no $MARKER)"
-hash=$(tail -n 1 "$MARKER")
-gap=$(send_from TXGEN_KEY_4 "$S4_TO" 1 "$GAS2500_WEI" "$(pending_nonce "$S4_ADDR")")
-[ -n "$gap" ] || fail_case "gap fill rejected"
+floor=$GAS2500_WEI
+n=$(pending_nonce "$(addr_of TXGEN_KEY_5)")
 
-status=$(hex2dec "$(receipt_field "$hash" status 60)")
-eff=$(hex2dec "$(receipt_field "$hash" effectiveGasPrice 5)")
-blocknum=$(hex2dec "$(receipt_field "$hash" blockNumber 5)")
-[ "$status" = "1" ] || fail_case "survivor not sealed (status=$status)"
-[ "$eff" = "$SURVIVOR_WEI" ] || fail_case "effectiveGasPrice=$eff != $SURVIVOR_WEI"
-pass_case "survivor sealed in block $blocknum at $eff wei"
+h=$(create_from TXGEN_KEY_5 tip 0 "$CREATION_CODE" "$n" 2>&1) ||
+    fail_case "tip-0 creation rejected: $h"
+e=$(receipt_field "$h" effectiveGasPrice 60) || fail_case "never sealed"
+t=$(receipt_field "$h" type 5)
+[ "$(hex2dec "$t")" = "2" ] || fail_case "type=$(hex2dec "${t:-?}"), expected 2"
+[ "$(hex2dec "$e")" = "$floor" ] ||
+    fail_case "effective=$(hex2dec "$e"), expected the base fee ($floor)"
+pass_case "sealed at $(hex2dec "$e") wei (tip 0, type 2)"

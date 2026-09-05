@@ -1,12 +1,11 @@
 #!/bin/bash
-# T12 — the latest block's baseFeePerGas equals the pre-fork tier price
-# (12.5 gwei), #2516. (The post-fork half with the boundary-block step is
-# T49.)
+# T12 — eth_maxPriorityFeePerGas suggests a tip below the pre-fork tier
+# price (12.5 gwei), #2516. (The post-fork half of this check is T38.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T12" "block baseFeePerGas carries the tier price (pre-fork tier)"
+begin_case "T12" "eth_maxPriorityFeePerGas suggests a tip below the tier price (pre-fork tier)"
 
 require_pre_fork "pre side missed the window"
 
-bf=$(base_fee latest)
-[ "$bf" = "$GAS50_WEI" ] || fail_case "latest baseFee=$bf, expected $GAS50_WEI"
-pass_case "baseFeePerGas=$bf wei"
+tip=$(hex2dec "$(rpc0 eth_maxPriorityFeePerGas | jq -r .)") || fail_case "RPC error"
+[ "$tip" -lt "$GAS50_WEI" ] || fail_case "tip=$tip not below tier price $GAS50_WEI"
+pass_case "tip suggestion=$tip wei (< $GAS50_WEI)"

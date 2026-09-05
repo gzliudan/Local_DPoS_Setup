@@ -1,14 +1,18 @@
 #!/bin/bash
-# T15 — eth_estimateGas returns the standard 21000 for a plain transfer
-# (read-only probe), #2516. (The post-fork half of this check is T52.)
+# T15 — txpool_contentFrom mirrors S1's pre-fork queue (10 queued), #2532.
+# (The post-fork half of this check is T41.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T15" "eth_estimateGas works (pre-fork tier)"
+begin_case "T15" "txpool_contentFrom mirrors the queue (pre-fork tier)"
 
 require_pre_fork "pre side missed the window"
 
 S1=$(addr_of TXGEN_KEY_1)
-est=$(rpc3 eth_estimateGas "[{\"from\":\"$(addr_of TXGEN_KEY_2)\",\"to\":\"$S1\",\"value\":\"0x1\"}]")
-[ "$est" = "null" ] && fail_case "estimateGas returned null"
-gas=$(hex2dec "$(printf '%s' "$est" | jq -r .)")
-[ "$gas" = "21000" ] || fail_case "estimate=$gas, expected 21000"
-pass_case "estimateGas=$gas"
+content=$(content_from "$S1")
+# contentFrom(FROM) returns {pending|queued: {nonce: tx}} — a SINGLE-level
+# map (flattenTxs keys by nonce); the old [.queued[][]] double-iterated into
+# each tx object's fields (10 txs x 17 fields = the phantom "170")
+pend=$(printf '%s' "$content" | jq '[.pending[]] | length')
+que=$(printf '%s' "$content" | jq '[.queued[]] | length')
+[ "$que" = "10" ] || fail_case "queued=$que, expected 10"
+[ "$pend" = "0" ] || fail_case "pending=$pend"
+pass_case "contentFrom: pending=$pend queued=$que"

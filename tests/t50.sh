@@ -1,17 +1,17 @@
 #!/bin/bash
-# T50 — the tier-aware default gas price on the post-fork tier (625 gwei):
-# P3's transfer is signed locally with NO gas price, #2516.
-# (The pre-fork half of this check is T13; P3 = pn3's own account,
-# PRIVATE_KEY_3.)
+# T50 — a legacy creation above the tier floor seals on the post-fork tier (625 gwei).
+# (The other half of this tx pair is T19.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T50" "the tier-aware default gas price (post-fork tier)"
+begin_case "T50" "creation above the tier floor seals (legacy, post-fork tier)"
 
-# no guard: the runner schedules this well after the fork
+# no guard: the runner schedules this after the fork, past the t43-t45 saga
 
-P3_TO=$(addr_of TXGEN_KEY_1)
-hash=$(_cast_send "$RPC3" PRIVATE_KEY_3 "$P3_TO" 1 "" "" --async 2>/dev/null)
-case "$hash" in 0x*) ;; *) fail_case "send rejected" ;; esac
+floor=$GAS2500_WEI
+n=$(pending_nonce "$(addr_of TXGEN_KEY_5)")
 
-eff=$(hex2dec "$(receipt_field "$hash" effectiveGasPrice)")
-[ "$eff" = "$GAS2500_WEI" ] || fail_case "effectiveGasPrice=$eff, expected $GAS2500_WEI"
-pass_case "default-price tx sealed at $eff wei"
+h=$(create_from TXGEN_KEY_5 legacy "$((floor + 1))" "$CREATION_CODE" "$n" 2>&1) ||
+    fail_case "legacy $((floor + 1)) creation rejected: $h"
+e=$(receipt_field "$h" effectiveGasPrice 60) || fail_case "never sealed"
+[ "$(hex2dec "$e")" = "$((floor + 1))" ] ||
+    fail_case "effective=$(hex2dec "$e")"
+pass_case "sealed at $((floor + 1)) wei"

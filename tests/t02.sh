@@ -1,5 +1,5 @@
 #!/bin/bash
-# T2 — at-floor execution on the pre-fork tier: S3 sends at exactly 12.5 gwei.
+# T02 — at-floor execution on the pre-fork tier: S3 sends at exactly 12.5 gwei.
 source "$(dirname "$0")/gas2500x-lib.sh"
 begin_case "T02" "at-floor execution on the pre-fork tier (12.5 gwei)"
 

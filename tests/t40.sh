@@ -1,19 +1,17 @@
 #!/bin/bash
-# T40 — an EIP-1559 creation with tip 0 seals at the base fee on the pre-fork tier (12.5 gwei).
-# (The other half of this tx pair is T46.)
+# T40 — the tier-aware default gas price on the post-fork tier (625 gwei):
+# P3's transfer is signed locally with NO gas price, #2516.
+# (The pre-fork half of this check is T14; P3 = pn3's own account,
+# PRIVATE_KEY_3.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T40" "creation with tip 0 seals at the base fee (pre-fork tier)"
+begin_case "T40" "the tier-aware default gas price (post-fork tier)"
 
-require_pre_fork "pre side missed the window"
+# no guard: the runner schedules this well after the fork
 
-floor=$GAS50_WEI
-n=$(pending_nonce "$(addr_of TXGEN_KEY_5)")
+P3_TO=$(addr_of TXGEN_KEY_1)
+hash=$(_cast_send "$RPC3" PRIVATE_KEY_3 "$P3_TO" 1 "" "" --async 2>/dev/null)
+case "$hash" in 0x*) ;; *) fail_case "send rejected" ;; esac
 
-h=$(create_from TXGEN_KEY_5 tip 0 "$CREATION_CODE" "$n" 2>&1) ||
-    fail_case "tip-0 creation rejected: $h"
-e=$(receipt_field "$h" effectiveGasPrice 60) || fail_case "never sealed"
-t=$(receipt_field "$h" type 5)
-[ "$(hex2dec "$t")" = "2" ] || fail_case "type=$(hex2dec "${t:-?}"), expected 2"
-[ "$(hex2dec "$e")" = "$floor" ] ||
-    fail_case "effective=$(hex2dec "$e"), expected the base fee ($floor)"
-pass_case "sealed at $(hex2dec "$e") wei (tip 0, type 2)"
+eff=$(hex2dec "$(receipt_field "$hash" effectiveGasPrice)")
+[ "$eff" = "$GAS2500_WEI" ] || fail_case "effectiveGasPrice=$eff, expected $GAS2500_WEI"
+pass_case "default-price tx sealed at $eff wei"

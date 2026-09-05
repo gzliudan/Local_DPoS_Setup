@@ -1,9 +1,16 @@
 #!/bin/bash
-# T28 — the --gasprice 1 knob is inert (#2516): nodes run with the flag yet
-# the enforced floor followed the schedule (proven by T3/T21 rejections).
+# T28 — at-floor execution on the new tier: S1 sends at exactly 625 gwei.
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T28" "the --gasprice 1 knob is inert"
+begin_case "T28" "at-floor execution on the new tier (625 gwei)"
 
-count=$(pgrep -af "XDC|geth" 2>/dev/null | grep -c -- "--gasprice 1")
-[ "$count" -ge 4 ] || fail_case "expected >= 4 nodes running --gasprice 1, found $count"
-pass_case "$count nodes run --gasprice 1 while the floor moved 12.5g→625g (T3/T21)"
+require_post_fork
+
+S1_TO=$(addr_of TXGEN_KEY_2)
+hash=$(send_from TXGEN_KEY_1 "$S1_TO" 1 "$GAS2500_WEI")
+[ -n "$hash" ] || fail_case "send rejected"
+
+status=$(hex2dec "$(receipt_field "$hash" status)")
+eff=$(hex2dec "$(receipt_field "$hash" effectiveGasPrice)")
+[ "$status" = "1" ] || fail_case "status=$status"
+[ "$eff" = "$GAS2500_WEI" ] || fail_case "effectiveGasPrice=$eff != $GAS2500_WEI"
+pass_case "sealed at $eff wei"

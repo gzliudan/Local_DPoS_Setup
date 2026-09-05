@@ -1,16 +1,16 @@
 #!/bin/bash
-# T49 — the tier step is visible across the fork boundary blocks: fork-1
-# carries the 12.5 gwei base fee, fork carries 625 gwei, #2516.
-# (The pre-fork half of this check is T12.)
+# T49 — a legacy creation at the tier floor seals on the post-fork tier (625 gwei).
+# (The other half of this tx pair is T18.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T49" "block baseFeePerGas carries the tier price (post-fork tier)"
+begin_case "T49" "creation at the tier floor seals (legacy, post-fork tier)"
 
-# no guard: the runner schedules this well after the fork
+# no guard: the runner schedules this after the fork, past the t43-t45 saga
 
-bf=$(base_fee latest)
-[ "$bf" = "$GAS2500_WEI" ] || fail_case "latest baseFee=$bf, expected $GAS2500_WEI"
-bf_pre=$(base_fee "$(printf '0x%x' $((FORK_BLOCK - 1)))")
-bf_fork=$(base_fee "$(printf '0x%x' "$FORK_BLOCK")")
-[ "$bf_pre" = "$GAS50_WEI" ] || fail_case "block $((FORK_BLOCK - 1)) baseFee=$bf_pre"
-[ "$bf_fork" = "$GAS2500_WEI" ] || fail_case "block $FORK_BLOCK baseFee=$bf_fork"
-pass_case "baseFeePerGas=$bf wei (step $((FORK_BLOCK - 1))→$FORK_BLOCK visible)"
+floor=$GAS2500_WEI
+n=$(pending_nonce "$(addr_of TXGEN_KEY_5)")
+
+h=$(create_from TXGEN_KEY_5 legacy "$floor" "$CREATION_CODE" "$n" 2>&1) ||
+    fail_case "legacy $floor creation rejected: $h"
+e=$(receipt_field "$h" effectiveGasPrice 60) || fail_case "never sealed"
+[ "$(hex2dec "$e")" = "$floor" ] || fail_case "effective=$(hex2dec "$e")"
+pass_case "sealed at $floor wei"

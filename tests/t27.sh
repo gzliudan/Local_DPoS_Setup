@@ -1,23 +1,18 @@
 #!/bin/bash
-# T27 — effectiveGasPrice matches the block's base fee on both tiers (#2516).
+# T27 — the sweep leaves a hold-back gauge (#2541): pn3=k, masternodes 0.
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T27" "effectiveGasPrice matches the block base fee on both tiers"
+begin_case "T27" "the sweep leaves a hold-back gauge"
 
-# the per-tx receipts of T02/T20 are not addressable after the fact; the
-# transcript (results/gas2500x-<ts>.log, exported as RUN_LOG by the runner)
-# proves those cases sealed at the tier prices, and the boundary blocks
-# below prove the tier step itself. Require both pass verdicts first.
-transcript=${RUN_LOG:-$(find results -maxdepth 1 -name 'gas2500x-*.log' -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -n 1 | cut -d' ' -f2-)}
-if [ -z "$transcript" ] || [ ! -f "$transcript" ]; then
-    fail_case "no run transcript found (results/gas2500x-*.log)"
-fi
-grep -q 'T02: pass' "$transcript" || \
-    fail_case "run T02 and T20 first (no pass verdicts in $transcript)"
-grep -q 'T20: pass' "$transcript" || \
-    fail_case "run T02 and T20 first (no pass verdicts in $transcript)"
-
-bf89=$(base_fee "$(printf '0x%x' $((FORK_BLOCK - 1)))")
-bf90=$(base_fee "$(printf '0x%x' "$FORK_BLOCK")")
-[ "$bf89" = "$GAS50_WEI" ] || fail_case "pre-fork baseFee=$bf89"
-[ "$bf90" = "$GAS2500_WEI" ] || fail_case "post-fork baseFee=$bf90"
-pass_case "tiers consistent: block $((FORK_BLOCK - 1))=$bf89, block $FORK_BLOCK=$bf90"
+# the hold-back materializes at the tracker's next recheck (10 s/60 s cadence)
+k=0
+for _ in $(seq 1 15); do
+    k=$(gauge3 txpool_local_belowfloor)
+    [ "$k" -gt 0 ] && break
+    sleep 5
+done
+[ "$k" -gt 0 ] || fail_case "gauge=0 after 75 s, expected the held-back count"
+for port in 6060 6061 6062; do
+    v=$(meter_port "$port" txpool_local_belowfloor)
+    [ "${v:-0}" = "0" ] || fail_case "masternode :$port gauge=$v, expected 0"
+done
+pass_case "pn3 gauge=k($k), masternodes 0"

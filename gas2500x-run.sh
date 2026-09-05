@@ -59,22 +59,16 @@ while :; do
     t=$((t + 1))
 done
 
-# Every schedule item is a unique case ID — no pre/post sides. T10-T15 and
-# T35-T40 run pre-fork (require_pre_fork guards), their post-fork twins
-# T47-T52 and T41-T46 run after the fork: T47-T52 after T28 (the pure RPC
-# reads), T41-T46 after T33 (they must not be in the journal at the rewind),
-# and T53 right after T17 (before t29's rewind, so t30's sync re-imports
-# the survivor's seal block).
+# Cases run strictly in file order T01..T53 — the schedule is the identity
+# sequence, so a transcript's block numbers can be read against the doc by
+# ID. Semantic windows (enforced by guards inside the cases, not by this
+# table): T03-T23 must run pre-fork (require_pre_fork); T27 waits for the
+# fork; T41-T46 (creation matrix, post tier) run after the T43-T45 rewind
+# saga so their txs are never in the journal at the rewind; T18 (the sweep
+# survivor's seal) runs right after T17 and before T43's rewind, so T44's
+# sync re-imports the seal block.
 SCHEDULE=(
-    t01 t02 t03 t04 t05 t06 t07 t08 t09 t34
-    t10 t11 t12 t13 t14 t15
-    t35 t36 t37 t38 t39 t40
-    t16 t17 t53 t18 t19
-    t20 t21 t22 t23 t24 t25 t26 t27 t28
-    t47 t48 t49 t50 t51 t52
-    t29 t30 t31
-    t32 t33
-    t41 t42 t43 t44 t45 t46
+    t01 t02 t03 t04 t05 t06 t07 t08 t09 t10 t11 t12 t13 t14 t15 t16 t17 t18 t19 t20 t21 t22 t23 t24 t25 t26 t27 t28 t29 t30 t31 t32 t33 t34 t35 t36 t37 t38 t39 t40 t41 t42 t43 t44 t45 t46 t47 t48 t49 t50 t51 t52 t53
 )
 
 # per-case wall-time expectation (seconds) for the test line's expected=<n>s:
@@ -82,16 +76,7 @@ SCHEDULE=(
 # 0.1s both map to 1). Source run: results/gas2500x-20260905-101010.log.
 # Regenerate after timing-changing edits.
 declare -A EXPECTED=(
-    [t01]=11 [t02]=3 [t03]=1 [t04]=65 [t05]=1 [t06]=1 [t07]=21 [t08]=1 [t09]=13
-    [t34]=1
-    [t10]=1 [t11]=1 [t12]=1 [t13]=2 [t14]=1 [t15]=1
-    [t35]=1 [t36]=1 [t37]=1 [t38]=1 [t39]=1 [t40]=1
-    [t16]=107 [t17]=1 [t53]=3 [t18]=1 [t19]=1
-    [t20]=2 [t21]=1 [t22]=130 [t23]=1 [t24]=13 [t25]=1 [t26]=130 [t27]=1 [t28]=1
-    [t47]=1 [t48]=1 [t49]=1 [t50]=2 [t51]=1 [t52]=1
-    [t29]=12 [t30]=62 [t31]=68
-    [t32]=3 [t33]=1
-    [t41]=1 [t42]=1 [t43]=1 [t44]=1 [t45]=1 [t46]=1
+
 )
 
 if [ $# -gt 0 ]; then
@@ -116,7 +101,7 @@ for item in "${SCHEDULE[@]}"; do
         skipped=$((skipped + 1))
         continue
     fi
-    # T29 disarms the gate once (see below); missing scripts skip above
+    # T43 disarms the gate once (see below); missing scripts skip above
     # without consuming it.
     if [[ "$prev_num" =~ ^[0-9]+$ ]]; then
         t=0
@@ -152,10 +137,10 @@ for item in "${SCHEDULE[@]}"; do
         [ -n "$verdict" ] && break
         sleep 0.2
     done
-    # T29 rewinds the chain (--set-head 30), so its number= can never be
-    # advanced past — disarm the gate once for T30.
+    # T43 rewinds the chain (--set-head 30), so its number= can never be
+    # advanced past — disarm the gate once for T44.
     new_num=$(printf '%s' "$verdict" | grep -o ' number=[0-9]*' | head -n 1 | cut -d= -f2)
-    if [ "$item" = "t29" ]; then
+    if [ "$item" = "t43" ]; then
         prev_num=""
     elif [ -n "$new_num" ]; then
         prev_num=$new_num

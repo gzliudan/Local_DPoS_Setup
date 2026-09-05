@@ -1,22 +1,25 @@
 #!/bin/bash
-# T24 — journal load converges on the new-tier replacement (#2541).
+# T24 — the fork sweep empties the queue (#2532, core case).
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T24" "journal load converges on the new-tier replacement"
+begin_case "T24" "the fork sweep empties the queue"
 
-S2=$(addr_of TXGEN_KEY_2)
+wait_head $((FORK_BLOCK + 1)) 120 || fail_case "fork did not fire"
 
-restart_pn3 || fail_case "pn3 restart failed"
-
-# journal txs re-enter the pool at the tracker's first recheck (10 s timer)
-for _ in $(seq 1 20); do
-    [ "$(pool_txs_from "$S2")" -ge 1 ] && break
-    sleep 5
+for port in 8545 8546 8547; do
+    que=$(hex2dec "$(rpc "http://127.0.0.1:$port" txpool_status | jq -r .result.queued)")
+    [ "$que" = "0" ] || fail_case "node $port still has queued=$que"
 done
 
-count=$(pool_txs_from "$S2")
-[ "$count" = "1" ] || fail_case "pool holds $count txs at S2, expected 1 (P2)"
-content=$(content_from "$S2")
-price=$(printf '%s' "$content" | jq -r '.. | .gasPrice? // empty' | head -n 1)
-[ "$(hex2dec "$price")" = $((GAS2500_WEI * 552 / 500)) ] || \
-    fail_case "surviving price $(hex2dec "$price"), expected P2 (110.4%)"
-pass_case "only P2 (110.4%) survived the load"
+# pn3: the sweep drops only below-floor txs, so T10's above-floor pre-fork
+# survivor (700 gwei, parked queued by T10) is still there — exactly one
+# queued tx when the seed ran, zero otherwise
+que=$(hex2dec "$(rpc "$RPC3" txpool_status | jq -r .result.queued)")
+if [ -f /tmp/g2500-t10-hashes ]; then
+    [ "$que" = "1" ] || fail_case "pn3 queued=$que, expected the 1 T10 survivor"
+    hash=$(tail -n 1 /tmp/g2500-t10-hashes)
+    pool_hashes_from "$(addr_of TXGEN_KEY_4)" | grep -q "$hash" \
+        || fail_case "pn3's queued tx is not the T10 survivor"
+    pass_case "queued=0 on pn0-pn2; pn3 keeps the T10 survivor (700 gwei)"
+fi
+[ "$que" = "0" ] || fail_case "pn3 still has queued=$que"
+pass_case "queued=0 on all four nodes"

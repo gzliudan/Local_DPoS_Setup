@@ -1,16 +1,14 @@
 #!/bin/bash
-# T42 — a legacy creation at the tier floor seals on the post-fork tier (625 gwei).
-# (The other half of this tx pair is T36.)
+# T42 — eth_estimateGas returns the standard 21000 post-fork (read-only
+# probe), #2516. (The pre-fork half of this check is T16.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T42" "creation at the tier floor seals (legacy, post-fork tier)"
+begin_case "T42" "eth_estimateGas works (post-fork tier)"
 
-# no guard: the runner schedules this after the fork, past the t29-t31 saga
+# no guard: the runner schedules this well after the fork
 
-floor=$GAS2500_WEI
-n=$(pending_nonce "$(addr_of TXGEN_KEY_5)")
-
-h=$(create_from TXGEN_KEY_5 legacy "$floor" "$CREATION_CODE" "$n" 2>&1) ||
-    fail_case "legacy $floor creation rejected: $h"
-e=$(receipt_field "$h" effectiveGasPrice 60) || fail_case "never sealed"
-[ "$(hex2dec "$e")" = "$floor" ] || fail_case "effective=$(hex2dec "$e")"
-pass_case "sealed at $floor wei"
+S1=$(addr_of TXGEN_KEY_1)
+est=$(rpc3 eth_estimateGas "[{\"from\":\"$(addr_of TXGEN_KEY_2)\",\"to\":\"$S1\",\"value\":\"0x1\"}]")
+[ "$est" = "null" ] && fail_case "estimateGas returned null"
+gas=$(hex2dec "$(printf '%s' "$est" | jq -r .)")
+[ "$gas" = "21000" ] || fail_case "estimate=$gas, expected 21000"
+pass_case "estimateGas=$gas"

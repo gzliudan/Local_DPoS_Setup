@@ -1,14 +1,14 @@
 #!/bin/bash
-# T16 — sealing continuity across the fork: heads advance in lockstep.
+# T16 — eth_estimateGas returns the standard 21000 for a plain transfer
+# (read-only probe), #2516. (The post-fork half of this check is T42.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T16" "sealing continuity across the fork"
+begin_case "T16" "eth_estimateGas works (pre-fork tier)"
 
-wait_head $((FORK_BLOCK + 5)) 240 || fail_case "pn3 head never passed $((FORK_BLOCK + 5))"
+require_pre_fork "pre side missed the window"
 
-h0b=$(head0)
-# masternode head sampled now must agree with pn3 within 1 block
-h3b=$(head3)
-diff=$((h0b > h3b ? h0b - h3b : h3b - h0b))
-[ "$diff" -le 1 ] || fail_case "heads diverge: pn0=$h0b pn3=$h3b"
-[ "$h0b" -ge $((FORK_BLOCK + 5)) ] || fail_case "masternodes stalled at $h0b"
-pass_case "all heads past $((FORK_BLOCK + 5)), pn0=$h0b pn3=$h3b"
+S1=$(addr_of TXGEN_KEY_1)
+est=$(rpc3 eth_estimateGas "[{\"from\":\"$(addr_of TXGEN_KEY_2)\",\"to\":\"$S1\",\"value\":\"0x1\"}]")
+[ "$est" = "null" ] && fail_case "estimateGas returned null"
+gas=$(hex2dec "$(printf '%s' "$est" | jq -r .)")
+[ "$gas" = "21000" ] || fail_case "estimate=$gas, expected 21000"
+pass_case "estimateGas=$gas"

@@ -1,17 +1,11 @@
 #!/bin/bash
-# T37 — a legacy creation above the tier floor seals on the pre-fork tier (12.5 gwei).
-# (The other half of this tx pair is T43.)
+# T37 — eth_gasPrice reports the post-fork tier price (625 gwei), #2516.
+# (The pre-fork half of this check is T11.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T37" "creation above the tier floor seals (legacy, pre-fork tier)"
+begin_case "T37" "eth_gasPrice reports the tier price (post-fork tier)"
 
-require_pre_fork "pre side missed the window"
+# no guard: the runner schedules this well after the fork
 
-floor=$GAS50_WEI
-n=$(pending_nonce "$(addr_of TXGEN_KEY_5)")
-
-h=$(create_from TXGEN_KEY_5 legacy "$((floor + 1))" "$CREATION_CODE" "$n" 2>&1) ||
-    fail_case "legacy $((floor + 1)) creation rejected: $h"
-e=$(receipt_field "$h" effectiveGasPrice 60) || fail_case "never sealed"
-[ "$(hex2dec "$e")" = "$((floor + 1))" ] ||
-    fail_case "effective=$(hex2dec "$e")"
-pass_case "sealed at $((floor + 1)) wei"
+gp=$(hex2dec "$(rpc0 eth_gasPrice | jq -r .)")
+[ "$gp" = "$GAS2500_WEI" ] || fail_case "gasPrice=$gp, expected $GAS2500_WEI"
+pass_case "gasPrice=$gp wei"

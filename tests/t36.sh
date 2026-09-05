@@ -1,16 +1,9 @@
 #!/bin/bash
-# T36 — a legacy creation at the tier floor seals on the pre-fork tier (12.5 gwei).
-# (The other half of this tx pair is T42.)
+# T36 — the --gasprice 1 knob is inert (#2516): nodes run with the flag yet
+# the enforced floor followed the schedule (proven by T03/T29 rejections).
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T36" "creation at the tier floor seals (legacy, pre-fork tier)"
+begin_case "T36" "the --gasprice 1 knob is inert"
 
-require_pre_fork "pre side missed the window"
-
-floor=$GAS50_WEI
-n=$(pending_nonce "$(addr_of TXGEN_KEY_5)")
-
-h=$(create_from TXGEN_KEY_5 legacy "$floor" "$CREATION_CODE" "$n" 2>&1) ||
-    fail_case "legacy $floor creation rejected: $h"
-e=$(receipt_field "$h" effectiveGasPrice 60) || fail_case "never sealed"
-[ "$(hex2dec "$e")" = "$floor" ] || fail_case "effective=$(hex2dec "$e")"
-pass_case "sealed at $floor wei"
+count=$(pgrep -af "XDC|geth" 2>/dev/null | grep -c -- "--gasprice 1")
+[ "$count" -ge 4 ] || fail_case "expected >= 4 nodes running --gasprice 1, found $count"
+pass_case "$count nodes run --gasprice 1 while the floor moved 12.5g→625g (T03/T29)"

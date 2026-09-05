@@ -1,12 +1,16 @@
 #!/bin/bash
-# T18 — sweep observables on pn3 (#2532): meter and trace log.
+# T18 — a legacy creation at the tier floor seals on the pre-fork tier (12.5 gwei).
+# (The other half of this tx pair is T49.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T18" "sweep observables on pn3"
+begin_case "T18" "creation at the tier floor seals (legacy, pre-fork tier)"
 
-m=$(meter3 txpool_belowfloor)
-[ -n "$m" ] || fail_case "meter txpool/belowfloor missing"
-[ "$m" -ge 18 ] || fail_case "meter=$m, expected >= 18 (T5 10 + T6 8 + T8 P2)"
+require_pre_fork "pre side missed the window"
 
-grep -q "reason=below-gas-price-floor" logs/pn3-*.log 2>/dev/null \
-    || fail_case "no 'Dropped pooled transaction ... reason=below-gas-price-floor' in logs"
-pass_case "meter=$m, drop log found"
+floor=$GAS50_WEI
+n=$(pending_nonce "$(addr_of TXGEN_KEY_5)")
+
+h=$(create_from TXGEN_KEY_5 legacy "$floor" "$CREATION_CODE" "$n" 2>&1) ||
+    fail_case "legacy $floor creation rejected: $h"
+e=$(receipt_field "$h" effectiveGasPrice 60) || fail_case "never sealed"
+[ "$(hex2dec "$e")" = "$floor" ] || fail_case "effective=$(hex2dec "$e")"
+pass_case "sealed at $floor wei"

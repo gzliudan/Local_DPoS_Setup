@@ -1,5 +1,5 @@
 #!/bin/bash
-# T7 — the queued batch is not sealed: blocks stay empty while txs sit queued.
+# T07 — the queued batch is not sealed: blocks stay empty while txs sit queued.
 source "$(dirname "$0")/gas2500x-lib.sh"
 begin_case "T07" "the queued batch is not sealed"
 

@@ -1,18 +1,22 @@
 #!/bin/bash
-# T14 — txpool_contentFrom mirrors S1's pre-fork queue (10 queued), #2532.
-# (The post-fork half of this check is T51.)
+# T14 — the tier-aware default gas price on the pre-fork tier: P3's
+# transfer is signed locally with NO gas price, so the node fills in the
+# tier-aware suggested price (12.5 gwei), #2516.
+# (The post-fork half of this check is T40; P3 = pn3's own account,
+# PRIVATE_KEY_3.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T14" "txpool_contentFrom mirrors the queue (pre-fork tier)"
+begin_case "T14" "the tier-aware default gas price (pre-fork tier)"
 
 require_pre_fork "pre side missed the window"
 
-S1=$(addr_of TXGEN_KEY_1)
-content=$(content_from "$S1")
-# contentFrom(FROM) returns {pending|queued: {nonce: tx}} — a SINGLE-level
-# map (flattenTxs keys by nonce); the old [.queued[][]] double-iterated into
-# each tx object's fields (10 txs x 17 fields = the phantom "170")
-pend=$(printf '%s' "$content" | jq '[.pending[]] | length')
-que=$(printf '%s' "$content" | jq '[.queued[]] | length')
-[ "$que" = "10" ] || fail_case "queued=$que, expected 10"
-[ "$pend" = "0" ] || fail_case "pending=$pend"
-pass_case "contentFrom: pending=$pend queued=$que"
+P3_TO=$(addr_of TXGEN_KEY_1)
+# signed locally with P3's own key; NO --gas-price: cast omits the price
+# and the node fills the tier-aware default. --legacy keeps the price
+# assertion exact (a 1559 tx's effectiveGasPrice would still be the base
+# fee, but legacy is what the plan documents)
+hash=$(_cast_send "$RPC3" PRIVATE_KEY_3 "$P3_TO" 1 "" "" --async 2>/dev/null)
+case "$hash" in 0x*) ;; *) fail_case "send rejected" ;; esac
+
+eff=$(hex2dec "$(receipt_field "$hash" effectiveGasPrice)")
+[ "$eff" = "$GAS50_WEI" ] || fail_case "effectiveGasPrice=$eff, expected $GAS50_WEI"
+pass_case "default-price tx sealed at $eff wei"

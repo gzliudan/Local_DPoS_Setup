@@ -1,11 +1,11 @@
 #!/bin/bash
-# T11 — eth_maxPriorityFeePerGas suggests a tip below the pre-fork tier
-# price (12.5 gwei), #2516. (The post-fork half of this check is T48.)
+# T11 — eth_gasPrice reports the pre-fork tier price (12.5 gwei), #2516.
+# (The post-fork half of this check is T37.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T11" "eth_maxPriorityFeePerGas suggests a tip below the tier price (pre-fork tier)"
+begin_case "T11" "eth_gasPrice reports the tier price (pre-fork tier)"
 
 require_pre_fork "pre side missed the window"
 
-tip=$(hex2dec "$(rpc0 eth_maxPriorityFeePerGas | jq -r .)") || fail_case "RPC error"
-[ "$tip" -lt "$GAS50_WEI" ] || fail_case "tip=$tip not below tier price $GAS50_WEI"
-pass_case "tip suggestion=$tip wei (< $GAS50_WEI)"
+gp=$(hex2dec "$(rpc0 eth_gasPrice | jq -r .)")
+[ "$gp" = "$GAS50_WEI" ] || fail_case "gasPrice=$gp, expected $GAS50_WEI"
+pass_case "gasPrice=$gp wei"

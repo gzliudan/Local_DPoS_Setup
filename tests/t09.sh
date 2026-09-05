@@ -1,5 +1,5 @@
 #!/bin/bash
-# T9 — journal load converges on the replacement (pre-fork, #2541):
+# T09 — journal load converges on the replacement (pre-fork, #2541):
 # after a restart the pool holds only P2 at nonce 10.
 source "$(dirname "$0")/gas2500x-lib.sh"
 begin_case "T09" "journal load converges on the replacement (pre-fork)"
@@ -15,7 +15,7 @@ for _ in $(seq 1 20); do
     sleep 5
 done
 
-# after the load: S2 holds T6's 2..9 (8 txs) plus P2 at nonce 10 — and P1
+# after the load: S2 holds T06's 2..9 (8 txs) plus P2 at nonce 10 — and P1
 # (the superseded tx) must be gone
 count=$(pool_txs_from "$S2")
 [ "$count" = "9" ] || fail_case "pool holds $count txs at S2, expected 9 (2..9 + P2)"

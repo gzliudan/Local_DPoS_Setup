@@ -9,8 +9,8 @@
 #
 # Environment:
 #   .env in the repo root provides PRIVATE_KEY_0 (pn0 prefunded signer),
-#   PRIVATE_KEY_3 (pn3's own key) and TXGEN_KEY_1/2/3 (raw sender keys
-#   S1/S2/S3).
+#   PRIVATE_KEY_3 (pn3's own key) and TXGEN_KEY_1/2/3/4 (raw sender keys
+#   S1/S2/S3/S4).
 # Requirements: bash, curl, jq, cast (foundry).
 #
 # Results: one "T02: pass output=<evidence>" verdict line per case on
@@ -100,6 +100,24 @@ wait_head() {
     done
 }
 
+# pending_regular — pn3's pending count excluding XDPoS CONSENSUS SIGNING
+# txs. Every ~30 s each masternode broadcasts one (to = the 0x…0089 system
+# contract, gasPrice = 0); sent by a genesis signer it enters every node's
+# pool as an executable-special entry (promoteSpecialTx — no "Pooled" trace)
+# and is removed ~2 s later when the block carrying it imports, so a raw
+# pending read can transiently show up to 3. User txs cannot match the
+# filter: gasPrice 0 is rejected at admission (ErrZeroGasPrice), and nothing
+# else in the pool targets the system contract.
+# NB: txpool_content keys are XDC-PREFIXED ("xdc77cb…"), while the tx
+# objects' own from/to fields are 0x-prefixed — never match on the keys.
+pending_regular() {
+    rpc3 txpool_content | jq -r '
+        [((.pending // {}) | to_entries[]) | .value[]
+         | select((((.to // "") | ascii_downcase)
+                   != "0x0000000000000000000000000000000000000089")
+              or ((.gasPrice // "0x0") != "0x0"))] | length'
+}
+
 # wait_rpc3 [timeout-s] — block until pn3's RPC answers eth_blockNumber
 # (head3 prints -1 while the node is down)
 wait_rpc3() {
@@ -120,13 +138,16 @@ addr_of() { # <key-env-name> — derive the address of a raw key from .env
 
 # _cast_send <url> <key-env-name> <to> <value-wei> [gasprice-wei] [nonce]
 #            [extra cast args...]
-# The one place that builds a cast send: locally signed legacy tx. --legacy
-# is REQUIRED: cast silently upgrades to EIP-1559 on London+ chains (fee cap
-# = --gas-price, tip = 1 wei), and a same-nonce replacement then fails the
-# "tip must strictly increase" gate no matter how much the fee cap rises.
-# Legacy txs put the whole bump into gasPrice (= tipCap = feeCap). An empty
-# gas price omits the flag — the node then signs at the tier-aware default
-# price (t13).
+# The one place that builds a cast send: a locally signed tx, legacy by
+# default. --legacy is REQUIRED for the legacy cases: cast silently upgrades
+# to EIP-1559 on London+ chains (fee cap = --gas-price, tip = 1 wei), and a
+# same-nonce replacement then fails the "tip must strictly increase" gate no
+# matter how much the fee cap rises. Legacy txs put the whole bump into
+# gasPrice (= tipCap = feeCap). An empty gas price omits the flag — the node
+# then signs at the tier-aware default price (t13).
+# The EIP-1559 cases (t32/t33) pass --priority-gas-price in the extras; cast
+# then treats the gas-price positional as the max fee per gas, and the two
+# flavors are mutually exclusive, so those skip --legacy instead.
 _cast_send() {
     local url=$1 keyvar=$2 to=$3 value=$4 gp=${5:-} nonce=${6:-}
     shift 6
@@ -135,14 +156,23 @@ _cast_send() {
     local cast_args=(
         send "$to" --value "$value"wei --gas-limit 21000
         --private-key "$(printenv "$keyvar")" --rpc-url "$url"
-        --chain-id "$CHAIN_ID" --json --legacy "$@"
+        --chain-id "$CHAIN_ID" --json
     )
+    local extra dynamic=1
+    for extra in "$@"; do
+        case $extra in
+        --priority-gas-price) dynamic= ;;
+        esac
+    done
+    [ -n "$dynamic" ] && cast_args+=(--legacy)
+    cast_args+=("$@")
     [ -n "$gp" ] && cast_args+=(--gas-price "$gp"wei)
     [ -n "$nonce" ] && cast_args+=(--nonce "$nonce")
     cast "${cast_args[@]}"
 }
 
 # send_from <key-env-name> <to> <value-wei> <gasprice-wei> [nonce]
+#            [extra cast args...]
 # Signs locally with cast and submits via pn3's RPC. Prints the tx hash on
 # success; on RPC rejection prints the error text to stderr and returns 1.
 # The send is async (--async): cast broadcasts and exits immediately instead
@@ -150,10 +180,13 @@ _cast_send() {
 # wait would stall every pool-seeding submission for its full timeout.
 send_from() {
     local keyvar=$1 to=$2 value=$3 gp=$4 nonce=${5:-}
+    # optional tail: extra cast args (the EIP-1559 tip flag of t32)
+    local extras=()
+    if [ "$#" -gt 5 ]; then shift 5; extras=("$@"); fi
     # per-process error file: parallel case runs must not clobber each other
     local err="/tmp/g2500-send-$$" out
     out=$(_cast_send "$RPC3" "$keyvar" "$to" "$value" "$gp" "$nonce" --async \
-        2>"$err")
+        ${extras[@]+"${extras[@]}"} 2>"$err")
     # --async --json prints the bare hash on success, an error JSON on failure
     if printf '%s' "$out" | grep -qE '^0x[0-9a-fA-F]{64}$'; then
         printf '%s\n' "$out"
@@ -165,13 +198,18 @@ send_from() {
 }
 
 # expect_reject <key-env-name> <to> <value-wei> <gasprice-wei> <needle>
+#               [nonce] [extra cast args...]
 # Assert the send is rejected with an error containing <needle>; prints the
 # error otherwise.
 expect_reject() {
-    local keyvar=$1 to=$2 value=$3 gp=$4 needle=$5 out
+    local keyvar=$1 to=$2 value=$3 gp=$4 needle=$5 nonce=${6:-}
+    # optional tail: extra cast args (the EIP-1559 tip flag of t33)
+    local extras=()
+    if [ "$#" -gt 6 ]; then shift 6; extras=("$@"); fi
     # capture BOTH streams: cast --json prints its error JSON on stdout;
     # --async keeps the accepted path from stalling on a receipt wait
-    out=$(_cast_send "$RPC3" "$keyvar" "$to" "$value" "$gp" "" --async 2>&1) || true
+    out=$(_cast_send "$RPC3" "$keyvar" "$to" "$value" "$gp" "$nonce" --async \
+        ${extras[@]+"${extras[@]}"} 2>&1) || true
     printf '%s' "$out" | grep -qi "$needle" && return 0
     printf '%s' "$out" >&2
     return 1
@@ -340,9 +378,10 @@ case_result() { # <id> <pass|fail|skip> <name> <evidence>
 begin_case() { # <id> <name>
     CASE_ID=$1
     CASE_NAME=${2:-$1}
-    # the test line carries the chain head at the moment the case starts
-    # (the case name stays visible in the runner transcript's pass line)
-    printf '%s: test number=%s\n' "$CASE_ID" "$(head3)"
+    # the test line carries the chain head at the moment the case starts, so
+    # transcript rows can be correlated with blocks, plus the case name for
+    # grep-ability (the verdict line only carries evidence)
+    printf '%s: test number=%s name=%s\n' "$CASE_ID" "$(head3)" "$CASE_NAME"
 }
 
 pass_case() { # [evidence]

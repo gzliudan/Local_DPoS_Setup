@@ -17,7 +17,8 @@ k=$(gauge3 txpool_local_belowfloor)
 sleep 65   # one more recheck under observation
 
 k2=$(gauge3 txpool_local_belowfloor)
-read -r pend que <<<"$(pool3)"
+read -r _ que <<<"$(pool3)"
+pend=$(pending_regular)   # signer-exempt — consensus signing txs transit here
 after=$(journal_size)
 [ "$k" -gt 0 ] || fail_case "gauge=0, no hold-back observed"
 [ "$k2" = "$k" ] || fail_case "gauge moved: $k -> $k2"

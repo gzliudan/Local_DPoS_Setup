@@ -5,8 +5,21 @@ begin_case "T17" "the fork sweep empties the queue"
 
 wait_head $((FORK_BLOCK + 1)) 120 || fail_case "fork did not fire"
 
-for port in 8545 8546 8547 8548; do
+for port in 8545 8546 8547; do
     que=$(hex2dec "$(rpc "http://127.0.0.1:$port" txpool_status | jq -r .result.queued)")
     [ "$que" = "0" ] || fail_case "node $port still has queued=$que"
 done
+
+# pn3: the sweep drops only below-floor txs, so T34's above-floor pre-fork
+# survivor (700 gwei, parked queued by t34-pre) is still there — exactly one
+# queued tx when the seed ran, zero otherwise
+que=$(hex2dec "$(rpc "$RPC3" txpool_status | jq -r .result.queued)")
+if [ -f /tmp/g2500-t34-hashes ]; then
+    [ "$que" = "1" ] || fail_case "pn3 queued=$que, expected the 1 T34 survivor"
+    hash=$(tail -n 1 /tmp/g2500-t34-hashes)
+    pool_hashes_from "$(addr_of TXGEN_KEY_4)" | grep -q "$hash" \
+        || fail_case "pn3's queued tx is not the T34 survivor"
+    pass_case "queued=0 on pn0-pn2; pn3 keeps the T34 survivor (700 gwei)"
+fi
+[ "$que" = "0" ] || fail_case "pn3 still has queued=$que"
 pass_case "queued=0 on all four nodes"

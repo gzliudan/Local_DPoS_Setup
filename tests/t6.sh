@@ -17,7 +17,9 @@ for n in $(seq 2 9); do
         || fail_case "submit nonce $n failed"
 done
 
-read -r pend que <<<"$(pool3)"
-[ "$pend" = "0" ] || fail_case "pending=$pend"
+read -r _ que <<<"$(pool3)"
+# signer-exempt pending read — see pending_regular in the lib
+pend=$(pending_regular)
+[ "$pend" = "0" ] || fail_case "pending=$pend, expected 0"
 [ "$que" = "18" ] || fail_case "queued=$que, expected 18"
-pass_case "pending=0 queued=18"
+pass_case "pending=0 (signers excluded) queued=18"

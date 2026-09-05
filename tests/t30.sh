@@ -23,9 +23,13 @@ if ! rpc3 admin_addPeer "[\"$enode\"]" >/dev/null; then
     fail_case "admin_addPeer failed"
 fi
 
-wait_head $((FORK_BLOCK + 5)) 300 || {
+# T34's above-floor pair seals a few blocks past the fork; the rewind's
+# revival resubmits both (their nonces are unspent again at head 30), so the
+# sync must re-import their seal blocks for the pool to drop them before the
+# poll below — hence +20 instead of the old +5.
+wait_head $((FORK_BLOCK + 20)) 300 || {
     restore_pn3
-    fail_case "pn3 never synced past $((FORK_BLOCK + 5))"
+    fail_case "pn3 never synced past $((FORK_BLOCK + 20))"
 }
 
 # the sweep runs inside the pool's head-event handler at the crossing; the

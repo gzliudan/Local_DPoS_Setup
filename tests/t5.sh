@@ -19,7 +19,10 @@ for n in $(seq 1 10); do
         || fail_case "submit nonce $n failed"
 done
 
-read -r pend que <<<"$(pool3)"
+read -r _ que <<<"$(pool3)"
+# pending is read with the genesis signers excluded: their consensus signing
+# txs transit the pool as executable-special entries for ~2 s every 30 s
+pend=$(pending_regular)
 [ "$pend" = "0" ] || fail_case "pending=$pend, expected 0"
 [ "$que" = "10" ] || fail_case "queued=$que, expected 10"
-pass_case "pending=0 queued=10"
+pass_case "pending=0 (signers excluded) queued=10"

@@ -355,7 +355,7 @@ tier_for() {
 }
 
 # ----------------------------------------------------------------- case frame
-CASE_ID="" CASE_NAME=""
+CASE_ID="" CASE_NAME="" CASE_T0=0
 
 # result_block — pn3's head at verdict time (-1 while the node is down);
 # used by the verdict line and the opt-in results-file rows
@@ -367,8 +367,12 @@ case_result() { # <id> <pass|fail|skip> <name> <evidence>
     # verdict line goes to stdout (the runner's transcript aggregates these);
     # the status word is lowercase everywhere — on the verdict line and in
     # the opt-in results-file row. number is the chain head at verdict time
-    # (the test line's number is the head at case start).
-    printf '%s: %s number=%s result=%s\n' "$id" "$status" "$(result_block)" "$evidence"
+    # (the test line's number is the head at case start); elapsed is the
+    # case's own wall time to 0.1 s, measured from begin_case.
+    local elapsed_ms=$(( $(date +%s%3N) - CASE_T0 ))
+    local elapsed="$((elapsed_ms / 1000)).$(( (elapsed_ms % 1000) / 100 ))s"
+    printf '%s: %s number=%s elapsed=%s result=%s\n' \
+        "$id" "$status" "$(result_block)" "$elapsed" "$evidence"
     if [ -n "$RESULTS_FILE" ]; then
         printf '| %s | %s | %s | %s | %s |\n' \
             "$id" "$status" "$(result_block)" "$name" \
@@ -380,9 +384,11 @@ case_result() { # <id> <pass|fail|skip> <name> <evidence>
 begin_case() { # <id> <name>
     CASE_ID=$1
     CASE_NAME=${2:-$1}
-    # the test line carries the chain head at the moment the case starts, so
-    # transcript rows can be correlated with blocks, plus the case name for
-    # grep-ability (the verdict line only carries evidence)
+    # start the elapsed clock first thing; the test line carries the chain
+    # head at the moment the case starts, so transcript rows can be
+    # correlated with blocks, plus the case name for grep-ability (the
+    # verdict line only carries evidence)
+    CASE_T0=$(date +%s%3N)
     printf '%s: test number=%s name=%s\n' "$CASE_ID" "$(head3)" "$CASE_NAME"
 }
 

@@ -119,19 +119,6 @@ skipped=0
 # case's.
 prev_num=""
 for item in "${SCHEDULE[@]}"; do
-    if [[ "$prev_num" =~ ^[0-9]+$ ]]; then
-        t=0
-        while :; do
-            head=$(head3)
-            # -1 = pn3's RPC is down: the gate cannot be satisfied and the
-            # case about to run will fail on its own guards — stop waiting
-            [ "$head" = "-1" ] && break
-            [ "$head" -gt "$prev_num" ] && break
-            [ "$t" -ge 30 ] && break   # the chain stalled — proceed anyway
-            sleep 1
-            t=$((t + 1))
-        done
-    fi
     script=$item
     args=""
     case $item in
@@ -146,6 +133,24 @@ for item in "${SCHEDULE[@]}"; do
         skipped=$((skipped + 1))
         continue
     fi
+    # block-advance gate between cases: each verdict line carries the chain
+    # head at verdict time ("number="), and the next case may start as soon
+    # as pn3's head moves strictly past it — no fixed sleep. T29 disarms it
+    # once (see below). Missing scripts above skip instantly without
+    # consuming the gate.
+    if [[ "$prev_num" =~ ^[0-9]+$ ]]; then
+        t=0
+        while :; do
+            head=$(head3)
+            # -1 = pn3's RPC is down: the gate cannot be satisfied and the
+            # case about to run will fail on its own guards — stop waiting
+            [ "$head" = "-1" ] && break
+            [ "$head" -gt "$prev_num" ] && break
+            [ "$t" -ge 30 ] && break   # the chain stalled — proceed anyway
+            sleep 1
+            t=$((t + 1))
+        done
+    fi
     # stream the case output live through the stamp filter — capturing it in
     # a variable would print every line at case end and stamp identical
     # times on the start and verdict lines. Each case prints its own
@@ -159,11 +164,7 @@ for item in "${SCHEDULE[@]}"; do
     # below only sees lines this case produced (a twice-case must not pick
     # up its other side's verdict)
     mark=$(wc -l <"$LOG" 2>/dev/null || echo 0)
-    # wall time for the case's elapsed= field (ms resolution, rounded to 0.1 s)
-    t0=$(date +%s%3N)
     bash "$f" "$args"
-    elapsed_ms=$(( $(date +%s%3N) - t0 ))
-    elapsed="$((elapsed_ms / 1000)).$(( (elapsed_ms % 1000) / 100 ))s"
     # the verdict travels through the stamp|tee process substitution, which
     # bash does NOT wait for — a single immediate grep can read the log
     # before the verdict line lands (seen as a phantom fail in run 16). Poll
@@ -172,11 +173,7 @@ for item in "${SCHEDULE[@]}"; do
     for _ in $(seq 1 15); do
         verdict=$(tail -n +"$((mark + 1))" "$LOG" 2>/dev/null |
             grep -E " $case_id: (pass|fail|skip)" | tail -n 1)
-        # inject the elapsed field into the verdict line (after number=)
-        if [ -n "$verdict" ]; then
-            verdict=${verdict/ result=/ elapsed=$elapsed result=}
-            break
-        fi
+        [ -n "$verdict" ] && break
         sleep 0.2
     done
     # remember this case's verdict-time head for the next case's gate; a

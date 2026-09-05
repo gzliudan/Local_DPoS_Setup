@@ -81,7 +81,7 @@ Shell layer, `bash` + `curl` + `jq` + `cast` (foundry) only, all under
   signing from the `.env` raw keys, fork-window guards, pool/meter/journal
   readers) plus the case frame: every case opens with a
   `Tnn: test number=<head> name=<case>` line and ends in one verdict line
-  `Tnn: pass|fail|skip number=<head> result=<evidence>` on stdout.
+  `Tnn: pass|fail|skip number=<head> elapsed=<n>s result=<evidence>` on stdout.
 - **`tests/t1.sh` … `tests/t34.sh`** — one script per test case. The runner
   drives everything; the twice-cases (T10–T15, T34) are invoked internally as
   pre/post sides.

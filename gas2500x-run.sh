@@ -35,15 +35,12 @@ echo
 # (genesis init, backfilled fields, peer dialing) stays on the console and
 # out of the transcript. A live pn3 short-circuits this (pre-provisioned
 # network; results then start from a used chain).
-if [ "$(head3)" != "-1" ]; then
-    LIFECYCLE="pn3 already running — kept the existing chain"
-else
+if [ "$(head3)" = "-1" ]; then
     ./stop-network.sh >/dev/null 2>&1 || true
     pkill -f 'XDC --config nodes/pn3' 2>/dev/null || true   # observer has no .pid file
     ./reset.sh >/dev/null
     ./start-network.sh >/dev/null
     ./run-node.sh 3 >/dev/null
-    LIFECYCLE="fresh chain: reset + full network start"
 fi
 
 # from here on everything (stdout+stderr) is duplicated into the log file and
@@ -64,7 +61,6 @@ for _ in $(seq 1 50); do
     [ -f "$LOG" ] && break
     sleep 0.1
 done
-echo "lifecycle: $LIFECYCLE"
 
 # every case must start on a real, MOVING chain. The RPC answering is not
 # enough: a freshly initialized chain sits at head 0 until the first seal,

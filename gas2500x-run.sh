@@ -4,7 +4,8 @@
 # One run is the complete test job: stop every node, wipe the datadirs,
 # start a fresh network, run all cases in order, then stop the network
 # (data and logs are kept; restart with ./start-network.sh && ./run-node.sh 3).
-# Transcript: "start: cases=N", per-case verdict lines
+# Transcript: "start: cases=N", per-case "Tnn: test number=<head>
+# expected=<n>s name=<case>" lines followed by verdict lines
 # "Tnn: pass/fail/skip number=<head> elapsed=<n>s result=<evidence>",
 # and "end: pass=X fail=Y skip=Z" — recorded in results/gas2500x-<ts>.log.
 set -uo pipefail
@@ -122,6 +123,11 @@ for item in "${SCHEDULE[@]}"; do
     # failed — skip exits 0, so rc alone cannot separate pass from skip)
     id_num=${item%%-*}; id_num=${id_num#t}
     case_id=$(printf 'T%02d' "$id_num")
+    # per-case wall-time expectation printed on the test line: ceil of the
+    # last full run's elapsed= value (minimum 1), from tests/gas2500x-expected.txt
+    expected=$(awk -v i="$item" '$1 == i { print $2 }' tests/gas2500x-expected.txt)
+    [ -n "$expected" ] || expected=1
+    export EXPECTED_S="$expected"
     # the verdict search only sees lines this case produced (twice-cases)
     mark=$(wc -l <"$LOG" 2>/dev/null || echo 0)
     bash "$f" "$args"

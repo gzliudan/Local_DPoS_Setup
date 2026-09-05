@@ -389,7 +389,8 @@ begin_case() { # <id> <name>
     # correlated with blocks, plus the case name for grep-ability (the
     # verdict line only carries evidence)
     CASE_T0=$(date +%s%3N)
-    printf '%s: test number=%s name=%s\n' "$CASE_ID" "$(head3)" "$CASE_NAME"
+    printf '%s: test number=%s expected=%ss name=%s\n' \
+        "$CASE_ID" "$(head3)" "${EXPECTED_S:-1}" "$CASE_NAME"
 }
 
 pass_case() { # [evidence]

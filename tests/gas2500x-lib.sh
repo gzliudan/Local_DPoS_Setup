@@ -42,6 +42,8 @@ FORK_BLOCK="${FORK_BLOCK:-120}"
 GAS50_WEI=12500000000                 # 12.5 gwei
 # shellcheck disable=SC2034
 GAS2500_WEI=625000000000              # 625 gwei
+# shellcheck disable=SC2034
+CREATION_CODE=0x60006000f3            # minimal runtime: PUSH1 0 PUSH1 0 RETURN
 RESULTS_FILE="${RESULTS_FILE:-}"
 
 if [ -n "$RESULTS_FILE" ]; then

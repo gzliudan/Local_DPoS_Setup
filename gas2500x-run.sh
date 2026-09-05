@@ -62,17 +62,20 @@ done
 # "<script>-<side>" entries run tests/<script>.sh with the side as its
 # argument. Ordering constraints: t34-pre parks the sweep survivor (t17
 # asserts it), t34-post seals it right after t17 so t30 re-imports the
-# seal blocks before its poll, and t32/t33/t35-post run after the t29-t31
-# saga so their txs are never in the journal at the rewind (t35-pre's
-# four seals are inert — mined before the fork, stale-removed on re-sync).
+# seal blocks before its poll, and t32/t33/t35-post..t40-post run after
+# the t29-t31 saga so their txs are never in the journal at the rewind
+# (t35-pre..t40-pre's seals are inert — mined before the fork, stale-removed
+# on re-sync).
 SCHEDULE=(
     t1 t2 t3 t4 t5 t6 t7 t8 t9 t34-pre
-    t10-pre t11-pre t12-pre t13-pre t14-pre t15-pre t35-pre
+    t10-pre t11-pre t12-pre t13-pre t14-pre t15-pre
+    t35-pre t36-pre t37-pre t38-pre t39-pre t40-pre
     t16 t17 t34-post t18 t19
     t20 t21 t22 t23 t24 t25 t26 t27 t28
     t10-post t11-post t12-post t13-post t14-post t15-post
     t29 t30 t31
-    t32 t33 t35-post
+    t32 t33
+    t35-post t36-post t37-post t38-post t39-post t40-post
 )
 
 # per-case wall-time expectation (seconds) for the test line's expected=<n>s:
@@ -83,12 +86,13 @@ declare -A EXPECTED=(
     [t1]=11 [t2]=3 [t3]=1 [t4]=65 [t5]=1 [t6]=1 [t7]=21 [t8]=1 [t9]=13
     [t34-pre]=1
     [t10-pre]=1 [t11-pre]=1 [t12-pre]=1 [t13-pre]=2 [t14-pre]=1 [t15-pre]=1
-    [t35-pre]=15
+    [t35-pre]=1 [t36-pre]=1 [t37-pre]=1 [t38-pre]=1 [t39-pre]=1 [t40-pre]=1
     [t16]=107 [t17]=1 [t34-post]=3 [t18]=1 [t19]=1
     [t20]=2 [t21]=1 [t22]=130 [t23]=1 [t24]=13 [t25]=1 [t26]=130 [t27]=1 [t28]=1
     [t10-post]=1 [t11-post]=1 [t12-post]=1 [t13-post]=2 [t14-post]=1 [t15-post]=1
     [t29]=12 [t30]=62 [t31]=68
-    [t32]=3 [t33]=1 [t35-post]=15
+    [t32]=3 [t33]=1
+    [t35-post]=1 [t36-post]=1 [t37-post]=1 [t38-post]=1 [t39-post]=1 [t40-post]=1
 )
 
 if [ $# -gt 0 ]; then
@@ -110,7 +114,7 @@ for item in "${SCHEDULE[@]}"; do
     script=$item
     args=""
     case $item in
-    t1[0-5]-* | t34-* | t35-*)
+    t1[0-5]-* | t3[4-9]-* | t40-*)
         script=${item%-*}
         args=${item#*-}
         ;;

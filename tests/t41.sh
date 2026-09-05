@@ -1,12 +1,12 @@
 #!/bin/bash
-# T35 — a legacy creation below the tier floor is rejected on the pre-fork tier (12.5 gwei).
-# (The other half of this tx pair is T41.)
+# T41 — a legacy creation below the tier floor is rejected on the post-fork tier (625 gwei).
+# (The other half of this tx pair is T35.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T35" "creation below the tier floor is rejected (legacy, pre-fork tier)"
+begin_case "T41" "creation below the tier floor is rejected (legacy, post-fork tier)"
 
-require_pre_fork "pre side missed the window"
+# no guard: the runner schedules this after the fork, past the t29-t31 saga
 
-floor=$GAS50_WEI
+floor=$GAS2500_WEI
 n=$(pending_nonce "$(addr_of TXGEN_KEY_5)")
 
 expect_create_reject TXGEN_KEY_5 legacy "$((floor - 1))" "$CREATION_CODE" \

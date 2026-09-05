@@ -1,12 +1,12 @@
 #!/bin/bash
-# T39 — an EIP-1559 creation at the tier floor seals on the pre-fork tier (12.5 gwei).
-# (The other half of this tx pair is T45.)
+# T45 — an EIP-1559 creation at the tier floor seals on the post-fork tier (625 gwei).
+# (The other half of this tx pair is T39.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T39" "creation at the tier floor seals (1559, pre-fork tier)"
+begin_case "T45" "creation at the tier floor seals (1559, post-fork tier)"
 
-require_pre_fork "pre side missed the window"
+# no guard: the runner schedules this after the fork, past the t29-t31 saga
 
-floor=$GAS50_WEI
+floor=$GAS2500_WEI
 n=$(pending_nonce "$(addr_of TXGEN_KEY_5)")
 
 h=$(create_from TXGEN_KEY_5 maxfee "$floor" "$CREATION_CODE" "$n" 2>&1) ||

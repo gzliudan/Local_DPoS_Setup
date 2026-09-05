@@ -1,12 +1,12 @@
 #!/bin/bash
-# T36 — a legacy creation at the tier floor seals on the pre-fork tier (12.5 gwei).
-# (The other half of this tx pair is T42.)
+# T42 — a legacy creation at the tier floor seals on the post-fork tier (625 gwei).
+# (The other half of this tx pair is T36.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T36" "creation at the tier floor seals (legacy, pre-fork tier)"
+begin_case "T42" "creation at the tier floor seals (legacy, post-fork tier)"
 
-require_pre_fork "pre side missed the window"
+# no guard: the runner schedules this after the fork, past the t29-t31 saga
 
-floor=$GAS50_WEI
+floor=$GAS2500_WEI
 n=$(pending_nonce "$(addr_of TXGEN_KEY_5)")
 
 h=$(create_from TXGEN_KEY_5 legacy "$floor" "$CREATION_CODE" "$n" 2>&1) ||

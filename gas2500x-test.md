@@ -85,9 +85,9 @@ Shell layer, `bash` + `curl` + `jq` + `cast` (foundry) only, all under
   on stdout. The expected time is injected by the runner from its per-item
   `EXPECTED` table (ceil of the last full run's elapsed, min 1); standalone
   case runs default to 1s.
-- **`tests/t1.sh` … `tests/t40.sh`** — one script per test case. The runner
-  drives everything; the twice-cases (T10–T15, T34, T35–T40) are invoked
-  internally as pre/post sides.
+- **`tests/t1.sh` … `tests/t46.sh`** — one script per test case, one case ID
+  per script. The runner drives everything; the only remaining twice-cases
+  (T10–T15, T34) are invoked internally as pre/post sides.
 - **`gas2500x-run.sh`** (repo root, next to `start-network.sh`) — the only
   entry point and the owner of the full lifecycle: stop leftovers → wipe
   datadirs → start the network → run cases → stop (bootstrap chatter stays
@@ -110,10 +110,10 @@ Observation-only cases (T04, T07, T17–T19, T22, T26–T28) share the trigger o
 the action case they observe and add no new submissions; the twice-cases
 (T10–T15, T34) run on both sides of the fork (pre before it, post after).
 Fork height: **120** (≈240 s after genesis at 2 s blocks). Hard timing rule:
-all pre-fork submissions (T01–T09, plus the pre sides of T13, T34 and
-T35–T40) must complete before head ≈ 115 — if the window is missed, simply
-re-run the runner (it resets the chain). Queued (gap) transactions survive
-until the fork regardless.
+all pre-fork submissions (T01–T09, plus the pre sides of T13 and T34 and
+the creation cases T35–T40) must complete before head ≈ 115 — if the window
+is missed, simply re-run the runner (it resets the chain). Queued (gap)
+transactions survive until the fork regardless.
 
 One benign interference source: every ~30 s each masternode broadcasts an
 XDPoS consensus signing tx (`to` = the `0x…0089` system contract,
@@ -415,42 +415,82 @@ transactions (they cannot be crafted on a running network).
 
 ### T35 — a legacy creation below the tier floor is rejected (#2516)
 
-- **Steps:** (twice-case `tests/t35.sh pre|post`) S5 (funded in T01) submits
-  one `cast send --create` of a minimal runtime (legacy) at floor−1 via
-  pn3's RPC — 12499999999 wei pre-fork, 624999999999 wei post.
+- **Steps:** S5 (funded in T01) submits one `cast send --create` of a
+  minimal runtime (legacy) at 12499999999 wei — one below the pre-fork
+  floor — via pn3's RPC.
 - **Expected:** rejected at once with `under min gas price`; consumes no
   nonce and is never tracked.
 
 ### T36 — a legacy creation at the tier floor seals (#2516)
 
-- **Steps:** (twice-case) S5 submits one legacy creation at exactly the
-  floor (12.5 gwei pre-fork, 625 gwei post) at its pending nonce.
-- **Expected:** sealed; `effectiveGasPrice` = the floor.
+- **Steps:** S5 submits one legacy creation at exactly the pre-fork floor
+  (12500000000 wei) at its pending nonce.
+- **Expected:** sealed; `effectiveGasPrice` = 12500000000 wei.
 
 ### T37 — a legacy creation above the tier floor seals (#2516)
 
-- **Steps:** (twice-case) S5 submits one legacy creation at floor+1.
-- **Expected:** sealed; `effectiveGasPrice` = floor+1 — above-floor
+- **Steps:** S5 submits one legacy creation at floor+1 (12500000001 wei).
+- **Expected:** sealed; `effectiveGasPrice` = 12500000001 wei — above-floor
   admission passes through at its own price.
 
 ### T38 — an EIP-1559 creation below the tier floor is rejected (#2516)
 
-- **Steps:** (twice-case) S5 submits one type-2 creation with only a fee
-  cap at floor−1.
+- **Steps:** S5 submits one type-2 creation with only a fee cap at
+  12499999999 wei.
 - **Expected:** rejected at once with `under min gas price` — for a
   dynamic-fee tx the floor compares the fee cap (T33's rule, creation
   variant).
 
 ### T39 — an EIP-1559 creation at the tier floor seals (#2516)
 
-- **Steps:** (twice-case) S5 submits one type-2 creation with only a fee
-  cap at exactly the floor.
-- **Expected:** sealed; receipt `type` = 0x2 and `effectiveGasPrice` = the
-  floor — the mirror of T32 for creation txs.
+- **Steps:** S5 submits one type-2 creation with only a fee cap at exactly
+  the pre-fork floor.
+- **Expected:** sealed; receipt `type` = 0x2 and `effectiveGasPrice` =
+  12500000000 wei — the mirror of T32 for creation txs.
 
 ### T40 — an EIP-1559 creation with tip 0 seals at the base fee (#2516)
 
-- **Steps:** (twice-case) S5 submits one type-2 creation setting only
+- **Steps:** S5 submits one type-2 creation setting only
   `--priority-gas-price 0` (fee cap = cast's estimate).
 - **Expected:** sealed; receipt `type` = 0x2 and `effectiveGasPrice` = the
-  base fee (which the floor pins to the tier value).
+  base fee (which the floor pins to the pre-fork tier value).
+
+### T41 — a legacy creation below the post-fork floor is rejected (#2516)
+
+- **Steps:** T35's tx re-probed on the post-fork tier: S5 submits one
+  legacy creation at 624999999999 wei (post-fork floor 625 gwei − 1),
+  scheduled after T33 and the T29–T31 saga.
+- **Expected:** rejected at once with `under min gas price`; consumes no
+  nonce and is never tracked.
+
+### T42 — a legacy creation at the post-fork floor seals (#2516)
+
+- **Steps:** T36's tx re-probed post-fork: S5 submits one legacy creation
+  at exactly 625 gwei.
+- **Expected:** sealed; `effectiveGasPrice` = 625000000000 wei.
+
+### T43 — a legacy creation above the post-fork floor seals (#2516)
+
+- **Steps:** T37's tx re-probed post-fork: S5 submits one legacy creation
+  at 625000000001 wei.
+- **Expected:** sealed; `effectiveGasPrice` = 625000000001 wei.
+
+### T44 — an EIP-1559 creation below the post-fork floor is rejected (#2516)
+
+- **Steps:** T38's tx re-probed post-fork: S5 submits one type-2 creation
+  with only a fee cap at 624999999999 wei.
+- **Expected:** rejected at once with `under min gas price`.
+
+### T45 — an EIP-1559 creation at the post-fork floor seals (#2516)
+
+- **Steps:** T39's tx re-probed post-fork: S5 submits one type-2 creation
+  with only a fee cap at exactly 625 gwei.
+- **Expected:** sealed; receipt `type` = 0x2 and `effectiveGasPrice` =
+  625000000000 wei.
+
+### T46 — an EIP-1559 creation with tip 0 seals at the base fee (#2516)
+
+- **Steps:** T40's tx re-probed post-fork: S5 submits one type-2 creation
+  setting only `--priority-gas-price 0`.
+- **Expected:** sealed; receipt `type` = 0x2 and `effectiveGasPrice` =
+  625000000000 wei (the base fee, pinned by the floor).

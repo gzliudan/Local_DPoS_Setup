@@ -4,7 +4,7 @@
 # Usage: gas2500x-run.sh [t1 t2 ...]   (default: all cases in execution order)
 # Results: printed to stdout, every line prefixed with the current date-time —
 # the log opens with "start: cases=N", every case streams its
-# "Tnn: pass/fail/skip output=<evidence>" verdict line, and the log closes
+# "Tnn: pass/fail/skip number=<head> result=<evidence>" verdict line, and the log closes
 # with "end: pass=X fail=Y skip=Z". The stamped console output is
 # also recorded in results/gas2500x-<timestamp>.log; no results .md file
 # is created.
@@ -102,7 +102,7 @@ for item in "${SCHEDULE[@]}"; do
     # stream the case output live through the stamp filter — capturing it in
     # a variable would print every line at case end and stamp identical
     # times on the start and verdict lines. Each case prints its own
-    # "Tnn: pass/fail/skip output=..." verdict line; the last one matching
+    # "Tnn: pass/fail/skip number=<head> result=..." verdict line; the last one matching
     # this case's id decides the tally (a case that crashes before printing
     # a verdict counts as failed — skip exits 0, so the rc alone cannot
     # separate pass from skip).

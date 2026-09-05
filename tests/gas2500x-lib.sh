@@ -13,8 +13,9 @@
 #   S1/S2/S3/S4).
 # Requirements: bash, curl, jq, cast (foundry).
 #
-# Results: one "T02: pass output=<evidence>" verdict line per case on
-# stdout (the runner stamps and tees these into results/gas2500x-<ts>.log).
+# Results: one "T02: pass number=<head> result=<evidence>" verdict line per
+# case on stdout (the runner stamps and tees these into
+# results/gas2500x-<ts>.log).
 # No results .md file is created unless the caller exports RESULTS_FILE
 # themselves (opt-in for standalone debugging).
 
@@ -357,7 +358,7 @@ tier_for() {
 CASE_ID="" CASE_NAME=""
 
 # result_block — pn3's head at verdict time (-1 while the node is down);
-# only used by the opt-in results-file rows
+# used by the verdict line and the opt-in results-file rows
 result_block() { head3; }
 
 case_result() { # <id> <pass|fail|skip> <name> <evidence>
@@ -365,8 +366,9 @@ case_result() { # <id> <pass|fail|skip> <name> <evidence>
     evidence=$(printf '%s' "$evidence" | tr '\n' ' ')
     # verdict line goes to stdout (the runner's transcript aggregates these);
     # the status word is lowercase everywhere — on the verdict line and in
-    # the opt-in results-file row — and there is no block number on the line
-    printf '%s: %s output=%s\n' "$id" "$status" "$evidence"
+    # the opt-in results-file row. number is the chain head at verdict time
+    # (the test line's number is the head at case start).
+    printf '%s: %s number=%s result=%s\n' "$id" "$status" "$(result_block)" "$evidence"
     if [ -n "$RESULTS_FILE" ]; then
         printf '| %s | %s | %s | %s | %s |\n' \
             "$id" "$status" "$(result_block)" "$name" \

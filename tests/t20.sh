@@ -2,7 +2,7 @@
 # T20 — an EIP-1559 creation below the tier floor is rejected on the pre-fork tier (12.5 gwei).
 # (The other half of this tx pair is T51.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T20" "creation below the tier floor is rejected (1559, pre-fork tier)"
+begin_case "T20" "creation below the tier floor is rejected (1559, pre-fork tier)" 0.0
 
 require_pre_fork "pre side missed the window"
 

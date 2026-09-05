@@ -2,7 +2,7 @@
 # T18 — a legacy creation at the tier floor seals on the pre-fork tier (12.5 gwei).
 # (The other half of this tx pair is T49.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T18" "creation at the tier floor seals (legacy, pre-fork tier)"
+begin_case "T18" "creation at the tier floor seals (legacy, pre-fork tier)" 2.1
 
 require_pre_fork "pre side missed the window"
 

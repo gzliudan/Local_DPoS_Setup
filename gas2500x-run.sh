@@ -5,9 +5,11 @@
 # start a fresh network, run all cases in order, then stop the network
 # (data and logs are kept; restart with ./start-network.sh && ./run-node.sh 3).
 # Transcript: "start: cases=N", per-case "Tnn: test number=<head>
-# expected=<n>s name=<case>" lines followed by verdict lines
-# "Tnn: pass/fail/skip number=<head> elapsed=<n>s result=<evidence>",
+# expected=<n.n>s name=<case>" lines followed by verdict lines
+# "Tnn: pass/fail/skip number=<head> elapsed=<n.n>s result=<evidence>",
 # and "end: pass=X fail=Y skip=Z" — recorded in results/gas2500x-<ts>.log.
+# expected= is embedded in each case script (its last measured wall time);
+# elapsed= is measured by the lib.
 set -uo pipefail
 cd "$(dirname "$0")" || exit
 
@@ -86,24 +88,6 @@ SCHEDULE=(
     t01 t03 t11 t12 t13 t16 t17 t20 t02 t04 t05 t06 t08 t15 t14 t18 t19 t21 t22 t09 t10 t07 t23 t24 t26 t27 t29 t33 t28 t25 t30 t31 t32 t34 t35 t36 t37 t38 t39 t41 t42 t40 t43 t44 t45 t47 t48 t51 t49 t50 t52 t53 t46
 )
 
-# per-case wall-time expectation (seconds) for the test line's expected=<n>s:
-# the ceil of the last full run's verdict elapsed= value, minimum 1 (0.0s and
-# 0.1s both map to 1). Source run: results/gas2500x-20260905-101010.log.
-# Regenerate after timing-changing edits.
-declare -A EXPECTED=(
-    # ceil of run #26's verdict elapsed values (0.0s and 0.1s map to 1).
-    # Source run: results/gas2500x-20260905-122923.log (2026-09-05).
-    # Regenerate after timing-changing edits. [t01] measured 1.4s after the
-    # async-batch funding rewrite (one block instead of six serial waits).
-    # [t23]/[t50] recalibrated from run 27 (20260905-151141, 53/0/0 green).
-    [t01]=2 [t02]=3 [t03]=1 [t04]=65 [t05]=1 [t06]=1 [t07]=21 [t08]=1 [t09]=13
-    [t10]=1 [t11]=1 [t12]=1 [t13]=1 [t14]=2 [t15]=1 [t16]=1 [t17]=1 [t18]=2
-    [t19]=2 [t20]=1 [t21]=2 [t22]=2 [t23]=93 [t24]=1 [t25]=3 [t26]=1 [t27]=1
-    [t28]=2 [t29]=1 [t30]=130 [t31]=1 [t32]=13 [t33]=1 [t34]=130 [t35]=1 [t36]=1
-    [t37]=1 [t38]=1 [t39]=1 [t40]=2 [t41]=1 [t42]=1 [t43]=12 [t44]=62 [t45]=68
-    [t46]=3 [t47]=1 [t48]=1 [t49]=2 [t50]=1 [t51]=1 [t52]=2 [t53]=2
-)
-
 if [ $# -gt 0 ]; then
     echo "error: this runner executes the full schedule only; per-case arguments were removed"
     exit 2
@@ -148,9 +132,8 @@ for item in "${SCHEDULE[@]}"; do
     id_num=${item%%-*}; id_num=${id_num#t}
     id_num=${id_num#0}
     case_id=$(printf 'T%02d' "$id_num")
-    # per-case wall-time expectation printed on the test line (ceil of the
-    # last full run's elapsed, minimum 1 — see the EXPECTED table)
-    export EXPECTED_S="${EXPECTED[$item]:-1}"
+    # the test line (with the case's own embedded expectation) and the
+    # verdict line are printed by the lib's case frame
     # the verdict search only sees lines this case produced (twice-cases)
     mark=$(wc -l <"$LOG" 2>/dev/null || echo 0)
     bash "$f"

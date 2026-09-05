@@ -429,16 +429,17 @@ case_result() { # <id> <pass|fail|skip> <name> <evidence>
     fi
 }
 
-begin_case() { # <id> <name>
+begin_case() { # <id> <name> [expected-s]
     CASE_ID=$1
     CASE_NAME=${2:-$1}
     # start the elapsed clock first thing; the test line carries the chain
     # head at the moment the case starts, so transcript rows can be
     # correlated with blocks, plus the case name for grep-ability (the
-    # verdict line only carries evidence)
+    # verdict line only carries evidence). expected = the case's own
+    # last-measured wall time (1 decimal), embedded in each script
     CASE_T0=$(date +%s%3N)
-    printf '%s: test number=%s expected=%ss name=%s\n' \
-        "$CASE_ID" "$(head3)" "${EXPECTED_S:-1}" "$CASE_NAME"
+    printf '%s: test number=%s expected=%.1fs name=%s\n' \
+        "$CASE_ID" "$(head3)" "${3:-1}" "$CASE_NAME"
 }
 
 pass_case() { # [evidence]

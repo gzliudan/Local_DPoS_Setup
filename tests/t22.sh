@@ -2,7 +2,7 @@
 # T22 — an EIP-1559 creation with tip 0 seals at the base fee on the pre-fork tier (12.5 gwei).
 # (The other half of this tx pair is T53.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T22" "creation with tip 0 seals at the base fee (pre-fork tier)"
+begin_case "T22" "creation with tip 0 seals at the base fee (pre-fork tier)" 2.1
 
 require_pre_fork "pre side missed the window"
 

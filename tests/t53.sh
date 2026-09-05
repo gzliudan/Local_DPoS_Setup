@@ -2,7 +2,7 @@
 # T53 — an EIP-1559 creation with tip 0 seals at the base fee on the post-fork tier (625 gwei).
 # (The other half of this tx pair is T22.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T53" "creation with tip 0 seals at the base fee (post-fork tier)"
+begin_case "T53" "creation with tip 0 seals at the base fee (post-fork tier)" 2.0
 
 # no guard: the runner schedules this after the fork, past the t43-t45 saga
 

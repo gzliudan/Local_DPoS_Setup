@@ -8,7 +8,7 @@
 # SECOND time — in the SAME process, so the txpool/belowfloor meter grows to
 # ~2x the first sweep and the tracker re-holds them (gauge back to k).
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T44" "the re-cross sweep fires again"
+begin_case "T44" "the re-cross sweep fires again" 61.6
 
 if [ ! -f /tmp/g2500-t43-state ]; then
     skip_case "T43 revival did not run; no re-cross to observe"

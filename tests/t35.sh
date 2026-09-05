@@ -1,7 +1,7 @@
 #!/bin/bash
 # T35 — effectiveGasPrice matches the block's base fee on both tiers (#2516).
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T35" "effectiveGasPrice matches the block base fee on both tiers"
+begin_case "T35" "effectiveGasPrice matches the block base fee on both tiers" 0.0
 
 # the per-tx receipts of T02/T28 are not addressable after the fact; the
 # transcript (results/gas2500x-<ts>.log, exported as RUN_LOG by the runner)

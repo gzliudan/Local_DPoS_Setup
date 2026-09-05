@@ -2,7 +2,7 @@
 # T49 — a legacy creation at the tier floor seals on the post-fork tier (625 gwei).
 # (The other half of this tx pair is T18.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T49" "creation at the tier floor seals (legacy, post-fork tier)"
+begin_case "T49" "creation at the tier floor seals (legacy, post-fork tier)" 2.0
 
 # no guard: the runner schedules this after the fork, past the t43-t45 saga
 

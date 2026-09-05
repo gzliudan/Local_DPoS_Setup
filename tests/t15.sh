@@ -2,7 +2,7 @@
 # T15 — txpool_contentFrom mirrors S1's pre-fork queue (10 queued), #2532.
 # (The post-fork half of this check is T41.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T15" "txpool_contentFrom mirrors the queue (pre-fork tier)"
+begin_case "T15" "txpool_contentFrom mirrors the queue (pre-fork tier)" 0.0
 
 require_pre_fork "pre side missed the window"
 

@@ -2,7 +2,7 @@
 # T37 — eth_gasPrice reports the post-fork tier price (625 gwei), #2516.
 # (The pre-fork half of this check is T11.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T37" "eth_gasPrice reports the tier price (post-fork tier)"
+begin_case "T37" "eth_gasPrice reports the tier price (post-fork tier)" 0.0
 
 # no guard: the runner schedules this well after the fork
 

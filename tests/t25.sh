@@ -5,7 +5,7 @@
 # t43's rewind so the seal block is re-imported by t44's sync. #2532
 # (The pre-fork half of this pair is T10.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T25" "an above-floor pre-fork tx survives the sweep (post-fork tier)"
+begin_case "T25" "an above-floor pre-fork tx survives the sweep (post-fork tier)" 2.1
 
 S4_ADDR=$(addr_of TXGEN_KEY_4)
 S4_TO=$(addr_of TXGEN_KEY_1)

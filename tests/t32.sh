@@ -1,7 +1,7 @@
 #!/bin/bash
 # T32 — journal load converges on the new-tier replacement (#2541).
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T32" "journal load converges on the new-tier replacement"
+begin_case "T32" "journal load converges on the new-tier replacement" 12.1
 
 S2=$(addr_of TXGEN_KEY_2)
 

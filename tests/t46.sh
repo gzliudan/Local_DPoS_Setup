@@ -5,7 +5,7 @@
 # of T28 is, and it seals at the floor: effectiveGasPrice =
 # min(feeCap, baseFee + tip) = 625 gwei.
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T46" "EIP-1559 at-floor admission on the new tier (fee cap = 625 gwei)"
+begin_case "T46" "EIP-1559 at-floor admission on the new tier (fee cap = 625 gwei)" 2.1
 
 require_post_fork
 

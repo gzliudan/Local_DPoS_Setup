@@ -2,7 +2,7 @@
 # T52 — an EIP-1559 creation at the tier floor seals on the post-fork tier (625 gwei).
 # (The other half of this tx pair is T21.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T52" "creation at the tier floor seals (1559, post-fork tier)"
+begin_case "T52" "creation at the tier floor seals (1559, post-fork tier)" 2.0
 
 # no guard: the runner schedules this after the fork, past the t43-t45 saga
 

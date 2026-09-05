@@ -1,7 +1,7 @@
 #!/bin/bash
 # T05 — queue seeding, sender S1: 10 transfers parked in the queue.
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T05" "queue seeding, sender S1 (10 queued)"
+begin_case "T05" "queue seeding, sender S1 (10 queued)" 0.3
 
 require_pre_fork
 

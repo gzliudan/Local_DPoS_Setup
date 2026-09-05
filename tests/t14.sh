@@ -5,7 +5,7 @@
 # (The post-fork half of this check is T40; P3 = pn3's own account,
 # PRIVATE_KEY_3.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T14" "the tier-aware default gas price (pre-fork tier)"
+begin_case "T14" "the tier-aware default gas price (pre-fork tier)" 2.0
 
 require_pre_fork "pre side missed the window"
 

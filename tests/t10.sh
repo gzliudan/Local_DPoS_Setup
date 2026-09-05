@@ -4,7 +4,7 @@
 # above-625gwei tx in any pool at the fork — the sweep must keep it
 # (T24 asserts that; T25 seals it post-fork). #2532
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T10" "an above-floor pre-fork tx survives the sweep (pre-fork tier)"
+begin_case "T10" "an above-floor pre-fork tx survives the sweep (pre-fork tier)" 0.0
 
 require_pre_fork "pre side missed the window"
 

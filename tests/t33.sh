@@ -1,7 +1,7 @@
 #!/bin/bash
 # T33 — a swept transaction cannot re-enter at the old price (#2532/#2541).
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T33" "a swept transaction cannot re-enter at the old price"
+begin_case "T33" "a swept transaction cannot re-enter at the old price" 0.0
 
 require_post_fork
 

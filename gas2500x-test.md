@@ -80,11 +80,11 @@ Shell layer, `bash` + `curl` + `jq` + `cast` (foundry) only, all under
 - **`tests/gas2500x-lib.sh`** — shared helpers (RPC via curl+jq, local `cast`
   signing from the `.env` raw keys, fork-window guards, pool/meter/journal
   readers) plus the case frame: every case opens with a
-  `Tnn: test number=<head> expected=<n>s name=<case>` line and ends in one
-  verdict line `Tnn: pass|fail|skip number=<head> elapsed=<n>s result=<evidence>`
-  on stdout. The expected time is injected by the runner from its per-item
-  `EXPECTED` table (ceil of the last full run's elapsed, min 1); standalone
-  case runs default to 1s.
+  `Tnn: test number=<head> expected=<n.n>s name=<case>` line and ends in one
+  verdict line `Tnn: pass|fail|skip number=<head> elapsed=<n.n>s result=<evidence>`
+  on stdout. The expected time is embedded in each case script (its last
+  measured wall time, one decimal, from run 27); standalone case runs
+  default to 1.0s.
 - **`tests/t01.sh` … `tests/t53.sh`** — one script per test case, one case ID
   per script; the runner drives everything (no pre/post arguments anywhere).
 - **`gas2500x-run.sh`** (repo root, next to `start-network.sh`) — the only

@@ -2,7 +2,7 @@
 # T17 — a legacy creation below the tier floor is rejected on the pre-fork tier (12.5 gwei).
 # (The other half of this tx pair is T48.)
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T17" "creation below the tier floor is rejected (legacy, pre-fork tier)"
+begin_case "T17" "creation below the tier floor is rejected (legacy, pre-fork tier)" 0.0
 
 require_pre_fork "pre side missed the window"
 

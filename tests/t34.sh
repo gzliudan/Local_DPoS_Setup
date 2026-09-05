@@ -2,7 +2,7 @@
 # T34 — no tracker revival within the recheck (#2541): the gauge stays at k
 # and the swept txs are not retried into a rejection loop.
 source "$(dirname "$0")/gas2500x-lib.sh"
-begin_case "T34" "no tracker revival within the recheck"
+begin_case "T34" "no tracker revival within the recheck" 130.0
 
 before=$(journal_size)
 

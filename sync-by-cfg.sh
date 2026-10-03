@@ -90,6 +90,9 @@ GCMODE="${GCMODE:-archive}"
 SYNCMODE="${SYNCMODE:-full}"
 NETWORK_ID="${NETWORK_ID:-0}"
 ETHERBASE="${ETHERBASE:-0x0000000000000000000000000000000000abcdef}"
+# Extra flags appended verbatim to the XDC command line, e.g. "--cache 49152".
+# Arguments given to this script on the command line are appended after these.
+EXTRA_XDC_ARGS="${EXTRA_XDC_ARGS:-}"
 
 # constant parameters
 LOG_DIR="logs"
@@ -239,6 +242,11 @@ if [[ -n "${SET_HEAD}" ]]; then
     args+=(
         --set-head "${SET_HEAD}"
     )
+fi
+
+if [[ -n "${EXTRA_XDC_ARGS}" ]]; then
+    read -ra EXTRA_XDC_ARGS_ARRAY <<<"${EXTRA_XDC_ARGS}"
+    args+=("${EXTRA_XDC_ARGS_ARRAY[@]}")
 fi
 
 if [[ "${#EXTRA_ARGS[@]}" -gt 0 ]]; then

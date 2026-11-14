@@ -31,6 +31,7 @@ function help() {
     echo "    ETHTEST_VALIDATORS  number of validators to start (default: 3; fixture has 4 masternodes)"
     echo "    ETHTEST_FROZEN_PORT / ETHTEST_FROZEN_RPC_PORT       (default: 30360 / 8625)"
     echo "    ETHTEST_VALIDATOR_BASE_PORT / ETHTEST_VALIDATOR_BASE_RPC_PORT (default: 30361 / 8626)"
+    echo "    ETHTEST_MINER_GASPRICE  validator miner price (default 1000000000000 wei; keeps fixture txs out of blocks so their broadcast stays observable)"
     echo
 }
 
@@ -83,6 +84,7 @@ READY_TIMEOUT=300
 DATE=$(date +%Y%m%d-%H%M%S)
 LOG_DIR="${LOG_DIR:-logs}"
 VERBOSITY="${VERBOSITY:-3}"
+MINER_GAS_PRICE="${ETHTEST_MINER_GASPRICE:-1000000000000}"
 
 function validator_name() {
     echo "validator$1"
@@ -208,6 +210,7 @@ function start_validator() {
         --nodiscover \
         --verbosity "${VERBOSITY}" \
         --port "$(validator_port "${INDEX}")" \
+        --miner-gasprice "${MINER_GAS_PRICE}" \
         --password .pwd \
         --unlock "${WALLET}" \
         --rpc \
